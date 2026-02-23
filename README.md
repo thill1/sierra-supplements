@@ -82,6 +82,16 @@ pnpm exec playwright test
 ```
 
 ## 🚀 Deployment
+
+### Client preview (recommended)
+Deploy a **public preview** for client feedback in one click:
+
+1. Go to [vercel.com](https://vercel.com) and sign in with GitHub.
+2. Click **Add New → Project** and import **thill1/sierra-supplements**.
+3. Leave defaults and click **Deploy**. Vercel will build and give you a URL like `sierra-supplements-xxx.vercel.app`.
+4. Share that URL with your client for feedback. Every push to `main` updates the preview.
+
+### Docker
 The repo is Docker-ready. Use the provided `Dockerfile` and `docker-compose.yml` for production deployments on platforms like Coolify, Railway, or VPS.
 
 ```bash
