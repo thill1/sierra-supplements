@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: sierra_supplements
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+
+  studio:
+    image: drom/drizzle-studio
+    restart: always
+    environment:
+      DB_URL: postgresql://postgres:password@db:5432/sierra_supplements
+    ports:
+      - "4983:4983"
+    depends_on:
+      - db

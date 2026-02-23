@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  turbopack: {
+    // Resolve from project root so Tailwind and deps are found when parent has lockfiles
+    root: process.cwd(),
+  },
 };
 
 export default nextConfig;
