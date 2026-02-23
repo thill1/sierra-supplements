@@ -2,9 +2,20 @@ import Link from "next/link";
 import { ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
 import type { Metadata } from "next";
 
+const CASE_STUDY_SLUGS = [
+    "trail-running-team",
+    "corporate-wellness",
+    "weight-loss-transformation",
+    "gym-partnership",
+];
+
 type Props = {
     params: Promise<{ slug: string }>;
 };
+
+export function generateStaticParams() {
+    return CASE_STUDY_SLUGS.map((slug) => ({ slug }));
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;

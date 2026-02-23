@@ -24,6 +24,21 @@ async function getProduct(slug: string) {
 
 type Props = { params: Promise<{ slug: string }> };
 
+export async function generateStaticParams() {
+    try {
+        const { db } = await import("@/db");
+        const { products } = await import("@/db/schema");
+        const { eq } = await import("drizzle-orm");
+        const rows = await db
+            .select({ slug: products.slug })
+            .from(products)
+            .where(eq(products.published, true));
+        return rows.map((r) => ({ slug: r.slug }));
+    } catch {
+        return [];
+    }
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
     const product = await getProduct(slug);

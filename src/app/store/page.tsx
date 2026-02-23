@@ -12,6 +12,8 @@ export const metadata: Metadata = {
     description: `Shop ${siteConfig.name}'s curated selection of pre-workout, creatine, protein, and more. Third-party tested for purity.`,
 };
 
+export const dynamic = "force-static";
+
 type Props = { searchParams: Promise<{ category?: string }> };
 
 export default async function StorePage({ searchParams }: Props) {

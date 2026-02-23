@@ -1,8 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "export",
+  basePath: process.env.NODE_ENV === "production" ? "/sierra-supplements" : undefined,
+  assetPrefix: process.env.NODE_ENV === "production" ? "/sierra-supplements/" : undefined,
   turbopack: {
-    // Resolve from project root so Tailwind and deps are found when parent has lockfiles
     root: process.cwd(),
   },
 };
