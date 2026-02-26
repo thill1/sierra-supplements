@@ -14,9 +14,17 @@ if (!dbUrl) {
     );
 }
 
+// Strip sslmode param from URL (we configure SSL via the pool options)
+const cleanUrl = dbUrl.replace(/[?&]sslmode=[^&]*/g, "").replace(/\?$/, "");
+
 const pool = new Pool({
-    connectionString: dbUrl,
-    ssl: { rejectUnauthorized: false },
+    connectionString: cleanUrl,
+    ssl:
+        process.env.NODE_ENV === "production" ||
+            dbUrl.includes("supabase") ||
+            dbUrl.includes("pooler")
+            ? { rejectUnauthorized: false }
+            : undefined,
 });
 
 export const db = drizzle(pool, { schema });

@@ -4,7 +4,6 @@ import { Pool } from "pg";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-    // Show which env var is being used
     const envInfo = {
         has_DATABASE_URL: !!process.env.DATABASE_URL,
         has_POSTGRES_URL: !!process.env.POSTGRES_URL,
@@ -20,8 +19,11 @@ export async function GET() {
         return NextResponse.json({ error: "No DB URL found", envInfo }, { status: 500 });
     }
 
+    // Strip sslmode param (we handle SSL via pool options)
+    const cleanUrl = dbUrl.replace(/[?&]sslmode=[^&]*/g, "").replace(/\?$/, "");
+
     const pool = new Pool({
-        connectionString: dbUrl,
+        connectionString: cleanUrl,
         ssl: { rejectUnauthorized: false },
     });
 
@@ -30,7 +32,7 @@ export async function GET() {
         await pool.end();
         return NextResponse.json({
             envInfo,
-            dbUrlPrefix: dbUrl.substring(0, 50) + "...",
+            dbUrlPrefix: cleanUrl.substring(0, 50) + "...",
             productCount: result.rowCount,
             products: result.rows,
         });
@@ -40,7 +42,7 @@ export async function GET() {
         return NextResponse.json({
             error: errorMessage,
             envInfo,
-            dbUrlPrefix: dbUrl.substring(0, 50) + "...",
+            dbUrlPrefix: cleanUrl.substring(0, 50) + "...",
         }, { status: 500 });
     }
 }
