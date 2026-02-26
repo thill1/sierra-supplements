@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     description: `Shop ${siteConfig.name}'s curated selection of pre-workout, creatine, protein, and more. Third-party tested for purity.`,
 };
 
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 type Props = { searchParams: Promise<{ category?: string }> };
 
