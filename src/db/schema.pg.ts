@@ -1,23 +1,26 @@
 import {
-    sqliteTable,
+    pgTable,
     text,
     integer,
-} from "drizzle-orm/sqlite-core";
+    timestamp,
+    boolean,
+    serial,
+} from "drizzle-orm/pg-core";
 
 // ─── Events ───────────────────────────────────────────────────
-export const events = sqliteTable("events", {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+export const events = pgTable("events", {
+    id: serial("id").primaryKey(),
     type: text("type").notNull(),
     page: text("page"),
     element: text("element"),
     metadata: text("metadata"),
     sessionId: text("session_id"),
-    createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+    createdAt: timestamp("created_at").defaultNow(),
 });
 
 // ─── Leads ───────────────────────────────────────────────────
-export const leads = sqliteTable("leads", {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+export const leads = pgTable("leads", {
+    id: serial("id").primaryKey(),
     name: text("name"),
     email: text("email").notNull(),
     phone: text("phone"),
@@ -26,7 +29,7 @@ export const leads = sqliteTable("leads", {
     page: text("page"),
     status: text("status").default("new"),
     notes: text("notes"),
-    createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+    createdAt: timestamp("created_at").defaultNow(),
 });
 
 // ─── Products ────────────────────────────────────────────────
@@ -47,8 +50,8 @@ export const productCategories = [
 
 export type ProductCategory = (typeof productCategories)[number];
 
-export const products = sqliteTable("products", {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+export const products = pgTable("products", {
+    id: serial("id").primaryKey(),
     slug: text("slug").notNull().unique(),
     name: text("name").notNull(),
     shortDescription: text("short_description"),
@@ -57,9 +60,9 @@ export const products = sqliteTable("products", {
     compareAtPrice: integer("compare_at_price"),
     category: text("category").notNull(),
     image: text("image"),
-    inStock: integer("in_stock", { mode: "boolean" }).default(true),
-    published: integer("published", { mode: "boolean" }).default(false),
-    featured: integer("featured", { mode: "boolean" }).default(false),
-    createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
-    updatedAt: integer("updated_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+    inStock: boolean("in_stock").default(true),
+    published: boolean("published").default(false),
+    featured: boolean("featured").default(false),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
 });

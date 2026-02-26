@@ -1,15 +1,17 @@
-import { drizzle } from "drizzle-orm/libsql";
-import { createClient } from "@libsql/client";
-import * as schema from "./schema.sqlite";
-import path from "path";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
+import * as schema from "./schema.pg";
 
-// Local SQLite — no Docker or Postgres required
-const dbUrl =
-    process.env.DATABASE_URL?.startsWith("file:")
-        ? process.env.DATABASE_URL
-        : `file:${path.resolve(process.cwd(), "data", "sierra.db")}`;
+// Use the Supabase Postgres connection string from environment variables
+const dbUrl = process.env.DATABASE_URL;
 
-const client = createClient({ url: dbUrl });
+if (!dbUrl) {
+    throw new Error("DATABASE_URL is not set");
+}
 
-export const db = drizzle(client, { schema });
+const pool = new Pool({
+    connectionString: dbUrl,
+});
+
+export const db = drizzle(pool, { schema });
 export type Database = typeof db;

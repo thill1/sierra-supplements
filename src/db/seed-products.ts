@@ -4,7 +4,7 @@
  */
 
 import { db } from "./index";
-import { products } from "./schema.sqlite";
+import { products } from "./schema.pg";
 
 const MOCK_PRODUCTS = [
     { slug: "peak-energy-preworkout", name: "Peak Energy Pre-Workout", shortDescription: "Explosive energy & focus for your toughest training", description: "Clinically dosed caffeine, beta-alanine, and citrulline malate for sustained energy, pump, and mental clarity. No crash, no jitters.", price: 3999, compareAtPrice: 4499, category: "pre-workout", image: "/images/store/preworkout.jpg", published: true, featured: true },

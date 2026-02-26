@@ -1,8 +1,8 @@
-// Local SQLite schema (no Docker/Postgres required)
+// Postgres schema
 export {
     events,
     leads,
     products,
     productCategories,
     type ProductCategory,
-} from "./schema.sqlite";
+} from "./schema.pg";
