@@ -22,11 +22,11 @@ export default function AdminSettingsPage() {
                     </div>
                     <div>
                         <label className="block text-sm font-medium mb-1.5">Base URL</label>
-                        <input className="input" defaultValue="https://sierrasupplements.com" />
+                        <input className="input" defaultValue="https://sierrastrengthsupplements.com" />
                     </div>
                     <div className="md:col-span-2">
                         <label className="block text-sm font-medium mb-1.5">Admin Notification Email</label>
-                        <input className="input" defaultValue="admin@sierrasupplements.com" />
+                        <input className="input" defaultValue="admin@sierrastrengthsupplements.com" />
                         <p className="text-xs text-[var(--color-text-muted)] mt-1.5">
                             Form submissions and system alerts will be sent here.
                         </p>

@@ -7,15 +7,15 @@ export const siteConfig = {
   tagline: "Peak Performance, Naturally",
   description:
     "Premium supplements & wellness services inspired by the strength of the Sierra Nevada mountains. Fuel your body with nature's best.",
-  url: "https://sierrasupplements.com",
+  url: "https://sierrastrengthsupplements.com",
   logoPath: "/logo.svg",
   ogImage: "/og-image.jpg",
 
   // ── Contact ────────────────────────────────────
   phone: "(530) 555-0142",
   smsNumber: "+15305550142",
-  email: "hello@sierrasupplements.com",
-  adminEmail: "admin@sierrasupplements.com",
+  email: "hello@sierrastrengthsupplements.com",
+  adminEmail: "admin@sierrastrengthsupplements.com",
   address: {
     street: "258 Elm Ave",
     city: "Auburn",
