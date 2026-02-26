@@ -12,7 +12,8 @@ async function getProducts(category?: string | null) {
             .from(products)
             .where(and(...conditions))
             .orderBy(desc(products.featured), desc(products.createdAt));
-    } catch {
+    } catch (e) {
+        console.error("[StoreGrid] Failed to fetch products:", e);
         return [];
     }
 }
