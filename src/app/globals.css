@@ -75,13 +75,16 @@ body {
 ::-webkit-scrollbar {
   width: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: var(--color-bg);
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--color-surface);
   border-radius: var(--radius-full);
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-border);
 }
@@ -192,6 +195,7 @@ body {
   background: var(--color-accent);
   color: var(--color-bg);
 }
+
 .btn-primary:hover {
   background: var(--color-accent-hover);
   transform: translateY(-1px);
@@ -203,6 +207,7 @@ body {
   color: var(--color-text);
   border: 1px solid var(--color-border);
 }
+
 .btn-secondary:hover {
   border-color: var(--color-accent);
   color: var(--color-accent);
@@ -213,6 +218,7 @@ body {
   color: var(--color-text-secondary);
   padding: 0.5rem 1rem;
 }
+
 .btn-ghost:hover {
   color: var(--color-text);
   background: var(--color-bg-muted);
@@ -267,6 +273,7 @@ body {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -274,9 +281,12 @@ body {
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.4);
   }
+
   50% {
     box-shadow: 0 0 0 12px rgba(217, 119, 6, 0);
   }
@@ -322,4 +332,147 @@ body {
 
 .hero-ember-glow {
   box-shadow: 0 0 30px rgba(245, 158, 11, 0.3), 0 0 60px rgba(217, 119, 6, 0.15);
+}
+
+/* ─── Hero Cinematic Animations ──────────────────────────────────── */
+@keyframes ken-burns {
+  0% {
+    transform: scale(1) translate(0, 0);
+  }
+
+  50% {
+    transform: scale(1.06) translate(-0.5%, -0.5%);
+  }
+
+  100% {
+    transform: scale(1) translate(0, 0);
+  }
+}
+
+@keyframes ember-float {
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  80% {
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translateY(-120vh) translateX(30px) scale(0.3);
+    opacity: 0;
+  }
+}
+
+@keyframes ember-glow-pulse {
+
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+
+  50% {
+    filter: brightness(1.8);
+  }
+}
+
+@keyframes fog-drift {
+  0% {
+    transform: translateX(-10%) scaleX(1.2);
+    opacity: 0.3;
+  }
+
+  50% {
+    transform: translateX(5%) scaleX(1.3);
+    opacity: 0.15;
+  }
+
+  100% {
+    transform: translateX(-10%) scaleX(1.2);
+    opacity: 0.3;
+  }
+}
+
+@keyframes fog-drift-reverse {
+  0% {
+    transform: translateX(10%) scaleX(1.2);
+    opacity: 0.2;
+  }
+
+  50% {
+    transform: translateX(-5%) scaleX(1.3);
+    opacity: 0.1;
+  }
+
+  100% {
+    transform: translateX(10%) scaleX(1.2);
+    opacity: 0.2;
+  }
+}
+
+@keyframes scroll-hint {
+
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.6;
+  }
+
+  50% {
+    transform: translateY(8px);
+    opacity: 1;
+  }
+}
+
+.hero-ken-burns {
+  animation: ken-burns 20s ease-in-out infinite;
+  will-change: transform;
+}
+
+.ember-particle {
+  position: absolute;
+  width: var(--ember-size, 4px);
+  height: var(--ember-size, 4px);
+  background: radial-gradient(circle, #F59E0B 0%, #D97706 40%, transparent 70%);
+  border-radius: 50%;
+  animation:
+    ember-float var(--ember-duration, 6s) ease-out var(--ember-delay, 0s) infinite,
+    ember-glow-pulse 2s ease-in-out infinite;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.fog-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.fog-layer--primary {
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(200, 200, 220, 0.06) 20%,
+      rgba(200, 200, 220, 0.08) 50%,
+      rgba(200, 200, 220, 0.06) 80%,
+      transparent 100%);
+  animation: fog-drift 25s ease-in-out infinite;
+}
+
+.fog-layer--secondary {
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(180, 160, 140, 0.04) 30%,
+      rgba(180, 160, 140, 0.06) 60%,
+      transparent 100%);
+  animation: fog-drift-reverse 30s ease-in-out infinite;
+}
+
+.scroll-hint-arrow {
+  animation: scroll-hint 2s ease-in-out infinite;
 }

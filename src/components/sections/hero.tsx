@@ -2,66 +2,141 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, ShoppingBag } from "lucide-react";
-import { motion } from "framer-motion";
+import { ArrowRight, ShoppingBag, ChevronDown } from "lucide-react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef, useMemo } from "react";
+
+/* ── Ember particle config ────────────────────────────────────── */
+function generateEmbers(count: number) {
+    return Array.from({ length: count }, (_, i) => ({
+        id: i,
+        left: `${Math.random() * 100}%`,
+        bottom: `${Math.random() * 30}%`,
+        size: `${2 + Math.random() * 4}px`,
+        duration: `${5 + Math.random() * 7}s`,
+        delay: `${Math.random() * 8}s`,
+    }));
+}
+
+/* ── Stagger animation variants ───────────────────────────────── */
+const containerVariants = {
+    hidden: {},
+    visible: {
+        transition: { staggerChildren: 0.12, delayChildren: 0.2 },
+    },
+};
+
+const fadeUp = {
+    hidden: { opacity: 0, y: 24 },
+    visible: {
+        opacity: 1,
+        y: 0,
+        transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const },
+    },
+};
+
+const fadeIn = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: { duration: 0.8, delay: 0.6 },
+    },
+};
 
 export function HeroSection() {
+    const sectionRef = useRef<HTMLElement>(null);
+    const embers = useMemo(() => generateEmbers(18), []);
+
+    /* Parallax: background moves slower than content */
+    const { scrollYProgress } = useScroll({
+        target: sectionRef,
+        offset: ["start start", "end start"],
+    });
+    const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
+
     return (
-        <section className="relative min-h-[100vh] flex flex-col overflow-hidden">
-            {/* Full-bleed background image */}
-            <div className="absolute inset-0">
-                <Image
-                    src="/images/hero-brand.png"
-                    alt="Sierra - Mountain landscape with dramatic sky"
-                    fill
-                    priority
-                    className="object-cover object-center"
-                    sizes="100vw"
-                />
-                {/* Light gradient overlay: lets background show through more */}
+        <section
+            ref={sectionRef}
+            className="relative min-h-[100vh] flex flex-col overflow-hidden"
+        >
+            {/* ── Background with Ken Burns + Parallax ──────────── */}
+            <motion.div
+                className="absolute inset-0"
+                style={{ y: bgY }}
+            >
+                <div className="absolute inset-0 hero-ken-burns">
+                    <Image
+                        src="/images/hero-brand.png"
+                        alt="Sierra Strength Supplements – Mountain landscape with dramatic sky"
+                        fill
+                        priority
+                        className="object-cover object-center"
+                        sizes="100vw"
+                    />
+                </div>
+
+                {/* Gradient overlay */}
                 <div
                     className="absolute inset-0"
                     style={{
                         background:
-                            "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 40%, rgba(0,0,0,0.45) 70%, rgba(0,0,0,0.65) 100%)",
+                            "linear-gradient(to bottom, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.2) 40%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0.7) 100%)",
                     }}
                 />
-                {/* Subtle ember glow at horizon */}
+
+                {/* Ember glow at horizon */}
                 <div
-                    className="absolute inset-0 opacity-20"
+                    className="absolute inset-0 opacity-25"
                     style={{
                         background:
-                            "radial-gradient(ellipse 80% 50% at 50% 60%, rgba(245, 158, 11, 0.1) 0%, transparent 60%)",
+                            "radial-gradient(ellipse 80% 50% at 50% 60%, rgba(245, 158, 11, 0.12) 0%, transparent 60%)",
                     }}
                 />
-            </div>
 
-            {/* Content: logo centered, overlay pushed to bottom */}
-            <div className="section-container relative z-10 flex flex-col flex-1 min-h-0 pt-24 text-center">
-                {/* Label: anchored near top */}
-                <motion.div
-                    className="mb-4"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                >
+                {/* ── Fog layers ─────────────────────────────────── */}
+                <div className="fog-layer fog-layer--primary" />
+                <div className="fog-layer fog-layer--secondary" />
+
+                {/* ── Floating embers ────────────────────────────── */}
+                {embers.map((ember) => (
+                    <div
+                        key={ember.id}
+                        className="ember-particle"
+                        style={{
+                            left: ember.left,
+                            bottom: ember.bottom,
+                            ["--ember-size" as string]: ember.size,
+                            ["--ember-duration" as string]: ember.duration,
+                            ["--ember-delay" as string]: ember.delay,
+                        }}
+                    />
+                ))}
+            </motion.div>
+
+            {/* ── Content ────────────────────────────────────────── */}
+            <motion.div
+                className="section-container relative z-10 flex flex-col flex-1 min-h-0 pt-24 text-center"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+            >
+                {/* Label */}
+                <motion.div className="mb-4" variants={fadeUp}>
                     <span className="label tracking-[0.25em] text-[var(--color-accent)]">
                         Auburn, CA · Third-Party Tested · Science-Backed
                     </span>
                 </motion.div>
 
-                {/* Spacer for hero background */}
+                {/* Spacer — lets the brand image breathe */}
                 <div className="flex-1" aria-hidden="true" />
 
-                {/* CTA overlay: anchored to bottom */}
+                {/* CTA overlay */}
                 <motion.div
-                    className="rounded-2xl p-6 sm:p-8 mt-auto mb-12 max-w-2xl mx-auto"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.35 }}
+                    className="rounded-2xl p-6 sm:p-8 mt-auto mb-6 max-w-2xl mx-auto"
+                    variants={fadeUp}
                     style={{
                         background:
-                            "linear-gradient(135deg, rgba(18,18,22,0.9) 0%, rgba(12,15,18,0.95) 100%)",
+                            "linear-gradient(135deg, rgba(18,18,22,0.92) 0%, rgba(12,15,18,0.96) 100%)",
                         border: "1px solid rgba(255,255,255,0.08)",
                         boxShadow:
                             "0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(245,158,11,0.1)",
@@ -94,12 +169,18 @@ export function HeroSection() {
                     </div>
                 </motion.div>
 
+                {/* Scroll hint */}
+                <motion.div
+                    className="flex justify-center pb-2"
+                    variants={fadeIn}
+                >
+                    <ChevronDown className="w-6 h-6 text-[var(--color-text-muted)] scroll-hint-arrow" />
+                </motion.div>
+
                 {/* Stats bar */}
                 <motion.div
-                    className="flex flex-wrap justify-center gap-12 pt-8 pb-6 border-t border-white/10"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.6, delay: 0.5 }}
+                    className="flex flex-wrap justify-center gap-12 pt-6 pb-6 border-t border-white/10"
+                    variants={fadeIn}
                 >
                     {[
                         { value: "50+", label: "Premium Products" },
@@ -112,7 +193,8 @@ export function HeroSection() {
                                 className="text-2xl font-bold text-[var(--color-accent)]"
                                 style={{
                                     fontFamily: "var(--font-display)",
-                                    textShadow: "0 0 20px rgba(245, 158, 11, 0.4)",
+                                    textShadow:
+                                        "0 0 20px rgba(245, 158, 11, 0.4)",
                                 }}
                             >
                                 {stat.value}
@@ -123,7 +205,7 @@ export function HeroSection() {
                         </div>
                     ))}
                 </motion.div>
-            </div>
+            </motion.div>
         </section>
     );
 }

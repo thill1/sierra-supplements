@@ -23,7 +23,7 @@ const MOCK_PRODUCTS = [
 ];
 
 async function seed() {
-    console.log("Seeding products into local SQLite...");
+    console.log("Seeding products into Supabase Postgres...");
     for (const p of MOCK_PRODUCTS) {
         try {
             await db.insert(products).values({
