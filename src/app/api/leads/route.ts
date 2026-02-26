@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 
                 // Notify admin
                 await resend.emails.send({
-                    from: "Sierra Supplements <noreply@sierrasupplements.com>",
+                    from: "Sierra Strength <noreply@sierrasupplements.com>",
                     to: process.env.ADMIN_EMAIL || "admin@sierrasupplements.com",
                     subject: `New Lead: ${data.name || data.email} (${data.source || "website"})`,
                     html: `
@@ -62,19 +62,19 @@ export async function POST(request: Request) {
 
                 // Send confirmation to user
                 await resend.emails.send({
-                    from: "Sierra Supplements <noreply@sierrasupplements.com>",
+                    from: "Sierra Strength <noreply@sierrasupplements.com>",
                     to: data.email,
-                    subject: "Thanks for reaching out to Sierra Supplements!",
+                    subject: "Thanks for reaching out to Sierra Strength!",
                     html: `
             <h2>We received your message!</h2>
             <p>Hi ${data.name || "there"},</p>
-            <p>Thank you for reaching out to Sierra Supplements. We've received your information and will be in touch within 2 hours during business hours.</p>
+            <p>Thank you for reaching out to Sierra Strength. We've received your information and will be in touch within 2 hours during business hours.</p>
             <p>In the meantime, feel free to:</p>
             <ul>
               <li><a href="https://sierrasupplements.com/book">Book a free consultation</a></li>
               <li><a href="https://sierrasupplements.com/blog">Read our latest articles</a></li>
             </ul>
-            <p>– The Sierra Supplements Team</p>
+            <p>– The Sierra Strength Team</p>
           `,
                 });
             } catch (emailError) {

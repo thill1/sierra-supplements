@@ -45,7 +45,7 @@ export default function ContactPage() {
                                 </a>
 
                                 <a
-                                    href={`sms:${siteConfig.smsNumber}?body=Hi! I'm interested in Sierra Supplements.`}
+                                    href={`sms:${siteConfig.smsNumber}?body=Hi! I'm interested in Sierra Strength.`}
                                     className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--color-bg-muted)] transition-colors"
                                 >
                                     <div className="w-10 h-10 rounded-lg bg-[var(--color-accent-subtle)] flex items-center justify-center flex-shrink-0">

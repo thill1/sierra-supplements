@@ -8,7 +8,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         ...(process.env.RESEND_API_KEY
             ? [
                 Resend({
-                    from: "Sierra Supplements <noreply@sierrasupplements.com>",
+                    from: "Sierra Strength <noreply@sierrasupplements.com>",
                 }),
             ]
             : []),

@@ -37,7 +37,7 @@ Higher UV exposure and increased oxidative stress at altitude make antioxidants 
 
 ## Our Recommendations
 
-At Sierra Supplements, we've developed altitude-specific protocols that account for these unique demands. Our Base Camp and Summit plans both include altitude-optimized formulations.
+At Sierra Strength, we've developed altitude-specific protocols that account for these unique demands. Our Base Camp and Summit plans both include altitude-optimized formulations.
 
 Ready to optimize your supplements for altitude? Book a free consultation and we'll create a personalized plan based on your elevation, activity level, and goals.
     `,

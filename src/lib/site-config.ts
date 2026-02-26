@@ -1,9 +1,9 @@
-// ─── Sierra Supplements – Site Configuration ────────────────────────
+// ─── Sierra Strength – Site Configuration ────────────────────────
 // Change these values to customize for any local service business.
 
 export const siteConfig = {
   // ── Brand ──────────────────────────────────────
-  name: "Sierra Supplements",
+  name: "Sierra Strength",
   tagline: "Peak Performance, Naturally",
   description:
     "Premium supplements & wellness services inspired by the strength of the Sierra Nevada mountains. Fuel your body with nature's best.",
@@ -178,7 +178,7 @@ export const siteConfig = {
         "Yes! While we love seeing clients in person at our Auburn location, all coaching and consultation services are available via video call.",
     },
     {
-      question: "What makes Sierra Supplements different?",
+      question: "What makes Sierra Strength different?",
       answer:
         "We combine the science of supplementation with the wisdom of mountain living. Our team lives and trains in the Sierra Nevada, and we build protocols that work for active, altitude-loving people.",
     },
@@ -195,7 +195,7 @@ export const siteConfig = {
       name: "Jake R.",
       role: "Trail Runner",
       quote:
-        "Sierra Supplements completely changed my recovery game. I PR'd my last 50K thanks to their custom plan.",
+        "Sierra Strength completely changed my recovery game. I PR'd my last 50K thanks to their custom plan.",
       avatar: "/images/testimonials/jake.jpg",
       rating: 5,
     },

@@ -76,15 +76,15 @@ export default function AboutPage() {
                         <span className="gradient-text">Sierra Nevada</span>
                     </h1>
                     <p className="body-lg mb-6">
-                        Sierra Supplements was founded in 2025 after a clear need emerged
+                        Sierra Strength was founded in 2025 after a clear need emerged
                         for a supplement company that truly understood the unique demands
                         of high-altitude living and training.
                     </p>
                     <p className="body-lg mb-6">
                         After years of seeing clients struggle with one-size-fits-all
-                        programs, Sierra Supplements was built on a different approach,
+                        programs, Sierra Strength was built on a different approach,
                         combining the science of supplementation with the practical wisdom
-                        of mountain living. Today, Sierra Supplements serves more than 500
+                        of mountain living. Today, Sierra Strength serves more than 500
                         clients across the Sierra Nevada and beyond.
                     </p>
                     <p className="body-lg">

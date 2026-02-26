@@ -15,7 +15,7 @@ export function StickyBottomBar() {
         {
             label: "Text",
             icon: MessageSquare,
-            href: `sms:${siteConfig.smsNumber}?body=Hi! I'm interested in learning more about Sierra Supplements.`,
+            href: `sms:${siteConfig.smsNumber}?body=Hi! I'm interested in learning more about Sierra Strength.`,
             id: "sticky-text",
         },
         {
