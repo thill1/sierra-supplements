@@ -64,7 +64,7 @@ export function HeroSection() {
                 className="absolute inset-0"
                 style={{ y: bgY }}
             >
-                <div className="absolute inset-0 hero-ken-burns">
+                <div className="absolute inset-0 top-16 hero-ken-burns">
                     <Image
                         src="/images/hero-brand.png"
                         alt="Sierra Strength Supplements – Mountain landscape with dramatic sky"
@@ -74,7 +74,7 @@ export function HeroSection() {
                         sizes="100vw"
                     />
                     {/* Dark fill behind the contained image on mobile */}
-                    <div className="absolute inset-0 -z-10 bg-[#0a0a0f]" />
+                    <div className="absolute inset-0 -top-16 -z-10 bg-[#0a0a0f]" />
                 </div>
 
                 {/* Gradient overlay */}
