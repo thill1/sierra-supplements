@@ -37,14 +37,20 @@ export function CalEmbed() {
                     }
                     p(cal, ar);
                 };
+            // Add the actual script tag
+            const s = d.createElement("script");
+            s.src = A;
+            s.async = true;
+            const first = d.getElementsByTagName("script")[0];
+            first.parentNode.insertBefore(s, first);
         })(window, "https://app.cal.com/embed/embed.js", "init");
 
         const cal = window.Cal;
         if (cal) {
             cal("init", "supplement-consultation", { origin: "https://cal.com" });
-            cal.ns["supplement-consultation"]("ui", {
+            cal.ns?.["supplement-consultation"]?.("ui", {
                 theme: siteConfig.calEmbedConfig.theme,
-                styles: { branding: { brandColor: siteConfig.accentColor } },
+                styles: { branding: { brandColor: "#F59E0B" } }, // Explicit amber
                 hideEventTypeDetails: siteConfig.calEmbedConfig.hideEventTypeDetails,
                 layout: "month_view",
             });
