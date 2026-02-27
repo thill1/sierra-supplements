@@ -137,7 +137,7 @@ export function HeroSection() {
             >
                 {/* CTA overlay */}
                 <motion.div
-                    className="mt-[55vh] sm:mt-12 mb-auto w-[90%] max-w-4xl mx-auto z-20"
+                    className="mt-[55vh] sm:mt-[15vh] mb-auto w-[90%] max-w-4xl mx-auto z-20"
                     variants={fadeUp}
                 >
                     <div className="flex flex-col gap-6 justify-center items-center">
