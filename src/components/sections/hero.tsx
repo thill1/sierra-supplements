@@ -57,49 +57,24 @@ export function HeroSection() {
     return (
         <section
             ref={sectionRef}
-            className="relative min-h-[100vh] sm:min-h-[85vh] flex flex-col overflow-hidden"
+            className="relative min-h-[100vh] flex flex-col overflow-hidden"
         >
             {/* ── Background with Ken Burns + Parallax ──────────── */}
             <motion.div
                 className="absolute inset-0"
                 style={{ y: bgY }}
             >
-                <div className="absolute inset-0 hero-ken-burns bg-[#0a0a0f]">
-                    {/* Mobile: Cloud layer to fill behind the 64px glass header */}
-                    <div className="absolute inset-x-0 top-0 h-16 sm:hidden overflow-hidden">
-                        <Image
-                            src="/images/hero-brand-extended.png"
-                            alt=""
-                            fill
-                            priority
-                            className="object-cover object-top opacity-70"
-                            sizes="100vw"
-                        />
-                    </div>
-
-                    {/* Mobile: Original setup pushed down 64px so the peak perfectly touches the bottom of the nav */}
-                    <div className="absolute inset-x-0 top-16 bottom-0 sm:hidden">
-                        <Image
-                            src="/images/hero-brand.png"
-                            alt="Sierra Strength Supplements – Mountain landscape with dramatic sky"
-                            fill
-                            priority
-                            className="object-contain object-top"
-                            sizes="100vw"
-                        />
-                    </div>
-
-                    {/* Desktop: New vertically extended setup */}
-                    <div className="hidden sm:block absolute inset-0">
-                        <Image
-                            src="/images/hero-brand-extended.png"
-                            alt="Sierra Strength Supplements – Mountain landscape with dramatic sky"
-                            fill
-                            priority
-                            className="object-contain object-center sm:object-center"
-                            sizes="100vw"
-                        />
-                    </div>
+                <div className="absolute inset-0 hero-ken-burns">
+                    <Image
+                        src="/images/hero-brand.png"
+                        alt="Sierra Strength Supplements – Mountain landscape with dramatic sky"
+                        fill
+                        priority
+                        className="object-contain sm:object-cover object-top sm:object-center"
+                        sizes="100vw"
+                    />
+                    {/* Dark fill behind the contained image on mobile */}
+                    <div className="absolute inset-0 -z-10 bg-[#0a0a0f]" />
                 </div>
 
                 {/* Gradient overlay */}
@@ -147,41 +122,49 @@ export function HeroSection() {
                 initial="hidden"
                 animate="visible"
             >
+                {/* Spacer — lets the brand image breathe */}
+                <div className="flex-1" aria-hidden="true" />
+
                 {/* CTA overlay */}
                 <motion.div
-                    className="mt-[25vh] sm:mt-[15vh] mb-auto w-[90%] max-w-4xl mx-auto z-20"
+                    className="rounded-2xl p-6 sm:p-8 mt-auto mb-6 max-w-2xl mx-auto"
                     variants={fadeUp}
+                    style={{
+                        background:
+                            "linear-gradient(135deg, rgba(18,18,22,0.92) 0%, rgba(12,15,18,0.96) 100%)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        boxShadow:
+                            "0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(245,158,11,0.1)",
+                    }}
                 >
-                    <div className="flex flex-col gap-6 justify-center items-center">
-                        <div className="flex flex-wrap gap-4 sm:gap-6 justify-center items-center w-full">
-                            <Link
-                                href="/store"
-                                className="btn btn-primary hero-ember-glow text-base px-8 py-3.5 flex items-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.3)]"
-                                id="hero-cta-store"
-                            >
-                                <ShoppingBag className="w-5 h-5" />
-                                Shop Supplements
-                                <ArrowRight className="w-5 h-5" />
-                            </Link>
-                            <Link
-                                href="/book"
-                                className="btn text-base font-medium px-8 py-3.5 border border-[var(--color-accent)] text-white bg-black/20 backdrop-blur-sm hover:bg-[var(--color-accent)] hover:text-white transition-all shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:shadow-[0_0_20px_rgba(245,158,11,0.4)]"
-                                id="hero-cta-book"
-                            >
-                                Free Consultation
-                            </Link>
-                            <Link
-                                href="/services"
-                                className="btn text-base font-medium px-8 py-3.5 border border-[var(--color-accent)] text-white bg-black/20 backdrop-blur-sm hover:bg-[var(--color-accent)] hover:text-white transition-all shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:shadow-[0_0_20px_rgba(245,158,11,0.4)]"
-                                id="hero-cta-services"
-                            >
-                                Services
-                            </Link>
-                        </div>
-                        <p className="label tracking-[0.2em] text-[10px] sm:text-xs text-white/90 text-center uppercase m-0 drop-shadow-md">
-                            Auburn, CA <span className="text-[var(--color-accent)] mx-1">·</span> Third-Party Tested <span className="text-[var(--color-accent)] mx-1">·</span> Science-Backed
-                        </p>
+                    <div className="flex flex-wrap gap-4 justify-center items-center">
+                        <Link
+                            href="/store"
+                            className="btn btn-primary hero-ember-glow text-base px-8 py-4 flex items-center gap-2"
+                            id="hero-cta-store"
+                        >
+                            <ShoppingBag className="w-5 h-5" />
+                            Shop Supplements
+                            <ArrowRight className="w-5 h-5" />
+                        </Link>
+                        <Link
+                            href="/book"
+                            className="btn btn-secondary text-base px-6 py-4 border-[var(--color-accent)]/50 hover:border-[var(--color-accent)] hover:bg-[var(--color-accent)]/10"
+                            id="hero-cta-book"
+                        >
+                            Free Consultation
+                        </Link>
+                        <Link
+                            href="/services"
+                            className="btn-ghost text-base px-6 py-4 text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
+                            id="hero-cta-services"
+                        >
+                            Services
+                        </Link>
                     </div>
+                    <p className="label tracking-[0.25em] text-[var(--color-accent)] text-center mt-5">
+                        Auburn, CA · Third-Party Tested · Science-Backed
+                    </p>
                 </motion.div>
 
                 {/* Scroll hint */}
