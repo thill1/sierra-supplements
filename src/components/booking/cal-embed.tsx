@@ -29,42 +29,47 @@ export function CalEmbed() {
                         const api: any = function () {
                             p(api, arguments);
                         };
-                        const activeBag = ar[ar.length - 1];
-                        if (activeBag.constructor === Object && activeBag.namespace) {
-                            api.namespace = activeBag.namespace;
-                        }
-                        return api;
+                        const namespace = ar[1];
+                        api.q = api.q || [];
+                        if (typeof namespace === "string") {
+                            cal.ns = cal.ns || {};
+                            cal.ns[namespace] = cal.ns[namespace] || api;
+                            p(cal.ns[namespace], ar);
+                            p(cal, ["initNamespace", namespace]);
+                        } else p(cal, ar);
+                        return;
                     }
                     p(cal, ar);
                 };
-            // Add the actual script tag
-            const s = d.createElement("script");
-            s.src = A;
-            s.async = true;
-            const first = d.getElementsByTagName("script")[0];
-            if (first && first.parentNode) {
-                first.parentNode.insertBefore(s, first);
+            let j = d.createElement("script");
+            j.src = A;
+            j.async = true;
+            let c = d.getElementsByTagName("script")[0];
+            if (c && c.parentNode) {
+                c.parentNode.insertBefore(j, c);
             } else {
-                d.head.appendChild(s);
+                d.head.appendChild(j);
             }
         })(window, "https://app.cal.com/embed/embed.js", "init");
 
-        const cal = window.Cal;
-        if (cal) {
-            const calNamespace = cal("init", "supplement-consultation", { origin: "https://cal.com" });
+        const Cal = window.Cal;
+        if (Cal) {
+            Cal("init", "supplement-consultation", { origin: "https://cal.com" });
 
-            calNamespace("inline", {
-                elementOrSelector: "#my-cal-inline",
-                calLink: siteConfig.calLink,
-                layout: "month_view",
-            });
+            if (Cal.ns && Cal.ns["supplement-consultation"]) {
+                Cal.ns["supplement-consultation"]("inline", {
+                    elementOrSelector: "#my-cal-inline",
+                    config: { layout: "month_view" },
+                    calLink: siteConfig.calLink,
+                });
 
-            calNamespace("ui", {
-                theme: siteConfig.calEmbedConfig.theme,
-                styles: { branding: { brandColor: "#F59E0B" } },
-                hideEventTypeDetails: siteConfig.calEmbedConfig.hideEventTypeDetails,
-                layout: "month_view",
-            });
+                Cal.ns["supplement-consultation"]("ui", {
+                    theme: siteConfig.calEmbedConfig.theme,
+                    styles: { branding: { brandColor: "#F59E0B" } },
+                    hideEventTypeDetails: siteConfig.calEmbedConfig.hideEventTypeDetails,
+                    layout: "month_view",
+                });
+            }
         }
     }, []);
 
