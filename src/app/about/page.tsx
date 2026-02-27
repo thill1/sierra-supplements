@@ -43,24 +43,19 @@ const values = [
 
 const team = [
     {
-        name: "Dr. Emily Chen",
-        role: "Founder & Head of Nutrition",
-        bio: "PhD in Nutritional Sciences, ultramarathon runner, and lifelong Sierra resident.",
+        name: "Brad Parker",
+        role: "TBD",
+        bio: "",
     },
     {
-        name: "Marcus Rivera",
-        role: "Head Coach",
-        bio: "Certified Sports Nutritionist and former collegiate athlete with 10+ years of coaching experience.",
+        name: "Blaine Overton",
+        role: "TBD",
+        bio: "",
     },
     {
-        name: "Sarah Winters",
-        role: "Wellness Director",
-        bio: "RN with specialty in integrative medicine. Passionate about making wellness accessible.",
-    },
-    {
-        name: "Jake Olmstead",
-        role: "Operations & Community",
-        bio: "Manages our retail space, events, and group programs. Local ski instructor and community advocate.",
+        name: "Kourtney Brothers",
+        role: "TBD",
+        bio: "",
     },
 ];
 
@@ -124,7 +119,7 @@ export default function AboutPage() {
                         Meet the <span className="gradient-text">Crew</span>
                     </h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {team.map((t) => (
                         <div key={t.name} className="card text-center">
                             <div className="w-20 h-20 rounded-full bg-[var(--color-surface)] flex items-center justify-center mx-auto mb-4">
