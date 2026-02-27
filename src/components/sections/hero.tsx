@@ -84,7 +84,7 @@ export function HeroSection() {
                             alt="Sierra Strength Supplements – Mountain landscape with dramatic sky"
                             fill
                             priority
-                            className="object-contain sm:object-cover object-top sm:object-[50%_80%]"
+                            className="object-contain sm:object-cover object-top sm:object-[50%_90%]"
                             sizes="100vw"
                         />
                     </div>
