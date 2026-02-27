@@ -98,16 +98,18 @@ export default function ContactPage() {
                             </div>
                         </div>
 
-                        {/* Map placeholder */}
-                        <div className="card !p-0 overflow-hidden h-48">
-                            <div className="w-full h-full bg-[var(--color-surface)] flex items-center justify-center">
-                                <div className="text-center">
-                                    <MapPin className="w-8 h-8 text-[var(--color-accent)] mx-auto mb-2" />
-                                    <p className="body-sm">
-                                        {siteConfig.address.city}, {siteConfig.address.state}
-                                    </p>
-                                </div>
-                            </div>
+                        {/* Google Maps embed */}
+                        <div className="card !p-0 overflow-hidden h-48 rounded-xl">
+                            <iframe
+                                title="Sierra Strength location – Auburn, CA"
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3106.8!2d-121.077!3d38.897!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x809b0a0a0a0a0a0a%3A0x0!2sAuburn%2C+CA+95603!5e0!3m2!1sen!2sus!4v1"
+                                width="100%"
+                                height="100%"
+                                style={{ border: 0, filter: "invert(90%) hue-rotate(180deg) brightness(0.95) contrast(0.9)" }}
+                                allowFullScreen
+                                loading="lazy"
+                                referrerPolicy="no-referrer-when-downgrade"
+                            />
                         </div>
                     </div>
 
