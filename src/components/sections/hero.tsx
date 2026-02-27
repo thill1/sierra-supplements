@@ -68,7 +68,7 @@ export function HeroSection() {
                     {/* Cloud Background Fill for Mobile Header (exactly 64px tall to match header, no duplicated mountains) */}
                     <div className="absolute inset-x-0 top-0 h-16 sm:hidden overflow-hidden">
                         <Image
-                            src="/images/hero-brand.png"
+                            src="/images/hero-brand-extended.png"
                             alt=""
                             fill
                             priority
@@ -80,7 +80,7 @@ export function HeroSection() {
                     {/* Main hero image container pushed down 64px on mobile so peak clears nav bottom */}
                     <div className="absolute inset-x-0 top-16 bottom-0 sm:inset-0 bg-[#0a0a0f]">
                         <Image
-                            src="/images/hero-brand.png"
+                            src="/images/hero-brand-extended.png"
                             alt="Sierra Strength Supplements – Mountain landscape with dramatic sky"
                             fill
                             priority
