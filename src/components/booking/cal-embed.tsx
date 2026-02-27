@@ -48,9 +48,14 @@ export function CalEmbed() {
         const cal = window.Cal;
         if (cal) {
             cal("init", "supplement-consultation", { origin: "https://cal.com" });
+            cal.ns?.["supplement-consultation"]?.("inline", {
+                elementOrSelector: "#my-cal-inline",
+                calLink: siteConfig.calLink,
+                layout: "month_view",
+            });
             cal.ns?.["supplement-consultation"]?.("ui", {
                 theme: siteConfig.calEmbedConfig.theme,
-                styles: { branding: { brandColor: "#F59E0B" } }, // Explicit amber
+                styles: { branding: { brandColor: "#F59E0B" } },
                 hideEventTypeDetails: siteConfig.calEmbedConfig.hideEventTypeDetails,
                 layout: "month_view",
             });
