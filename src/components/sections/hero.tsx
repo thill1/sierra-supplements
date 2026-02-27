@@ -70,7 +70,7 @@ export function HeroSection() {
                         alt="Sierra Strength Supplements – Mountain landscape with dramatic sky"
                         fill
                         priority
-                        className="object-cover object-center sm:object-cover sm:object-center"
+                        className="object-contain sm:object-cover object-top sm:object-center"
                         sizes="100vw"
                     />
                     {/* Dark fill behind the contained image on mobile */}
@@ -162,7 +162,7 @@ export function HeroSection() {
 
                 {/* Scroll hint */}
                 <motion.div
-                    className="hidden sm:flex justify-center pb-2"
+                    className="flex justify-center pb-2"
                     variants={fadeIn}
                 >
                     <ChevronDown className="w-6 h-6 text-[var(--color-text-muted)] scroll-hint-arrow" />
@@ -170,7 +170,7 @@ export function HeroSection() {
 
                 {/* Stats bar */}
                 <motion.div
-                    className="hidden sm:flex flex-wrap justify-center gap-12 pt-6 pb-6 border-t border-white/10"
+                    className="flex flex-wrap justify-center gap-12 pt-6 pb-6 border-t border-white/10"
                     variants={fadeIn}
                 >
                     {[
