@@ -139,7 +139,7 @@ export const siteConfig = {
     },
     {
       name: "Peak Elite",
-      price: 299,
+      price: 199,
       period: "/month",
       description: "Full-service performance optimization",
       features: [
