@@ -28,17 +28,21 @@ export function Header() {
                         </span>
                     </Link>
 
-                    {/* Desktop Nav */}
-                    <nav className="hidden md:flex items-center gap-1">
+                    {/* Desktop Nav — centered */}
+                    <nav className="hidden md:flex items-center gap-3 absolute left-1/2 -translate-x-1/2">
                         {siteConfig.nav.map((item) => (
                             <Link
                                 key={item.href}
                                 href={item.href}
-                                className="btn-ghost text-sm"
+                                className="btn-ghost text-base"
                             >
                                 {item.label}
                             </Link>
                         ))}
+                    </nav>
+
+                    {/* Desktop right side */}
+                    <div className="hidden md:flex items-center gap-1">
                         <CartIcon />
                         <Link
                             href="/book"
@@ -46,7 +50,7 @@ export function Header() {
                         >
                             Book Now
                         </Link>
-                    </nav>
+                    </div>
 
                     {/* Mobile: Cart + Phone + Menu */}
                     <div className="flex items-center gap-2 md:hidden">
