@@ -65,8 +65,20 @@ export function HeroSection() {
                 style={{ y: bgY }}
             >
                 <div className="absolute inset-0 hero-ken-burns bg-[#0a0a0f]">
-                    {/* Mobile: Original setup from the start of the day */}
-                    <div className="absolute inset-0 sm:hidden">
+                    {/* Mobile: Cloud layer to fill behind the 64px glass header */}
+                    <div className="absolute inset-x-0 top-0 h-16 sm:hidden overflow-hidden">
+                        <Image
+                            src="/images/hero-brand-extended.png"
+                            alt=""
+                            fill
+                            priority
+                            className="object-cover object-top opacity-70"
+                            sizes="100vw"
+                        />
+                    </div>
+
+                    {/* Mobile: Original setup pushed down 64px so the peak perfectly touches the bottom of the nav */}
+                    <div className="absolute inset-x-0 top-16 bottom-0 sm:hidden">
                         <Image
                             src="/images/hero-brand.png"
                             alt="Sierra Strength Supplements – Mountain landscape with dramatic sky"
