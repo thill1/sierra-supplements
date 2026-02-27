@@ -36,7 +36,7 @@ export const siteConfig = {
   },
 
   // ── Booking ────────────────────────────────────
-  calLink: "sierra-supplements/consultation",
+  calLink: "sierra-strength-supplements-vu0gb0/supplement-consultation",
   calEmbedConfig: {
     theme: "dark" as const,
     hideEventTypeDetails: false,
