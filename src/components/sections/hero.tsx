@@ -137,37 +137,37 @@ export function HeroSection() {
             >
                 {/* CTA overlay */}
                 <motion.div
-                    className="group rounded-2xl p-5 sm:p-6 mt-[55vh] sm:mt-12 mb-auto w-[90%] max-w-3xl mx-auto bg-black/20 backdrop-blur-md border border-white/10 transition-all duration-300 hover:border-[var(--color-accent)]/50 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)]"
+                    className="mt-[55vh] sm:mt-12 mb-auto w-[90%] max-w-4xl mx-auto z-20"
                     variants={fadeUp}
                 >
-                    <div className="flex flex-col gap-3 justify-center items-center">
-                        <div className="flex flex-wrap gap-3 sm:gap-4 justify-center items-center w-full">
+                    <div className="flex flex-col gap-6 justify-center items-center">
+                        <div className="flex flex-wrap gap-4 sm:gap-6 justify-center items-center w-full">
                             <Link
                                 href="/store"
-                                className="btn btn-primary hero-ember-glow text-sm px-6 py-3 flex items-center gap-2"
+                                className="btn btn-primary hero-ember-glow text-base px-8 py-3.5 flex items-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.3)]"
                                 id="hero-cta-store"
                             >
-                                <ShoppingBag className="w-4 h-4" />
+                                <ShoppingBag className="w-5 h-5" />
                                 Shop Supplements
-                                <ArrowRight className="w-4 h-4" />
+                                <ArrowRight className="w-5 h-5" />
                             </Link>
                             <Link
                                 href="/book"
-                                className="btn btn-secondary text-sm px-6 py-3 border-[var(--color-accent)]/50 hover:border-[var(--color-accent)] hover:bg-[var(--color-accent)]/10"
+                                className="btn text-base font-medium px-8 py-3.5 border border-[var(--color-accent)] text-white bg-black/20 backdrop-blur-sm hover:bg-[var(--color-accent)] hover:text-white transition-all shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:shadow-[0_0_20px_rgba(245,158,11,0.4)]"
                                 id="hero-cta-book"
                             >
                                 Free Consultation
                             </Link>
                             <Link
                                 href="/services"
-                                className="btn-ghost text-sm px-5 py-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
+                                className="btn text-base font-medium px-8 py-3.5 border border-[var(--color-accent)] text-white bg-black/20 backdrop-blur-sm hover:bg-[var(--color-accent)] hover:text-white transition-all shadow-[0_0_15px_rgba(245,158,11,0.15)] hover:shadow-[0_0_20px_rgba(245,158,11,0.4)]"
                                 id="hero-cta-services"
                             >
                                 Services
                             </Link>
                         </div>
-                        <p className="label tracking-[0.2em] text-[10px] sm:text-xs text-[var(--color-accent)] text-center uppercase m-0">
-                            Auburn, CA · Third-Party Tested · Science-Backed
+                        <p className="label tracking-[0.2em] text-[10px] sm:text-xs text-white/90 text-center uppercase m-0 drop-shadow-md">
+                            Auburn, CA <span className="text-[var(--color-accent)] mx-1">·</span> Third-Party Tested <span className="text-[var(--color-accent)] mx-1">·</span> Science-Backed
                         </p>
                     </div>
                 </motion.div>
