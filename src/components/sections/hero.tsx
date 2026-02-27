@@ -70,7 +70,7 @@ export function HeroSection() {
                         alt="Sierra Strength Supplements – Mountain landscape with dramatic sky"
                         fill
                         priority
-                        className="object-cover object-top sm:object-cover sm:object-center"
+                        className="object-cover object-center sm:object-cover sm:object-center"
                         sizes="100vw"
                     />
                     {/* Dark fill behind the contained image on mobile */}
@@ -127,7 +127,7 @@ export function HeroSection() {
 
                 {/* CTA overlay */}
                 <motion.div
-                    className="rounded-2xl py-3 px-6 sm:py-4 sm:px-8 mt-auto mb-4 sm:mb-[48px] max-w-2xl mx-auto bg-black/5 border border-[var(--color-accent)]/30 shadow-lg shadow-black/10 cta-ember-pulse transition-all duration-300 hover:border-[var(--color-accent)]/60 hover:shadow-[0_0_30px_rgba(245,158,11,0.3)]"
+                    className="rounded-2xl py-3 px-6 sm:py-4 sm:px-8 mt-auto mb-1 sm:mb-[48px] max-w-2xl mx-auto bg-black/5 border border-[var(--color-accent)]/30 shadow-lg shadow-black/10 cta-ember-pulse transition-all duration-300 hover:border-[var(--color-accent)]/60 hover:shadow-[0_0_30px_rgba(245,158,11,0.3)]"
                     variants={fadeUp}
                 >
                     <div className="flex flex-wrap gap-4 justify-center items-center">
