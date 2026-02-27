@@ -78,8 +78,8 @@ export function HeroSection() {
                         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#0a0a0f] to-transparent" />
                     </div>
 
-                    {/* Main hero image container pushed down 64px on mobile so peak is at nav bottom */}
-                    <div className="absolute inset-x-0 top-16 bottom-0 sm:inset-0">
+                    {/* Main hero image container pushed down 96px on mobile so peak clears nav bottom */}
+                    <div className="absolute inset-x-0 top-24 bottom-0 sm:inset-0">
                         <Image
                             src="/images/hero-brand.png"
                             alt="Sierra Strength Supplements – Mountain landscape with dramatic sky"
@@ -138,7 +138,7 @@ export function HeroSection() {
             >
                 {/* CTA overlay */}
                 <motion.div
-                    className="group rounded-2xl p-5 sm:p-6 mt-[45vh] sm:mt-[25vh] mb-auto w-[90%] max-w-3xl mx-auto bg-black/20 backdrop-blur-md border border-white/10 transition-all duration-300 hover:border-[var(--color-accent)]/50 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)]"
+                    className="group rounded-2xl p-5 sm:p-6 mt-[55vh] sm:mt-[15vh] mb-auto w-[90%] max-w-3xl mx-auto bg-black/20 backdrop-blur-md border border-white/10 transition-all duration-300 hover:border-[var(--color-accent)]/50 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)]"
                     variants={fadeUp}
                 >
                     <div className="flex flex-col gap-3 justify-center items-center">
