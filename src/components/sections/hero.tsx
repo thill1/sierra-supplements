@@ -57,7 +57,7 @@ export function HeroSection() {
     return (
         <section
             ref={sectionRef}
-            className="relative min-h-[60vh] sm:min-h-[100vh] flex flex-col overflow-hidden"
+            className="relative min-h-[50vh] sm:min-h-[100vh] flex flex-col overflow-hidden"
         >
             {/* ── Background with Ken Burns + Parallax ──────────── */}
             <motion.div
