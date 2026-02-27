@@ -124,7 +124,7 @@ export function HeroSection() {
             >
                 {/* CTA overlay */}
                 <motion.div
-                    className="rounded-2xl p-6 sm:p-8 mt-[55vh] sm:mt-[60vh] mb-auto max-w-2xl mx-auto bg-black/20 backdrop-blur-md border border-white/10"
+                    className="rounded-2xl p-6 sm:p-8 mt-[55vh] sm:mt-[55vh] mb-auto max-w-2xl mx-auto bg-black/20 backdrop-blur-md border border-white/10"
                     variants={fadeUp}
                 >
                     <div className="flex flex-wrap gap-4 justify-center items-center">
