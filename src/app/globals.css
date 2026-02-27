@@ -217,11 +217,13 @@ body {
   background: transparent;
   color: var(--color-text-secondary);
   padding: 0.5rem 1rem;
+  transition: color 0.3s ease, text-shadow 0.3s ease;
 }
 
 .btn-ghost:hover {
-  color: var(--color-text);
-  background: var(--color-bg-muted);
+  color: var(--color-accent);
+  background: transparent;
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.5), 0 0 16px rgba(245, 158, 11, 0.25);
 }
 
 /* ─── Card ───────────────────────────────────────────────────────── */
