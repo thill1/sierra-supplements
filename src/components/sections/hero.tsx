@@ -78,13 +78,13 @@ export function HeroSection() {
                     </div>
 
                     {/* Main hero image container pushed down 64px on mobile so peak clears nav bottom */}
-                    <div className="absolute inset-x-0 top-16 bottom-0 sm:inset-0">
+                    <div className="absolute inset-x-0 top-16 bottom-0 sm:inset-0 bg-[#0a0a0f]">
                         <Image
                             src="/images/hero-brand.png"
                             alt="Sierra Strength Supplements – Mountain landscape with dramatic sky"
                             fill
                             priority
-                            className="object-contain sm:object-cover object-top sm:object-[50%_-64px]"
+                            className="object-contain sm:object-contain object-top sm:object-center"
                             sizes="100vw"
                         />
                     </div>
