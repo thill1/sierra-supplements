@@ -12,7 +12,7 @@ function generateEmbers(count: number) {
         id: i,
         left: `${Math.random() * 100}%`,
         bottom: `${Math.random() * 30}%`,
-        size: `${3 + Math.random() * 6}px`,
+        size: `${2 + Math.random() * 4}px`,
         duration: `${5 + Math.random() * 7}s`,
         delay: `${Math.random() * 8}s`,
     }));
