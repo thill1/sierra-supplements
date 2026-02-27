@@ -42,7 +42,11 @@ export function CalEmbed() {
             s.src = A;
             s.async = true;
             const first = d.getElementsByTagName("script")[0];
-            first.parentNode.insertBefore(s, first);
+            if (first && first.parentNode) {
+                first.parentNode.insertBefore(s, first);
+            } else {
+                d.head.appendChild(s);
+            }
         })(window, "https://app.cal.com/embed/embed.js", "init");
 
         const cal = window.Cal;
