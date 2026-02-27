@@ -65,26 +65,26 @@ export function HeroSection() {
                 style={{ y: bgY }}
             >
                 <div className="absolute inset-0 hero-ken-burns bg-[#0a0a0f]">
-                    {/* Cloud Background Fill for Mobile Header (exactly 64px tall to match header, no duplicated mountains) */}
-                    <div className="absolute inset-x-0 top-0 h-16 sm:hidden overflow-hidden">
+                    {/* Mobile: Original setup from the start of the day */}
+                    <div className="absolute inset-0 sm:hidden">
                         <Image
-                            src="/images/hero-brand-extended.png"
-                            alt=""
+                            src="/images/hero-brand.png"
+                            alt="Sierra Strength Supplements – Mountain landscape with dramatic sky"
                             fill
                             priority
-                            className="object-cover object-top opacity-70"
+                            className="object-contain object-top"
                             sizes="100vw"
                         />
                     </div>
 
-                    {/* Main hero image container pushed down 64px on mobile so peak clears nav bottom */}
-                    <div className="absolute inset-x-0 top-16 bottom-0 sm:inset-0 bg-[#0a0a0f]">
+                    {/* Desktop: New vertically extended setup */}
+                    <div className="hidden sm:block absolute inset-0">
                         <Image
                             src="/images/hero-brand-extended.png"
                             alt="Sierra Strength Supplements – Mountain landscape with dramatic sky"
                             fill
                             priority
-                            className="object-cover object-center sm:object-[50%_75%]"
+                            className="object-cover object-[50%_75%]"
                             sizes="100vw"
                         />
                     </div>
