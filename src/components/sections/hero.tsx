@@ -122,13 +122,6 @@ export function HeroSection() {
                 initial="hidden"
                 animate="visible"
             >
-                {/* Label */}
-                <motion.div className="mb-4" variants={fadeUp}>
-                    <span className="label tracking-[0.25em] text-[var(--color-accent)]">
-                        Auburn, CA · Third-Party Tested · Science-Backed
-                    </span>
-                </motion.div>
-
                 {/* Spacer — lets the brand image breathe */}
                 <div className="flex-1" aria-hidden="true" />
 
@@ -169,6 +162,9 @@ export function HeroSection() {
                             Services
                         </Link>
                     </div>
+                    <p className="label tracking-[0.25em] text-[var(--color-accent)] text-center mt-5">
+                        Auburn, CA · Third-Party Tested · Science-Backed
+                    </p>
                 </motion.div>
 
                 {/* Scroll hint */}
