@@ -57,7 +57,7 @@ export function HeroSection() {
     return (
         <section
             ref={sectionRef}
-            className="relative min-h-[100vh] flex flex-col overflow-hidden"
+            className="relative min-h-[100vh] sm:min-h-[85vh] flex flex-col overflow-hidden"
         >
             {/* ── Background with Ken Burns + Parallax ──────────── */}
             <motion.div
@@ -137,7 +137,7 @@ export function HeroSection() {
             >
                 {/* CTA overlay */}
                 <motion.div
-                    className="mt-[40vh] sm:mt-[15vh] mb-auto w-[90%] max-w-4xl mx-auto z-20"
+                    className="mt-[25vh] sm:mt-[15vh] mb-auto w-[90%] max-w-4xl mx-auto z-20"
                     variants={fadeUp}
                 >
                     <div className="flex flex-col gap-6 justify-center items-center">
