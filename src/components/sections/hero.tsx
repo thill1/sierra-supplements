@@ -122,20 +122,10 @@ export function HeroSection() {
                 initial="hidden"
                 animate="visible"
             >
-                {/* Spacer — lets the brand image breathe */}
-                <div className="flex-1" aria-hidden="true" />
-
                 {/* CTA overlay */}
                 <motion.div
-                    className="rounded-2xl p-6 sm:p-8 mt-auto mb-6 max-w-2xl mx-auto"
+                    className="glass rounded-2xl p-6 sm:p-8 mt-8 sm:mt-[25vh] mb-auto max-w-2xl mx-auto"
                     variants={fadeUp}
-                    style={{
-                        background:
-                            "linear-gradient(135deg, rgba(18,18,22,0.92) 0%, rgba(12,15,18,0.96) 100%)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        boxShadow:
-                            "0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(245,158,11,0.1)",
-                    }}
                 >
                     <div className="flex flex-wrap gap-4 justify-center items-center">
                         <Link
