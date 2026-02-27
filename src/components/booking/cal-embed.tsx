@@ -47,13 +47,15 @@ export function CalEmbed() {
 
         const cal = window.Cal;
         if (cal) {
-            cal("init", "supplement-consultation", { origin: "https://cal.com" });
-            cal.ns?.["supplement-consultation"]?.("inline", {
+            const calNamespace = cal("init", "supplement-consultation", { origin: "https://cal.com" });
+
+            calNamespace("inline", {
                 elementOrSelector: "#my-cal-inline",
                 calLink: siteConfig.calLink,
                 layout: "month_view",
             });
-            cal.ns?.["supplement-consultation"]?.("ui", {
+
+            calNamespace("ui", {
                 theme: siteConfig.calEmbedConfig.theme,
                 styles: { branding: { brandColor: "#F59E0B" } },
                 hideEventTypeDetails: siteConfig.calEmbedConfig.hideEventTypeDetails,
