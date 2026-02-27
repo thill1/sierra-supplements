@@ -124,37 +124,39 @@ export function HeroSection() {
             >
                 {/* CTA overlay */}
                 <motion.div
-                    className="group rounded-2xl p-6 sm:p-8 mt-[calc(55vh-100px)] sm:mt-[calc(55vh-100px)] mb-auto max-w-2xl mx-auto bg-black/20 backdrop-blur-md border border-white/10 transition-all duration-300 hover:border-[var(--color-accent)]/50 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)]"
+                    className="group rounded-2xl p-5 sm:p-6 mt-[55vh] mb-auto w-[90%] max-w-3xl mx-auto bg-black/20 backdrop-blur-md border border-white/10 transition-all duration-300 hover:border-[var(--color-accent)]/50 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)]"
                     variants={fadeUp}
                 >
-                    <div className="flex flex-wrap gap-4 justify-center items-center">
-                        <Link
-                            href="/store"
-                            className="btn btn-primary hero-ember-glow text-base px-8 py-4 flex items-center gap-2"
-                            id="hero-cta-store"
-                        >
-                            <ShoppingBag className="w-5 h-5" />
-                            Shop Supplements
-                            <ArrowRight className="w-5 h-5" />
-                        </Link>
-                        <Link
-                            href="/book"
-                            className="btn btn-secondary text-base px-6 py-4 border-[var(--color-accent)]/50 hover:border-[var(--color-accent)] hover:bg-[var(--color-accent)]/10"
-                            id="hero-cta-book"
-                        >
-                            Free Consultation
-                        </Link>
-                        <Link
-                            href="/services"
-                            className="btn-ghost text-base px-6 py-4 text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
-                            id="hero-cta-services"
-                        >
-                            Services
-                        </Link>
+                    <div className="flex flex-col gap-3 justify-center items-center">
+                        <div className="flex flex-wrap gap-3 sm:gap-4 justify-center items-center w-full">
+                            <Link
+                                href="/store"
+                                className="btn btn-primary hero-ember-glow text-sm px-6 py-3 flex items-center gap-2"
+                                id="hero-cta-store"
+                            >
+                                <ShoppingBag className="w-4 h-4" />
+                                Shop Supplements
+                                <ArrowRight className="w-4 h-4" />
+                            </Link>
+                            <Link
+                                href="/book"
+                                className="btn btn-secondary text-sm px-6 py-3 border-[var(--color-accent)]/50 hover:border-[var(--color-accent)] hover:bg-[var(--color-accent)]/10"
+                                id="hero-cta-book"
+                            >
+                                Free Consultation
+                            </Link>
+                            <Link
+                                href="/services"
+                                className="btn-ghost text-sm px-5 py-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
+                                id="hero-cta-services"
+                            >
+                                Services
+                            </Link>
+                        </div>
+                        <p className="label tracking-[0.2em] text-[10px] sm:text-xs text-[var(--color-accent)] text-center uppercase m-0">
+                            Auburn, CA · Third-Party Tested · Science-Backed
+                        </p>
                     </div>
-                    <p className="label tracking-[0.25em] text-[var(--color-accent)] text-center mt-5">
-                        Auburn, CA · Third-Party Tested · Science-Backed
-                    </p>
                 </motion.div>
 
                 {/* Scroll hint */}
