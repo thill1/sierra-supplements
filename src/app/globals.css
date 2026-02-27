@@ -215,7 +215,7 @@ body {
 
 .btn-ghost {
   background: transparent;
-  color: var(--color-text-secondary);
+  color: #ffffff;
   padding: 0.5rem 1rem;
   transition: color 0.3s ease, text-shadow 0.3s ease;
 }
