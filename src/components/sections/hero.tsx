@@ -64,17 +64,31 @@ export function HeroSection() {
                 className="absolute inset-0"
                 style={{ y: bgY }}
             >
-                <div className="absolute inset-0 hero-ken-burns">
-                    <Image
-                        src="/images/hero-brand.png"
-                        alt="Sierra Strength Supplements – Mountain landscape with dramatic sky"
-                        fill
-                        priority
-                        className="object-contain sm:object-cover object-top sm:object-[50%_-64px]"
-                        sizes="100vw"
-                    />
-                    {/* Dark fill behind the contained image on mobile */}
-                    <div className="absolute inset-0 -z-10 bg-[#0a0a0f]" />
+                <div className="absolute inset-0 hero-ken-burns bg-[#0a0a0f]">
+                    {/* Cloud Background Fill for Mobile Header (replaces black band) */}
+                    <div className="absolute inset-x-0 top-0 h-[120px] sm:hidden">
+                        <Image
+                            src="/images/hero-brand.png"
+                            alt=""
+                            fill
+                            priority
+                            className="object-cover object-top opacity-70"
+                            sizes="100vw"
+                        />
+                        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#0a0a0f] to-transparent" />
+                    </div>
+
+                    {/* Main hero image container pushed down 64px on mobile so peak is at nav bottom */}
+                    <div className="absolute inset-x-0 top-16 bottom-0 sm:inset-0">
+                        <Image
+                            src="/images/hero-brand.png"
+                            alt="Sierra Strength Supplements – Mountain landscape with dramatic sky"
+                            fill
+                            priority
+                            className="object-contain sm:object-cover object-top sm:object-[50%_-64px]"
+                            sizes="100vw"
+                        />
+                    </div>
                 </div>
 
                 {/* Gradient overlay */}
@@ -124,7 +138,7 @@ export function HeroSection() {
             >
                 {/* CTA overlay */}
                 <motion.div
-                    className="group rounded-2xl p-5 sm:p-6 mt-[25vh] sm:mt-[25vh] mb-auto w-[90%] max-w-3xl mx-auto bg-black/20 backdrop-blur-md border border-white/10 transition-all duration-300 hover:border-[var(--color-accent)]/50 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)]"
+                    className="group rounded-2xl p-5 sm:p-6 mt-[45vh] sm:mt-[25vh] mb-auto w-[90%] max-w-3xl mx-auto bg-black/20 backdrop-blur-md border border-white/10 transition-all duration-300 hover:border-[var(--color-accent)]/50 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)]"
                     variants={fadeUp}
                 >
                     <div className="flex flex-col gap-3 justify-center items-center">
