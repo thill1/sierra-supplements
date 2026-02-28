@@ -63,44 +63,34 @@ export const siteConfig = {
   // ── Services ───────────────────────────────────
   services: [
     {
-      slug: "custom-supplement-plans",
-      title: "Custom Supplement Plans",
+      slug: "sierra-stack-systems",
+      title: "Sierra Stack Systems",
       shortDescription:
-        "Personalized vitamin & supplement protocols based on your unique goals.",
+        "Custom Supplement Plans. Personalized vitamin & supplement protocols based on your unique goals.",
       description:
         "Our expert nutritionists create tailored supplement stacks designed around your health goals, lifestyle, and lab results. Whether you're training for a marathon or optimizing daily energy, we build a plan that works for you.",
       icon: "Dumbbell",
       image: "/images/services/custom-plans.jpg",
     },
     {
-      slug: "nutrition-coaching",
-      title: "Nutrition Coaching",
+      slug: "high-elevation-coaching",
+      title: "High Elevation Coaching",
       shortDescription:
-        "1-on-1 coaching to transform your diet and fuel your performance.",
+        "Workouts plus Nutrition. 1-on-1 coaching to transform your diet and fuel your performance.",
       description:
         "Work directly with a certified nutrition coach who understands the demands of mountain living. We combine whole-food strategies with targeted supplementation to unlock your full potential.",
       icon: "Apple",
       image: "/images/services/nutrition-coaching.jpg",
     },
     {
-      slug: "group-wellness",
-      title: "Group Wellness Programs",
+      slug: "ascent-nutrition",
+      title: "Ascent Nutrition",
       shortDescription:
-        "Team-based wellness challenges and corporate health packages.",
+        "Nutrition Only. Focused nutritional guidance to fuel your daily life and training.",
       description:
-        "Bring your team together with group supplement programs, wellness workshops, and accountability challenges. Ideal for gyms, corporate wellness, and community groups.",
+        "A dedicated program to transform your diet. Get personalized macro and micro-nutrient plans with supplement integration, designed specifically for your body and goals.",
       icon: "Users",
       image: "/images/services/group-wellness.jpg",
-    },
-    {
-      slug: "online-store",
-      title: "Online Supplement Store",
-      shortDescription:
-        "Curated, third-party-tested supplements shipped to your door.",
-      description:
-        "Browse our carefully curated selection of supplements, all third-party tested for purity and potency. From protein to adaptogens, we stock only what we'd take ourselves.",
-      icon: "ShoppingBag",
-      image: "/images/services/online-store.jpg",
     },
   ],
 
