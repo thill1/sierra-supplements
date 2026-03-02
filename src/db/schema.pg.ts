@@ -46,6 +46,8 @@ export const productCategories = [
     "fat-burners",
     "sleep-recovery",
     "joint-support",
+    "bars",
+    "carbs",
 ] as const;
 
 export type ProductCategory = (typeof productCategories)[number];

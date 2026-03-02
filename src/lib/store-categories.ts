@@ -12,6 +12,8 @@ export const STORE_CATEGORIES = [
     { slug: "fat-burners", label: "Fat Burners" },
     { slug: "sleep-recovery", label: "Sleep & Recovery" },
     { slug: "joint-support", label: "Joint Support" },
+    { slug: "bars", label: "Bars" },
+    { slug: "carbs", label: "Carbs" },
 ] as const;
 
 export type StoreCategorySlug = (typeof STORE_CATEGORIES)[number]["slug"];

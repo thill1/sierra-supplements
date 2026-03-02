@@ -1,40 +1,309 @@
 /**
- * Seed mock supplement products for local SQLite.
+ * Seed products from Sierra Strength Inventory.
  * Run with: pnpm db:seed
+ *
+ * Retail prices sourced from sierra Strength Inventory.numbers
  */
 
 import { db } from "./index";
 import { products } from "./schema.pg";
 
-const MOCK_PRODUCTS = [
-    { slug: "peak-energy-preworkout", name: "Peak Energy Pre-Workout", shortDescription: "Explosive energy & focus for your toughest training", description: "Clinically dosed caffeine, beta-alanine, and citrulline malate for sustained energy, pump, and mental clarity. No crash, no jitters.", price: 3999, compareAtPrice: 4499, category: "pre-workout", image: "/images/store/preworkout.jpg", published: true, featured: true },
-    { slug: "mountain-fuel-stim-free", name: "Mountain Fuel Stim-Free Pre-Workout", shortDescription: "Pump and endurance without caffeine", description: "Non-stimulant pre-workout for evening sessions or caffeine-sensitive athletes.", price: 3499, category: "pre-workout", image: "/images/store/stim-free.jpg", published: true },
-    { slug: "sierra-pump-formula", name: "Sierra Pump Formula", shortDescription: "Maximum vascularity and muscle fullness", description: "Nitric oxide boosters and vasodilators for skin-splitting pumps.", price: 4299, compareAtPrice: 4999, category: "pre-workout", image: "/images/store/pump.jpg", published: true, featured: true },
-    { slug: "creatine-monohydrate", name: "Creatine Monohydrate 500g", shortDescription: "The gold standard for strength & power", description: "99.9% pure creatine monohydrate. Scientifically proven to increase strength and power.", price: 2499, category: "creatine", image: "/images/store/creatine-mono.jpg", published: true, featured: true },
-    { slug: "creatine-hcl", name: "Creatine HCl 120 Servings", shortDescription: "Improved solubility, no loading phase", description: "Creatine hydrochloride for better absorption. Lower dose per serving.", price: 3999, category: "creatine", image: "/images/store/creatine-hcl.jpg", published: true },
-    { slug: "creatine-capsules", name: "Creatine Capsules 200ct", shortDescription: "No scoop, no mess, no taste", description: "Pre-measured creatine monohydrate in easy-to-swallow capsules.", price: 2999, category: "creatine", image: "/images/store/creatine-caps.jpg", published: true },
-    { slug: "whey-protein-vanilla", name: "Whey Protein Isolate - Vanilla", shortDescription: "24g protein, 1g sugar, delicious", description: "Premium whey protein isolate from grass-fed cows. Third-party tested.", price: 5499, compareAtPrice: 5999, category: "protein", image: "/images/store/whey-vanilla.jpg", published: true, featured: true },
-    { slug: "whey-protein-chocolate", name: "Whey Protein Isolate - Chocolate", shortDescription: "Rich chocolate, 24g protein", description: "Our best-selling flavor. Premium whey isolate with real cocoa.", price: 5499, category: "protein", image: "/images/store/whey-chocolate.jpg", published: true },
-    { slug: "plant-protein-blend", name: "Plant Protein Blend - Vanilla", shortDescription: "Pea & rice blend, 22g protein", description: "Vegan-friendly protein from pea and rice. Complete amino acid profile.", price: 4999, category: "protein", image: "/images/store/plant-protein.jpg", published: true },
-    { slug: "fish-oil-omega-3", name: "Fish Oil Omega-3 1000mg", shortDescription: "EPA & DHA for heart and joints", description: "Quality fish oil with high EPA and DHA.", price: 2999, category: "omega-3", image: "/images/store/fish-oil.jpg", published: true, featured: true },
-    { slug: "electrolyte-mix", name: "Electrolyte Mix - Orange", shortDescription: "Sodium, potassium, magnesium", description: "Replenish what you lose in sweat. Perfect for long runs.", price: 2799, category: "electrolytes", image: "/images/store/electrolytes.jpg", published: true },
-    { slug: "collagen-peptides", name: "Collagen Peptides Unflavored", shortDescription: "20g collagen per serving", description: "Grass-fed bovine collagen for joint, skin, and gut health.", price: 4299, category: "collagen", image: "/images/store/collagen.jpg", published: true },
-    { slug: "sleep-support", name: "Sleep & Recovery Complex", shortDescription: "Melatonin, magnesium, GABA", description: "Fall asleep faster and wake refreshed.", price: 3299, category: "sleep-recovery", image: "/images/store/sleep.jpg", published: true },
+// Products from inventory spreadsheet – price in cents (retail)
+const INVENTORY_PRODUCTS = [
+    // Protein Powders – $49
+    {
+        slug: "allmax-pb-choc",
+        name: "Allmax Protein - PB Chocolate",
+        shortDescription: "Peanut butter chocolate protein",
+        description: "Premium protein from Allmax. Peanut butter chocolate flavor.",
+        price: 4900,
+        category: "protein",
+        image: "/images/store/protein.jpg",
+        published: true,
+        featured: true,
+    },
+    {
+        slug: "allmax-choc-mint",
+        name: "Allmax Protein - Chocolate Mint",
+        shortDescription: "Chocolate mint protein",
+        description: "Premium protein from Allmax. Chocolate mint flavor.",
+        price: 4900,
+        category: "protein",
+        image: "/images/store/protein.jpg",
+        published: true,
+    },
+    {
+        slug: "muscle-sport-monster-cookie",
+        name: "Muscle Sport Protein - Monster Cookie",
+        shortDescription: "Monster cookie flavor protein",
+        description: "Muscle Sport protein. Monster cookie flavor.",
+        price: 4900,
+        category: "protein",
+        image: "/images/store/protein.jpg",
+        published: true,
+    },
+    {
+        slug: "muscle-sport-white-choc-pb",
+        name: "Muscle Sport Protein - White Chocolate PB",
+        shortDescription: "White chocolate peanut butter protein",
+        description: "Muscle Sport protein. White chocolate peanut butter flavor.",
+        price: 4900,
+        category: "protein",
+        image: "/images/store/protein.jpg",
+        published: true,
+    },
+    {
+        slug: "muscle-sport-dubai-choc",
+        name: "Muscle Sport Protein - Dubai Chocolate",
+        shortDescription: "Dubai chocolate flavor protein",
+        description: "Muscle Sport protein. Dubai chocolate flavor.",
+        price: 4900,
+        category: "protein",
+        image: "/images/store/protein.jpg",
+        published: true,
+    },
+    {
+        slug: "muscle-sport-fluffer-nutter",
+        name: "Muscle Sport Protein - Fluffer Nutter",
+        shortDescription: "Fluffer nutter flavor protein",
+        description: "Muscle Sport protein. Fluffer nutter flavor.",
+        price: 4900,
+        category: "protein",
+        image: "/images/store/protein.jpg",
+        published: true,
+    },
+    {
+        slug: "muscle-sport-carrot-cake",
+        name: "Muscle Sport Protein - Carrot Cake",
+        shortDescription: "Carrot cake flavor protein",
+        description: "Muscle Sport protein. Carrot cake flavor.",
+        price: 4900,
+        category: "protein",
+        image: "/images/store/protein.jpg",
+        published: true,
+    },
+    // Pre-Workout Stim – $39
+    {
+        slug: "afterdark-snowcone",
+        name: "Afterdark Pre-Workout - Snowcone",
+        shortDescription: "Stimulant pre-workout, snowcone flavor",
+        description: "Afterdark pre-workout with caffeine. Snowcone flavor.",
+        price: 3900,
+        category: "pre-workout",
+        image: "/images/store/preworkout.jpg",
+        published: true,
+        featured: true,
+    },
+    // Pre-Workout Non-Stim – $39
+    {
+        slug: "pump-sauce-gummy-worm",
+        name: "Pump Sauce - Gummy Worm",
+        shortDescription: "Non-stim pump formula",
+        description: "Pump Sauce non-stimulant pre-workout. Gummy worm flavor.",
+        price: 3900,
+        category: "pre-workout",
+        image: "/images/store/stim-free.jpg",
+        published: true,
+    },
+    {
+        slug: "pump-sauce-clappin-peach",
+        name: "Pump Sauce - Clappin Peach",
+        shortDescription: "Non-stim pump formula",
+        description: "Pump Sauce non-stimulant pre-workout. Clappin peach flavor.",
+        price: 3900,
+        category: "pre-workout",
+        image: "/images/store/stim-free.jpg",
+        published: true,
+    },
+    {
+        slug: "pump-sauce-gummy-shark",
+        name: "Pump Sauce - Gummy Shark",
+        shortDescription: "Non-stim pump formula",
+        description: "Pump Sauce non-stimulant pre-workout. Gummy shark flavor.",
+        price: 3900,
+        category: "pre-workout",
+        image: "/images/store/stim-free.jpg",
+        published: true,
+    },
+    // Cream of Rice – $25
+    {
+        slug: "elev8-peanut-butter",
+        name: "Elev8 Cream of Rice - Peanut Butter",
+        shortDescription: "Fast-digesting carb, peanut butter",
+        description: "Elev8 cream of rice. Peanut butter flavor. Ideal pre-workout carb.",
+        price: 2500,
+        category: "carbs",
+        image: "/images/store/electrolytes.jpg",
+        published: true,
+    },
+    {
+        slug: "elev8-carrot-cake",
+        name: "Elev8 Cream of Rice - Carrot Cake",
+        shortDescription: "Fast-digesting carb, carrot cake",
+        description: "Elev8 cream of rice. Carrot cake flavor. Ideal pre-workout carb.",
+        price: 2500,
+        category: "carbs",
+        image: "/images/store/electrolytes.jpg",
+        published: true,
+    },
+    {
+        slug: "elev8-cookie-butter",
+        name: "Elev8 Cream of Rice - Cookie Butter",
+        shortDescription: "Fast-digesting carb, cookie butter",
+        description: "Elev8 cream of rice. Cookie butter flavor. Ideal pre-workout carb.",
+        price: 2500,
+        category: "carbs",
+        image: "/images/store/electrolytes.jpg",
+        published: true,
+    },
+    // Vitamins
+    {
+        slug: "liver-organ-defender",
+        name: "Liver and Organ Defender",
+        shortDescription: "Organ support supplement",
+        description: "Liver and organ support supplement.",
+        price: 3900,
+        category: "vitamins",
+        image: "/images/store/fish-oil.jpg",
+        published: true,
+    },
+    {
+        slug: "liver-kidney-revolution",
+        name: "Liver and Kidney Revolution (60 caps)",
+        shortDescription: "Liver and kidney support",
+        description: "Liver and kidney support. 60 capsules.",
+        price: 2000,
+        category: "vitamins",
+        image: "/images/store/fish-oil.jpg",
+        published: true,
+    },
+    {
+        slug: "digestive-enzymes-revolution",
+        name: "Digestive Enzymes Revolution 60 ct",
+        shortDescription: "Digestive enzyme support",
+        description: "Digestive enzymes. 60 count.",
+        price: 2000,
+        category: "vitamins",
+        image: "/images/store/fish-oil.jpg",
+        published: true,
+    },
+    // Bars – $4
+    {
+        slug: "anabar-fluff-n-butter",
+        name: "Anabar - Fluff n Butter",
+        shortDescription: "Protein bar, fluff n butter",
+        description: "Anabar protein bar. Fluff n butter flavor.",
+        price: 400,
+        category: "bars",
+        image: "/images/store/electrolytes.jpg",
+        published: true,
+    },
+    // Aminos – $29
+    {
+        slug: "amino-hydration-patriot-pop",
+        name: "Amino+Hydration - Patriot Pop",
+        shortDescription: "Amino acids with hydration",
+        description: "Amino acids with hydration support. Patriot pop flavor.",
+        price: 2900,
+        category: "bcaas",
+        image: "/images/store/electrolytes.jpg",
+        published: true,
+    },
+    {
+        slug: "amino-hydration-italian-ice",
+        name: "Amino+Hydration - Italian Ice",
+        shortDescription: "Amino acids with hydration",
+        description: "Amino acids with hydration support. Italian ice flavor.",
+        price: 2900,
+        category: "bcaas",
+        image: "/images/store/electrolytes.jpg",
+        published: true,
+    },
+    // Creatine – $29
+    {
+        slug: "creatine-hydration-blueberry-lemon",
+        name: "Creatine+Hydration - Blueberry Lemon",
+        shortDescription: "Creatine with hydration",
+        description: "Creatine with hydration. Blueberry lemon flavor.",
+        price: 2900,
+        category: "creatine",
+        image: "/images/store/creatine-mono.jpg",
+        published: true,
+        featured: true,
+    },
+    {
+        slug: "creatine-hydration-italian-lemon-ice",
+        name: "Creatine+Hydration - Italian Lemon Ice",
+        shortDescription: "Creatine with hydration",
+        description: "Creatine with hydration. Italian lemon ice flavor.",
+        price: 2900,
+        category: "creatine",
+        image: "/images/store/creatine-mono.jpg",
+        published: true,
+    },
+    // Carb Powder – $39
+    {
+        slug: "karbolyn-unflavored",
+        name: "Karbolyn Carb Powder - Unflavored",
+        shortDescription: "Fast-digesting carb powder",
+        description: "Karbolyn fast-digesting carb powder. Unflavored.",
+        price: 3900,
+        category: "carbs",
+        image: "/images/store/electrolytes.jpg",
+        published: true,
+    },
+    // L-Carnitine – $29
+    {
+        slug: "l-carnitine-miami-sunrise",
+        name: "L-Carnitine - Miami Sunrise",
+        shortDescription: "L-Carnitine performance support",
+        description: "L-Carnitine. Miami sunrise flavor.",
+        price: 2900,
+        category: "fat-burners",
+        image: "/images/store/fish-oil.jpg",
+        published: true,
+    },
+    {
+        slug: "l-carnitine-patriot-pop",
+        name: "L-Carnitine - Patriot Pop",
+        shortDescription: "L-Carnitine performance support",
+        description: "L-Carnitine. Patriot pop flavor.",
+        price: 2900,
+        category: "fat-burners",
+        image: "/images/store/fish-oil.jpg",
+        published: true,
+    },
 ];
 
 async function seed() {
-    console.log("Seeding products into Supabase Postgres...");
-    for (const p of MOCK_PRODUCTS) {
+    console.log("Seeding products from Sierra Strength Inventory...");
+    for (const p of INVENTORY_PRODUCTS) {
         try {
-            await db.insert(products).values({
-                ...p,
-                inStock: true,
-            }).onConflictDoNothing({ target: products.slug });
+            await db
+                .insert(products)
+                .values({
+                    ...p,
+                    inStock: true,
+                })
+                .onConflictDoUpdate({
+                    target: products.slug,
+                    set: {
+                        name: p.name,
+                        shortDescription: p.shortDescription,
+                        description: p.description,
+                        price: p.price,
+                        category: p.category,
+                        image: p.image,
+                        published: p.published,
+                        featured: p.featured,
+                        updatedAt: new Date(),
+                    },
+                });
         } catch (e) {
-            // Ignore duplicates
+            console.error(`Failed to seed ${p.slug}:`, e);
         }
     }
-    console.log(`Seeded ${MOCK_PRODUCTS.length} products.`);
+    console.log(`Seeded ${INVENTORY_PRODUCTS.length} products.`);
 }
 
 seed().catch((e) => {
