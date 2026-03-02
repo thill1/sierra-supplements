@@ -3,7 +3,7 @@ import { Pool } from "pg";
 import * as schema from "./schema.pg";
 
 // Supabase-Vercel integration injects POSTGRES_URL; local .env uses DATABASE_URL
-const dbUrl =
+let dbUrl =
     process.env.DATABASE_URL ||
     process.env.POSTGRES_URL_NON_POOLING ||
     process.env.POSTGRES_URL;
@@ -14,6 +14,12 @@ if (!dbUrl && !isBuild) {
     throw new Error(
         "No database URL found. Set DATABASE_URL or connect the Supabase-Vercel integration.",
     );
+}
+
+// For Supabase pooler on Vercel serverless: use port 6543 and add pgbouncer=true
+if (dbUrl && dbUrl.includes("supabase") && dbUrl.includes("6543") && !dbUrl.includes("pgbouncer=true")) {
+    const sep = dbUrl.includes("?") ? "&" : "?";
+    dbUrl = `${dbUrl}${sep}pgbouncer=true`;
 }
 
 // Strip sslmode param from URL (we configure SSL via the pool options)
