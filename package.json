@@ -11,6 +11,11 @@
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/db/seed-products.ts"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.1",
     "@libsql/client": "^0.17.0",
