@@ -30,8 +30,7 @@ export function ServicesGrid() {
                         Peak Performance <span className="gradient-text">Services</span>
                     </h2>
                     <p className="body-lg max-w-2xl mx-auto">
-                        From custom supplement plans to nutrition coaching and wellness testing,
-                        we offer everything you need to perform at your best in the mountains and beyond.
+                        From custom supplement plans to nutrition coaching, we offer everything you need to perform at your best in the mountains and beyond.
                     </p>
                 </FadeIn>
 

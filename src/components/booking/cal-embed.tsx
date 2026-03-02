@@ -12,15 +12,15 @@ declare global {
 export function CalEmbed() {
     useEffect(() => {
         (function (C: any, A: any, L: any) {
-            let p = function (a: any, ar: any) {
+            const p = function (a: any, ar: any) {
                 a.q.push(ar);
             };
-            let d = C.document;
+            const d = C.document;
             C.Cal =
                 C.Cal ||
                 function () {
-                    let cal = C.Cal;
-                    let ar = arguments;
+                    const cal = C.Cal;
+                    const ar = arguments;
                     if (!cal.loaded) {
                         cal.q = cal.q || [];
                         cal.loaded = true;
@@ -41,10 +41,10 @@ export function CalEmbed() {
                     }
                     p(cal, ar);
                 };
-            let j = d.createElement("script");
+            const j = d.createElement("script");
             j.src = A;
             j.async = true;
-            let c = d.getElementsByTagName("script")[0];
+            const c = d.getElementsByTagName("script")[0];
             if (c && c.parentNode) {
                 c.parentNode.insertBefore(j, c);
             } else {

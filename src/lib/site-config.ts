@@ -66,7 +66,7 @@ export const siteConfig = {
       slug: "sierra-stack-systems",
       title: "Sierra Stack Systems",
       shortDescription:
-        "Custom Supplement Plans. Personalized vitamin & supplement protocols based on your unique goals.",
+        "Custom supplement plans. Personalized vitamin & supplement protocols based on your unique goals.",
       description:
         "Our expert nutritionists create tailored supplement stacks designed around your health goals, lifestyle, and lab results. Whether you're training for a marathon or optimizing daily energy, we build a plan that works for you.",
       icon: "Dumbbell",
@@ -74,19 +74,19 @@ export const siteConfig = {
     },
     {
       slug: "high-elevation-coaching",
-      title: "High Elevation Coaching",
+      title: "High Elevation coaching",
       shortDescription:
-        "Workouts plus Nutrition. 1-on-1 coaching to transform your diet and fuel your performance.",
+        "Workouts plus nutrition. 1-on-1 coaching to transform your diet and fuel your performance.",
       description:
         "Work directly with a certified nutrition coach who understands the demands of mountain living. We combine whole-food strategies with targeted supplementation to unlock your full potential.",
       icon: "Apple",
       image: "/images/services/nutrition-coaching.jpg",
     },
     {
-      slug: "ascent-nutrition",
-      title: "Ascent Nutrition",
+      slug: "assent-nutrition",
+      title: "Assent Nutrition",
       shortDescription:
-        "Nutrition Only. Focused nutritional guidance to fuel your daily life and training.",
+        "Nutrition only. Focused nutritional guidance to fuel your daily life and training.",
       description:
         "A dedicated program to transform your diet. Get personalized macro and micro-nutrient plans with supplement integration, designed specifically for your body and goals.",
       icon: "Users",
