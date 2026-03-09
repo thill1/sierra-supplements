@@ -52,6 +52,25 @@ export const productCategories = [
 
 export type ProductCategory = (typeof productCategories)[number];
 
+// ─── Orders ────────────────────────────────────────────────────
+export const orders = pgTable("orders", {
+    id: serial("id").primaryKey(),
+    email: text("email").notNull(),
+    name: text("name"),
+    phone: text("phone"),
+    addressLine1: text("address_line1"),
+    addressLine2: text("address_line2"),
+    city: text("city"),
+    state: text("state"),
+    zip: text("zip"),
+    items: text("items").notNull(), // JSON: [{ slug, name, price, quantity }]
+    subtotal: integer("subtotal").notNull(), // cents
+    notes: text("notes"),
+    status: text("status").default("pending"),
+    createdAt: timestamp("created_at").defaultNow(),
+});
+
+// ─── Products ──────────────────────────────────────────────────
 export const products = pgTable("products", {
     id: serial("id").primaryKey(),
     slug: text("slug").notNull().unique(),

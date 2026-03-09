@@ -2,6 +2,7 @@
 export {
     events,
     leads,
+    orders,
     products,
     productCategories,
     type ProductCategory,

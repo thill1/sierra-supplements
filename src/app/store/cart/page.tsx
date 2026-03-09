@@ -125,9 +125,6 @@ export default function CartPage() {
                             >
                                 Proceed to Checkout
                             </Link>
-                            <p className="text-xs text-center mt-4 text-[var(--color-text-muted)]">
-                                Checkout coming soon — this is a placeholder.
-                            </p>
                         </div>
                     </div>
                 </div>

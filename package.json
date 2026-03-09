@@ -3,13 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx src/db/seed-products.ts"
+    "db:seed": "tsx src/db/seed-products.ts",
+    "setup:check": "node scripts/check-env.js",
+    "setup:vercel": "echo 'See docs/DEPLOYMENT.md for Vercel env setup'"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

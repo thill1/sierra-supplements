@@ -9,13 +9,29 @@ import type { Metadata } from "next";
 
 type Props = { params: Promise<{ slug: string }> };
 
+async function getProductBySlug(slug: string) {
+    try {
+        const { db } = await import("@/db");
+        const { products } = await import("@/db/schema");
+        const { eq, and } = await import("drizzle-orm");
+        const result = await db
+            .select()
+            .from(products)
+            .where(and(eq(products.slug, slug), eq(products.published, true)))
+            .limit(1);
+        return result[0] ?? null;
+    } catch {
+        return null;
+    }
+}
+
 export function generateStaticParams() {
     return HARDCODED_PRODUCTS.map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
-    const product = getHardcodedProductBySlug(slug);
+    const product = (await getProductBySlug(slug)) ?? getHardcodedProductBySlug(slug);
     if (!product) return {};
     return {
         title: product.name,
@@ -25,7 +41,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductDetailPage({ params }: Props) {
     const { slug } = await params;
-    const product = getHardcodedProductBySlug(slug);
+    const dbProduct = await getProductBySlug(slug);
+    const product = dbProduct ?? getHardcodedProductBySlug(slug);
     if (!product) notFound();
 
     const priceFormatted = (product.price / 100).toFixed(2);
