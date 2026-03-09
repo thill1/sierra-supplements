@@ -3,21 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingCart } from "lucide-react";
 import { AddToCartButton } from "./add-to-cart-button";
 import { formatCategory } from "@/lib/store-categories";
-
-type Product = {
-    id: number;
-    slug: string;
-    name: string;
-    shortDescription: string | null;
-    price: number;
-    compareAtPrice: number | null;
-    category: string;
-    image: string | null;
-    featured: boolean | null;
-};
+import type { Product } from "@/types/store";
 
 export function ProductCard({ product }: { product: Product }) {
     const [imgError, setImgError] = useState(false);
@@ -83,13 +71,7 @@ export function ProductCard({ product }: { product: Product }) {
         <div className="px-4 pb-4" onClick={(e) => e.preventDefault()}>
             <AddToCartButton
                 compact
-                product={{
-                    id: product.id,
-                    slug: product.slug,
-                    name: product.name,
-                    price: product.price,
-                    image: product.image,
-                }}
+                product={product}
             />
         </div>
         </div>

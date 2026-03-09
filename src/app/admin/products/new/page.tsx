@@ -167,7 +167,7 @@ export default function AdminNewProductPage() {
                     <input
                         type="text"
                         className="input"
-                        placeholder="/images/store/product.jpg"
+                        placeholder="/images/store/protein.svg"
                         value={form.image}
                         onChange={(e) => setForm({ ...form, image: e.target.value })}
                     />

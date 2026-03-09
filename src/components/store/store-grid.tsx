@@ -1,18 +1,46 @@
 import { ProductCard } from "./product-card";
 import { getHardcodedProducts } from "@/lib/products-data";
+import type { Product } from "@/types/store";
 
-async function getProductsFromDb(category?: string | null) {
+function dbRowToProduct(row: {
+    id: number;
+    slug: string;
+    name: string;
+    shortDescription: string | null;
+    description: string;
+    price: number;
+    compareAtPrice: number | null;
+    category: string;
+    image: string | null;
+    featured: boolean | null;
+}): Product {
+    return {
+        id: row.id,
+        slug: row.slug,
+        name: row.name,
+        shortDescription: row.shortDescription,
+        description: row.description,
+        price: row.price,
+        compareAtPrice: row.compareAtPrice,
+        category: row.category,
+        image: row.image,
+        featured: row.featured ?? false,
+    };
+}
+
+async function getProductsFromDb(category?: string | null): Promise<Product[] | null> {
     try {
         const { db } = await import("@/db");
         const { products } = await import("@/db/schema");
         const { eq, desc, and } = await import("drizzle-orm");
         const conditions = [eq(products.published, true)];
         if (category) conditions.push(eq(products.category, category));
-        return await db
+        const rows = await db
             .select()
             .from(products)
             .where(and(...conditions))
             .orderBy(desc(products.featured), desc(products.createdAt));
+        return rows.map(dbRowToProduct);
     } catch {
         return null;
     }
@@ -35,7 +63,7 @@ export async function StoreGrid({
                     </p>
                 </div>
             ) : (
-                items.map((product: { id: number; slug: string; name: string; shortDescription: string | null; price: number; compareAtPrice: number | null; category: string; image: string | null; featured: boolean }) => (
+                items.map((product: Product) => (
                     <ProductCard
                         key={product.id}
                         product={product}

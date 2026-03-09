@@ -8,9 +8,7 @@ import {
     Trash2,
     ExternalLink,
 } from "lucide-react";
-import { STORE_CATEGORIES } from "@/lib/store-categories";
-
-type Product = {
+type AdminProduct = {
     id: number;
     slug: string;
     name: string;
@@ -25,7 +23,7 @@ type Product = {
 };
 
 export default function AdminProductsPage() {
-    const [products, setProducts] = useState<Product[]>([]);
+    const [products, setProducts] = useState<AdminProduct[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 

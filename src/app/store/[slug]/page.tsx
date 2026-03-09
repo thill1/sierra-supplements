@@ -6,10 +6,11 @@ import { formatCategory } from "@/lib/store-categories";
 import { AddToCartButton } from "@/components/store/add-to-cart-button";
 import { getHardcodedProductBySlug, HARDCODED_PRODUCTS } from "@/lib/products-data";
 import type { Metadata } from "next";
+import type { Product } from "@/types/store";
 
 type Props = { params: Promise<{ slug: string }> };
 
-async function getProductBySlug(slug: string) {
+async function getProductBySlug(slug: string): Promise<Product | null> {
     try {
         const { db } = await import("@/db");
         const { products } = await import("@/db/schema");
@@ -19,7 +20,20 @@ async function getProductBySlug(slug: string) {
             .from(products)
             .where(and(eq(products.slug, slug), eq(products.published, true)))
             .limit(1);
-        return result[0] ?? null;
+        const row = result[0];
+        if (!row) return null;
+        return {
+            id: row.id,
+            slug: row.slug,
+            name: row.name,
+            shortDescription: row.shortDescription,
+            description: row.description,
+            price: row.price,
+            compareAtPrice: row.compareAtPrice,
+            category: row.category,
+            image: row.image,
+            featured: row.featured ?? false,
+        };
     } catch {
         return null;
     }
@@ -110,13 +124,7 @@ export default async function ProductDetailPage({ params }: Props) {
 
                         <div className="flex flex-wrap gap-4">
                             <AddToCartButton
-                                product={{
-                                    id: product.id,
-                                    slug: product.slug,
-                                    name: product.name,
-                                    price: product.price,
-                                    image: product.image,
-                                }}
+                                product={product}
                             />
                             <Link
                                 href="/book"

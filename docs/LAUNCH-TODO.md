@@ -1,8 +1,8 @@
 # Before Launch Checklist
 
-## ⚠️ Database setup required
+## Database (recommended for full features)
 
-The store currently uses **hardcoded products** so it works on Vercel without `DATABASE_URL`. Before launch you must:
+The store uses **db-first with hardcoded fallback** – it works without `DATABASE_URL`, but admin, leads, and orders need the database.
 
 1. **Add `DATABASE_URL` to Vercel**
    - Supabase → Project Settings → Database → Connection string (URI) → **Transaction** (port 6543)
@@ -15,9 +15,13 @@ The store currently uses **hardcoded products** so it works on Vercel without `D
    DATABASE_URL="your-pooler-uri" pnpm db:seed
    ```
 
-3. **Switch store back to database**
-   - Update `src/components/store/store-grid.tsx` to fetch from `db` instead of `getHardcodedProducts`
-   - Update `src/app/store/[slug]/page.tsx` to fetch from `db` instead of `getHardcodedProductBySlug`
-   - Remove or archive `src/lib/products-data.ts` (or keep as fallback)
+3. **Redeploy** on Vercel after env vars.
 
-4. **Redeploy** on Vercel after env vars and code changes.
+## Other env vars (Vercel)
+
+| Variable | Purpose |
+|----------|---------|
+| `NEXTAUTH_SECRET` | Auth sessions |
+| `NEXTAUTH_URL` | Production URL |
+| `RESEND_API_KEY` | Order + contact emails |
+| `ADMIN_EMAIL` | Where to send notifications |

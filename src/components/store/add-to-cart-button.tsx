@@ -3,20 +3,13 @@
 import { useState } from "react";
 import { ShoppingCart, Check } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
-
-type Product = {
-    id: number;
-    slug: string;
-    name: string;
-    price: number;
-    image: string | null;
-};
+import type { ProductCartPayload } from "@/types/store";
 
 export function AddToCartButton({
     product,
     compact = false,
 }: {
-    product: Product;
+    product: ProductCartPayload;
     compact?: boolean;
 }) {
     const { addItem } = useCart();

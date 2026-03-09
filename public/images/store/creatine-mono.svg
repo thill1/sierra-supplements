@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <rect width="400" height="400" fill="#1B2028"/>
+  <g fill="none" stroke="#D97706" stroke-width="2" opacity="0.4">
+    <rect x="140" y="100" width="120" height="160" rx="8"/>
+    <line x1="160" y1="140" x2="280" y2="140"/>
+  </g>
+  <text x="200" y="340" text-anchor="middle" fill="#A0AEC0" font-family="system-ui,sans-serif" font-size="24" font-weight="600">Creatine</text>
+</svg>

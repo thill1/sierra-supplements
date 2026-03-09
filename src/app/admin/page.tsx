@@ -1,6 +1,4 @@
-import { db } from "@/db";
-import { leads } from "@/db/schema";
-import { desc } from "drizzle-orm";
+import Link from "next/link";
 import {
     Users,
     TrendingUp,
@@ -9,9 +7,11 @@ import {
 } from "lucide-react";
 
 export default async function AdminDashboardPage() {
-    // Graceful fallback if DB isn't running yet during preview
-    let recentLeads: any[] = [];
+    let recentLeads: { id: number; name: string | null; email: string; source: string | null; status: string | null; createdAt: Date | null }[] = [];
     try {
+        const { db } = await import("@/db");
+        const { leads } = await import("@/db/schema");
+        const { desc } = await import("drizzle-orm");
         recentLeads = await db.select().from(leads).orderBy(desc(leads.createdAt)).limit(5);
     } catch (e) {
         console.warn("Could not fetch leads for dashboard", e);
@@ -48,9 +48,9 @@ export default async function AdminDashboardPage() {
             <div className="card !p-0 overflow-hidden">
                 <div className="px-6 py-4 border-b border-[var(--color-border-subtle)] flex items-center justify-between">
                     <h2 className="font-semibold">Recent Leads</h2>
-                    <button className="text-sm text-[var(--color-accent)] hover:underline">
+                    <Link href="/admin/leads" className="text-sm text-[var(--color-accent)] hover:underline">
                         View All
-                    </button>
+                    </Link>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">

@@ -166,6 +166,9 @@ export function Footer() {
                         <Link href="/terms" className="body-sm hover:text-[var(--color-accent)] transition-colors">
                             Terms of Service
                         </Link>
+                        <Link href="/shipping" className="body-sm hover:text-[var(--color-accent)] transition-colors">
+                            Shipping
+                        </Link>
                     </div>
                 </div>
             </div>

@@ -11,12 +11,14 @@ import {
     LogOut,
     Mountain,
     Package,
+    ShoppingBag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const sidebarLinks = [
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { label: "Products", href: "/admin/products", icon: Package },
+    { label: "Orders", href: "/admin/orders", icon: ShoppingBag },
     { label: "Leads", href: "/admin/leads", icon: Users },
     { label: "Content Blocks", href: "/admin/content", icon: FileText },
     { label: "Blog Editor", href: "/admin/blog", icon: MessageSquare },

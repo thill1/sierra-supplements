@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <rect width="400" height="400" fill="#1B2028"/>
+  <g fill="none" stroke="#D97706" stroke-width="2" opacity="0.4">
+    <ellipse cx="200" cy="180" rx="70" ry="40"/>
+    <path d="M130 180 Q200 140 270 180 Q200 220 130 180"/>
+  </g>
+  <text x="200" y="340" text-anchor="middle" fill="#A0AEC0" font-family="system-ui,sans-serif" font-size="24" font-weight="600">Fish Oil</text>
+</svg>

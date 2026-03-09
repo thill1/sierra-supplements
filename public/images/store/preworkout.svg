@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <rect width="400" height="400" fill="#1B2028"/>
+  <g fill="none" stroke="#D97706" stroke-width="2" opacity="0.4">
+    <path d="M200 100 L200 200 M170 170 L200 200 L230 170 M180 120 L200 200 L220 120"/>
+  </g>
+  <text x="200" y="340" text-anchor="middle" fill="#A0AEC0" font-family="system-ui,sans-serif" font-size="24" font-weight="600">Pre-Workout</text>
+</svg>
