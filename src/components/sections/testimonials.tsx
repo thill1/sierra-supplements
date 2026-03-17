@@ -2,9 +2,15 @@
 
 import { Star, Quote } from "lucide-react";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/ui/motion";
-import { siteConfig } from "@/lib/site-config";
+import type { Testimonial } from "@/lib/testimonials";
 
-export function TestimonialsSection() {
+type Props = {
+    testimonials?: Testimonial[];
+};
+
+export function TestimonialsSection({ testimonials: propsTestimonials }: Props) {
+    const testimonials = propsTestimonials ?? [];
+
     return (
         <section className="section-padding bg-[var(--color-bg-elevated)]">
             <div className="section-container">
@@ -17,7 +23,7 @@ export function TestimonialsSection() {
                 </FadeIn>
 
                 <StaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {siteConfig.testimonials.map((t, i) => (
+                    {testimonials.map((t, i) => (
                         <StaggerItem key={i}>
                             <div className="card h-full flex flex-col">
                                 <Quote className="w-8 h-8 text-[var(--color-accent)] opacity-30 mb-4" />

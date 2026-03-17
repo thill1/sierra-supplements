@@ -54,7 +54,6 @@ export const siteConfig = {
     { label: "Home", href: "/" },
     { label: "Store", href: "/store" },
     { label: "Services", href: "/services" },
-    { label: "Pricing", href: "/pricing" },
     { label: "About", href: "/about" },
     { label: "Blog", href: "/blog" },
     { label: "Contact", href: "/contact" },
@@ -79,17 +78,17 @@ export const siteConfig = {
         "Workouts plus nutrition. 1-on-1 coaching to transform your diet and fuel your performance.",
       description:
         "Work directly with a certified nutrition coach who understands the demands of mountain living. We combine whole-food strategies with targeted supplementation to unlock your full potential.",
-      icon: "Apple",
+      icon: "Users",
       image: "/images/services/nutrition-coaching.jpg",
     },
     {
-      slug: "assent-nutrition",
-      title: "Assent Nutrition",
+      slug: "ascent-nutrition",
+      title: "Ascent Nutrition",
       shortDescription:
         "Nutrition only. Focused nutritional guidance to fuel your daily life and training.",
       description:
         "A dedicated program to transform your diet. Get personalized macro and micro-nutrient plans with supplement integration, designed specifically for your body and goals.",
-      icon: "Users",
+      icon: "Apple",
       image: "/images/services/group-wellness.jpg",
     },
   ],

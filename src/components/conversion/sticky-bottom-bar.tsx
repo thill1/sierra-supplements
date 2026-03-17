@@ -33,14 +33,14 @@ export function StickyBottomBar() {
     ];
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden glass border-t border-[var(--color-border)]">
+        <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden glass border-t border-[var(--color-border)] pb-[env(safe-area-inset-bottom)]">
             <div className="grid grid-cols-4 gap-0">
                 {actions.map(({ label, icon: Icon, href, id }) => (
                     <a
                         key={id}
                         id={id}
                         href={href}
-                        className="flex flex-col items-center justify-center py-3 gap-1 hover:bg-[var(--color-bg-muted)] transition-colors active:bg-[var(--color-accent-subtle)]"
+                        className="flex flex-col items-center justify-center py-3 gap-1 min-h-[52px] hover:bg-[var(--color-bg-muted)] transition-colors active:bg-[var(--color-accent-subtle)]"
                     >
                         <Icon className="w-5 h-5 text-[var(--color-accent)]" />
                         <span className="text-xs font-medium text-[var(--color-text-secondary)]">

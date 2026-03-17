@@ -64,9 +64,23 @@ export const orders = pgTable("orders", {
     state: text("state"),
     zip: text("zip"),
     items: text("items").notNull(), // JSON: [{ slug, name, price, quantity }]
-    subtotal: integer("subtotal").notNull(), // cents
+    subtotal: integer("subtotal").notNull(), // cents (final amount after discounts)
+    autoPay: boolean("auto_pay").default(false),
     notes: text("notes"),
     status: text("status").default("pending"),
+    createdAt: timestamp("created_at").defaultNow(),
+});
+
+// ─── Testimonials ──────────────────────────────────────────────
+export const testimonials = pgTable("testimonials", {
+    id: serial("id").primaryKey(),
+    name: text("name").notNull(),
+    role: text("role").notNull(),
+    quote: text("quote").notNull(),
+    avatar: text("avatar"),
+    rating: integer("rating").default(5),
+    sortOrder: integer("sort_order").default(0),
+    published: boolean("published").default(true),
     createdAt: timestamp("created_at").defaultNow(),
 });
 

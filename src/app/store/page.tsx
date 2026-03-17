@@ -35,15 +35,15 @@ export default async function StorePage({ searchParams }: Props) {
             {/* Category filters + Product grid */}
             <section className="section-container section-padding">
                 <div className="flex flex-col lg:flex-row gap-8">
-                    {/* Sidebar - categories */}
+                    {/* Sidebar - categories; horizontal scroll on mobile */}
                     <aside className="lg:w-56 flex-shrink-0">
                         <h2 className="font-semibold mb-3 text-sm text-[var(--color-text-muted)] uppercase tracking-wider">
                             Categories
                         </h2>
-                        <nav className="space-y-1">
+                        <nav className="flex flex-wrap gap-2 lg:flex-col lg:flex-nowrap lg:space-y-1 lg:gap-0">
                             <Link
                                 href="/store"
-                                className="block py-2 px-3 rounded-lg text-sm font-medium text-[var(--color-accent)] bg-[var(--color-accent-subtle)]"
+                                className="inline-block py-2 px-3 rounded-lg text-sm font-medium text-[var(--color-accent)] bg-[var(--color-accent-subtle)] min-h-[44px] flex items-center"
                             >
                                 All Products
                             </Link>
@@ -51,7 +51,7 @@ export default async function StorePage({ searchParams }: Props) {
                                 <Link
                                     key={cat.slug}
                                     href={`/store?category=${cat.slug}`}
-                                    className="block py-2 px-3 rounded-lg text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-muted)] hover:text-[var(--color-text)] transition-colors"
+                                    className="inline-block py-2 px-3 rounded-lg text-sm text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-muted)] hover:text-[var(--color-text)] transition-colors min-h-[44px] flex items-center lg:block lg:min-h-0"
                                 >
                                     {cat.label}
                                 </Link>

@@ -13,11 +13,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             ]
             : []),
         // Google OAuth (optional)
-        ...(process.env.GOOGLE_CLIENT_ID
+        ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
             ? [
                 Google({
                     clientId: process.env.GOOGLE_CLIENT_ID,
-                    clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+                    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
                 }),
             ]
             : []),
@@ -38,4 +38,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         },
     },
     secret: process.env.NEXTAUTH_SECRET,
+    trustHost: true,
 });

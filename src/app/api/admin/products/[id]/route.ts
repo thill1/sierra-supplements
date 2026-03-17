@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { products } from "@/db/schema";
+import { products, productCategories } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod/v4";
+import { requireAuth } from "@/lib/require-auth";
 
 const updateSchema = z.object({
     slug: z.string().min(1).optional(),
@@ -11,7 +12,7 @@ const updateSchema = z.object({
     description: z.string().min(1).optional(),
     price: z.number().int().positive().optional(),
     compareAtPrice: z.number().int().positive().optional().nullable(),
-    category: z.string().min(1).optional(),
+    category: z.enum(productCategories).optional(),
     image: z.string().optional().nullable(),
     inStock: z.boolean().optional(),
     published: z.boolean().optional(),
@@ -21,6 +22,9 @@ const updateSchema = z.object({
 type Params = { params: Promise<{ id: string }> };
 
 export async function PUT(request: Request, { params }: Params) {
+    const { response } = await requireAuth();
+    if (response) return response;
+
     try {
         const { id } = await params;
         const productId = parseInt(id, 10);
@@ -67,6 +71,9 @@ export async function PUT(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
+    const { response } = await requireAuth();
+    if (response) return response;
+
     try {
         const { id } = await params;
         const productId = parseInt(id, 10);

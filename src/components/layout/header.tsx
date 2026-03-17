@@ -52,19 +52,19 @@ export function Header() {
                         </Link>
                     </div>
 
-                    {/* Mobile: Cart + Phone + Menu */}
-                    <div className="flex items-center gap-2 md:hidden">
+                    {/* Mobile: Cart + Phone + Menu — min 44px touch targets */}
+                    <div className="flex items-center gap-1 md:hidden">
                         <CartIcon />
                         <a
                             href={`tel:${siteConfig.phone}`}
-                            className="p-2 rounded-lg hover:bg-[var(--color-bg-muted)] transition-colors"
+                            className="p-3 rounded-lg hover:bg-[var(--color-bg-muted)] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                             aria-label="Call us"
                         >
                             <Phone className="w-5 h-5 text-[var(--color-accent)]" />
                         </a>
                         <button
                             onClick={() => setIsOpen(!isOpen)}
-                            className="p-2 rounded-lg hover:bg-[var(--color-bg-muted)] transition-colors"
+                            className="p-3 rounded-lg hover:bg-[var(--color-bg-muted)] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                             aria-label={isOpen ? "Close menu" : "Open menu"}
                         >
                             {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

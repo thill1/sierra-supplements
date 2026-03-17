@@ -20,7 +20,7 @@ export default function ShippingPage() {
                         <div className="card p-6">
                             <h2 className="text-lg font-semibold mb-3">Free Shipping</h2>
                             <p className="body-sm text-[var(--color-text-secondary)]">
-                                Free shipping on orders over $75. Orders under $75 are subject to standard shipping rates at checkout.
+                                Free shipping on orders over $80. Orders under $80 are subject to standard shipping rates at checkout.
                             </p>
                         </div>
                         <div className="card p-6">

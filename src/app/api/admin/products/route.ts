@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { products } from "@/db/schema";
+import { products, productCategories } from "@/db/schema";
 import { desc } from "drizzle-orm";
 import { z } from "zod/v4";
+import { requireAuth } from "@/lib/require-auth";
 
 const createSchema = z.object({
     slug: z.string().min(1),
@@ -11,7 +12,7 @@ const createSchema = z.object({
     description: z.string().min(1),
     price: z.number().int().positive(),
     compareAtPrice: z.number().int().positive().optional().nullable(),
-    category: z.string().min(1),
+    category: z.enum(productCategories),
     image: z.string().optional().nullable(),
     inStock: z.boolean().optional(),
     published: z.boolean().optional(),
@@ -19,6 +20,9 @@ const createSchema = z.object({
 });
 
 export async function GET() {
+    const { response } = await requireAuth();
+    if (response) return response;
+
     try {
         const result = await db
             .select()
@@ -35,6 +39,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+    const { response } = await requireAuth();
+    if (response) return response;
+
     try {
         const body = await request.json();
         const data = createSchema.parse({

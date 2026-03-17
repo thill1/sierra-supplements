@@ -8,6 +8,7 @@ import {
     Users,
     ShoppingBag,
     ArrowRight,
+    Sparkles,
 } from "lucide-react";
 import { FadeIn, StaggerContainer, StaggerItem } from "@/components/ui/motion";
 import { siteConfig } from "@/lib/site-config";
@@ -55,6 +56,20 @@ export function ServicesGrid() {
                             </StaggerItem>
                         );
                     })}
+                    <StaggerItem>
+                        <div className="card h-full opacity-75 border-dashed">
+                            <div className="w-12 h-12 rounded-xl bg-[var(--color-bg-muted)] flex items-center justify-center mb-4">
+                                <Sparkles className="w-6 h-6 text-[var(--color-text-muted)]" />
+                            </div>
+                            <h3 className="heading-sm mb-2">Membership Plans</h3>
+                            <p className="body-sm mb-4 text-[var(--color-text-muted)]">
+                                Custom plans and ongoing support. Coming soon.
+                            </p>
+                            <span className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
+                                Coming Soon
+                            </span>
+                        </div>
+                    </StaggerItem>
                 </StaggerContainer>
             </div>
         </section>

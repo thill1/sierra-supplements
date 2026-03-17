@@ -3,14 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Truck, RefreshCw } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
+import { qualifiesForFreeShipping, applyAutoPayDiscount } from "@/lib/shipping";
 
 export default function CheckoutPage() {
     const router = useRouter();
     const { items, subtotal, itemCount, clearCart } = useCart();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [autoPay, setAutoPay] = useState(false);
     const [form, setForm] = useState({
         name: "",
         email: "",
@@ -47,13 +49,8 @@ export default function CheckoutPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     ...form,
-                    items: items.map((i) => ({
-                        slug: i.slug,
-                        name: i.name,
-                        price: i.price,
-                        quantity: i.quantity,
-                    })),
-                    subtotal,
+                    items: items.map((i) => ({ slug: i.slug, quantity: i.quantity })),
+                    autoPay,
                 }),
             });
             if (!res.ok) {
@@ -182,6 +179,23 @@ export default function CheckoutPage() {
                     </div>
 
                     <div className="card mb-8 p-6">
+                        <label className="flex items-start gap-3 cursor-pointer group">
+                            <input
+                                type="checkbox"
+                                checked={autoPay}
+                                onChange={(e) => setAutoPay(e.target.checked)}
+                                className="mt-1 w-4 h-4 accent-[var(--color-accent)]"
+                            />
+                            <div>
+                                <span className="font-medium">Monthly Auto-Pay</span>
+                                <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
+                                    Save 10% on every order. We&apos;ll ship the same items monthly and charge your card automatically.
+                                </p>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div className="card mb-8 p-6">
                         <h2 className="font-semibold mb-4">Order summary</h2>
                         <ul className="space-y-2 text-sm text-[var(--color-text-secondary)] mb-4">
                             {items.map((item) => (
@@ -191,9 +205,33 @@ export default function CheckoutPage() {
                                 </li>
                             ))}
                         </ul>
+                        {qualifiesForFreeShipping(subtotal) && (
+                            <div className="flex items-center gap-2 text-sm text-[var(--color-success)] mb-2">
+                                <Truck className="w-4 h-4" />
+                                <span>Free shipping on this order</span>
+                            </div>
+                        )}
+                        {autoPay && (
+                            <div className="flex items-center gap-2 text-sm text-[var(--color-success)] mb-2">
+                                <RefreshCw className="w-4 h-4" />
+                                <span>10% Auto-Pay discount applied</span>
+                            </div>
+                        )}
+                        {autoPay && (
+                            <div className="flex justify-between text-sm text-[var(--color-text-muted)] mb-2">
+                                <span>Subtotal</span>
+                                <span>${(subtotal / 100).toFixed(2)}</span>
+                            </div>
+                        )}
+                        {autoPay && (
+                            <div className="flex justify-between text-sm text-[var(--color-success)] mb-2">
+                                <span>Auto-Pay discount (10%)</span>
+                                <span>-${((subtotal - applyAutoPayDiscount(subtotal)) / 100).toFixed(2)}</span>
+                            </div>
+                        )}
                         <div className="border-t pt-4 flex justify-between font-semibold">
                             <span>Total ({itemCount} items)</span>
-                            <span className="text-[var(--color-accent)]">${(subtotal / 100).toFixed(2)}</span>
+                            <span className="text-[var(--color-accent)]">${((autoPay ? applyAutoPayDiscount(subtotal) : subtotal) / 100).toFixed(2)}</span>
                         </div>
                     </div>
 

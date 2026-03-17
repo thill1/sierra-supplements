@@ -6,7 +6,8 @@
  */
 
 import { db } from "./index";
-import { products } from "./schema.pg";
+import { products, testimonials } from "./schema.pg";
+import { siteConfig } from "@/lib/site-config";
 
 // Products from inventory spreadsheet – price in cents (retail)
 const INVENTORY_PRODUCTS = [
@@ -276,6 +277,26 @@ const INVENTORY_PRODUCTS = [
 ];
 
 async function seed() {
+    console.log("Seeding testimonials from site-config...");
+    const existingCount = await db.select().from(testimonials).limit(1);
+    if (existingCount.length === 0) {
+        for (let i = 0; i < siteConfig.testimonials.length; i++) {
+            const t = siteConfig.testimonials[i];
+            await db.insert(testimonials).values({
+                name: t.name,
+                role: t.role,
+                quote: t.quote,
+                avatar: t.avatar,
+                rating: t.rating,
+                sortOrder: i,
+                published: true,
+            });
+        }
+        console.log(`Seeded ${siteConfig.testimonials.length} testimonials.`);
+    } else {
+        console.log("Testimonials already exist, skipping.");
+    }
+
     console.log("Seeding products from Sierra Strength Inventory...");
     for (const p of INVENTORY_PRODUCTS) {
         try {

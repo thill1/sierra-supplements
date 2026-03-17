@@ -8,11 +8,12 @@ import {
     Settings,
     FileText,
     MessageSquare,
-    LogOut,
     Mountain,
     Package,
     ShoppingBag,
+    Star,
 } from "lucide-react";
+import { SignOutButton } from "@/components/admin/sign-out-button";
 import { cn } from "@/lib/utils";
 
 const sidebarLinks = [
@@ -20,8 +21,9 @@ const sidebarLinks = [
     { label: "Products", href: "/admin/products", icon: Package },
     { label: "Orders", href: "/admin/orders", icon: ShoppingBag },
     { label: "Leads", href: "/admin/leads", icon: Users },
-    { label: "Content Blocks", href: "/admin/content", icon: FileText },
-    { label: "Blog Editor", href: "/admin/blog", icon: MessageSquare },
+    { label: "Content", href: "/admin/content", icon: FileText },
+    { label: "Testimonials", href: "/admin/testimonials", icon: Star },
+    { label: "Blog", href: "/admin/blog", icon: MessageSquare },
     { label: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
@@ -64,10 +66,7 @@ export default function AdminLayout({
                 </nav>
 
                 <div className="p-4 border-t border-[var(--color-border-subtle)]">
-                    <button className="flex items-center gap-3 px-3 py-2 w-full rounded-lg text-sm font-medium text-[var(--color-text-muted)] hover:text-[var(--color-error)] hover:bg-red-500/10 transition-colors">
-                        <LogOut className="w-4 h-4" />
-                        Sign Out
-                    </button>
+                    <SignOutButton />
                 </div>
             </aside>
 

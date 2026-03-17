@@ -1,18 +1,60 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Filter, MoreVertical, ExternalLink } from "lucide-react";
-import { siteConfig } from "@/lib/site-config";
 
-// Mock data for display if DB isn't populated
-const mockLeads = [
-    { id: 1, name: "Jake Trail", email: "jake@example.com", phone: "555-0101", source: "contact_form", status: "New", date: "2026-02-10" },
-    { id: 2, name: "Summit Sarah", email: "sarah@peak.com", phone: "555-0102", source: "lead_magnet", status: "Contacted", date: "2026-02-09" },
-    { id: 3, name: "Mountain Mike", email: "mike@sierra.com", phone: "555-0103", source: "exit_intent", status: "Qualified", date: "2026-02-08" },
-];
+type Lead = {
+    id: number;
+    name: string | null;
+    email: string;
+    phone: string | null;
+    message: string | null;
+    source: string | null;
+    page: string | null;
+    status: string | null;
+    createdAt: string | null;
+};
 
 export default function AdminLeadsPage() {
     const [searchTerm, setSearchTerm] = useState("");
+    const [leads, setLeads] = useState<Lead[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        fetch("/api/admin/leads")
+            .then((res) => {
+                if (!res.ok) throw new Error("Failed to fetch leads");
+                return res.json();
+            })
+            .then(setLeads)
+            .catch((e) => setError(e instanceof Error ? e.message : "Unknown error"))
+            .finally(() => setLoading(false));
+    }, []);
+
+    const filteredLeads = searchTerm
+        ? leads.filter(
+            (l) =>
+                l.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                l.email?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        : leads;
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center py-20">
+                <p className="text-[var(--color-text-muted)]">Loading leads…</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="p-4 rounded-lg bg-[var(--color-error)]/10 border border-[var(--color-error)]/30 text-[var(--color-error)]">
+                {error}
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -60,29 +102,36 @@ export default function AdminLeadsPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-[var(--color-border-subtle)]">
-                            {mockLeads.map((lead) => (
+                            {filteredLeads.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-12 text-center text-[var(--color-text-muted)]">
+                                        No leads found yet. They will appear here once users submit forms.
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredLeads.map((lead) => (
                                 <tr key={lead.id} className="hover:bg-[var(--color-bg-muted)]/30 transition-colors group">
                                     <td className="px-6 py-4">
-                                        <div className="font-medium text-sm">{lead.name}</div>
+                                        <div className="font-medium text-sm">{lead.name || "—"}</div>
                                         <div className="text-xs text-[var(--color-text-muted)]">ID: {lead.id}</div>
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="text-sm">{lead.email}</div>
-                                        <div className="text-xs text-[var(--color-text-muted)]">{lead.phone}</div>
+                                        <div className="text-xs text-[var(--color-text-muted)]">{lead.phone || "—"}</div>
                                     </td>
                                     <td className="px-6 py-4 space-y-2">
                                         <div className="flex gap-2">
                                             <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-[var(--color-bg-muted)] text-[var(--color-text-secondary)] border border-[var(--color-border-subtle)]">
-                                                {lead.source.replace("_", " ")}
+                                                {(lead.source || "unknown").replace("_", " ")}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-1.5">
                                             <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent)]" />
-                                            <span className="text-sm font-medium">{lead.status}</span>
+                                            <span className="text-sm font-medium">{lead.status || "new"}</span>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-sm text-[var(--color-text-muted)]">
-                                        {lead.date}
+                                        {lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() : "—"}
                                     </td>
                                     <td className="px-6 py-4 text-right">
                                         <button className="p-2 rounded-lg hover:bg-[var(--color-bg-muted)] transition-colors opacity-0 group-hover:opacity-100">
@@ -93,7 +142,8 @@ export default function AdminLeadsPage() {
                                         </button>
                                     </td>
                                 </tr>
-                            ))}
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>

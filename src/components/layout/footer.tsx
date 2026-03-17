@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { Mountain, Instagram, Facebook, Youtube } from "lucide-react";
+import { Mountain, Instagram, Facebook, Youtube, Shield } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 
 export function Footer() {
     const currentYear = new Date().getFullYear();
 
     return (
-        <footer className="border-t border-[var(--color-border-subtle)] pb-24 md:pb-0">
+        <footer className="border-t border-[var(--color-border-subtle)] pb-[calc(6rem+env(safe-area-inset-bottom,0px))] md:pb-0">
             {/* CTA Band */}
             <div className="bg-[var(--color-accent)] py-12">
                 <div className="section-container text-center">
@@ -159,7 +159,7 @@ export function Footer() {
                     <p className="body-sm">
                         © {currentYear} {siteConfig.name}. All rights reserved.
                     </p>
-                    <div className="flex gap-6">
+                    <div className="flex flex-wrap gap-6 items-center">
                         <Link href="/privacy" className="body-sm hover:text-[var(--color-accent)] transition-colors">
                             Privacy Policy
                         </Link>
@@ -168,6 +168,13 @@ export function Footer() {
                         </Link>
                         <Link href="/shipping" className="body-sm hover:text-[var(--color-accent)] transition-colors">
                             Shipping
+                        </Link>
+                        <Link
+                            href="/admin"
+                            className="body-sm inline-flex items-center gap-1.5 text-[var(--color-accent)] hover:underline transition-colors"
+                        >
+                            <Shield className="w-3.5 h-3.5" />
+                            Admin
                         </Link>
                     </div>
                 </div>

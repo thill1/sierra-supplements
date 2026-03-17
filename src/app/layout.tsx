@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
@@ -18,6 +18,13 @@ const outfit = Outfit({
   subsets: ["latin"],
   display: "swap",
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#0C0F12",
+};
 
 export const metadata: Metadata = {
   title: {
@@ -50,7 +57,7 @@ export const metadata: Metadata = {
 import { LocalBusinessSchema } from "@/components/seo/local-business-schema";
 import { CartProvider } from "@/contexts/cart-context";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

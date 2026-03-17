@@ -10,7 +10,7 @@ export function CartIcon() {
     return (
         <Link
             href="/store/cart"
-            className="relative p-2 rounded-lg hover:bg-[var(--color-bg-muted)] transition-colors"
+            className="relative p-3 rounded-lg hover:bg-[var(--color-bg-muted)] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center md:p-2 md:min-w-0 md:min-h-0"
             aria-label={`Cart with ${itemCount} items`}
         >
             <ShoppingCart className="w-5 h-5 text-[var(--color-text-secondary)]" />

@@ -1,21 +1,23 @@
 # Before Launch Checklist
 
-## Database (recommended for full features)
+## Database (required for store/admin)
 
 The store uses **db-first with hardcoded fallback** – it works without `DATABASE_URL`, but admin, leads, and orders need the database.
 
-1. **Add `DATABASE_URL` to Vercel**
-   - Supabase → Project Settings → Database → Connection string (URI) → **Transaction** (port 6543)
-   - Copy the URI, replace `[YOUR-PASSWORD]` with your DB password
-   - Vercel → Project → Settings → Environment Variables → add `DATABASE_URL`
+1. **Choose a provider** — Supabase, Neon, or Vercel Postgres. See `docs/DATABASE.md`.
 
-2. **Sync the database**
+2. **Add `DATABASE_URL` to Vercel**
+   - Supabase: Transaction pooler URI (port 6543)
+   - Neon: Connection string from dashboard
+   - Vercel Postgres: `POSTGRES_URL` is auto-injected
+
+3. **Sync the database**
    ```bash
-   DATABASE_URL="your-pooler-uri" pnpm db:push
-   DATABASE_URL="your-pooler-uri" pnpm db:seed
+   pnpm db:push
+   pnpm db:seed
    ```
 
-3. **Redeploy** on Vercel after env vars.
+4. **Redeploy** on Vercel after env vars.
 
 ## Other env vars (Vercel)
 

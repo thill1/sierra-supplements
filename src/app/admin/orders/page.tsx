@@ -16,6 +16,7 @@ type Order = {
     zip: string | null;
     items: string;
     subtotal: number;
+    autoPay: boolean | null;
     notes: string | null;
     status: string | null;
     createdAt: string | null;
@@ -122,6 +123,11 @@ export default function AdminOrdersPage() {
                                                 <div className="font-medium text-sm">#{order.id}</div>
                                                 <div className="text-xs text-[var(--color-text-muted)]">
                                                     {items.length} item{items.length !== 1 ? "s" : ""}
+                                                    {order.autoPay && (
+                                                        <span className="ml-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-[var(--color-accent-subtle)] text-[var(--color-accent)]">
+                                                            Auto-Pay
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">

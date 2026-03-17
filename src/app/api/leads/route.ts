@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 import { z } from "zod/v4";
+import { escapeHtml } from "@/lib/escape-html";
 
 // Schema validation for lead capture
 const leadSchema = z.object({
-    name: z.string().optional(),
-    email: z.email(),
-    phone: z.string().optional(),
-    message: z.string().optional(),
-    source: z.string().optional(),
-    page: z.string().optional(),
+    name: z.string().max(200).optional(),
+    email: z.string().email(),
+    phone: z.string().max(50).optional(),
+    message: z.string().max(2000).optional(),
+    source: z.string().max(100).optional(),
+    page: z.string().max(500).optional(),
 });
 
 export async function POST(request: Request) {
@@ -48,15 +49,15 @@ export async function POST(request: Request) {
                 await resend.emails.send({
                     from: "Sierra Strength <noreply@sierrastrengthsupplements.com>",
                     to: process.env.ADMIN_EMAIL || "admin@sierrastrengthsupplements.com",
-                    subject: `New Lead: ${data.name || data.email} (${data.source || "website"})`,
+                    subject: `New Lead: ${escapeHtml(data.name || data.email)} (${escapeHtml(data.source || "website")})`,
                     html: `
             <h2>New Lead Received</h2>
-            <p><strong>Name:</strong> ${data.name || "Not provided"}</p>
-            <p><strong>Email:</strong> ${data.email}</p>
-            <p><strong>Phone:</strong> ${data.phone || "Not provided"}</p>
-            <p><strong>Source:</strong> ${data.source || "website"}</p>
-            <p><strong>Page:</strong> ${data.page || "/"}</p>
-            <p><strong>Message:</strong> ${data.message || "No message"}</p>
+            <p><strong>Name:</strong> ${escapeHtml(data.name || "Not provided")}</p>
+            <p><strong>Email:</strong> ${escapeHtml(data.email)}</p>
+            <p><strong>Phone:</strong> ${escapeHtml(data.phone || "Not provided")}</p>
+            <p><strong>Source:</strong> ${escapeHtml(data.source || "website")}</p>
+            <p><strong>Page:</strong> ${escapeHtml(data.page || "/")}</p>
+            <p><strong>Message:</strong> ${escapeHtml(data.message || "No message")}</p>
           `,
                 });
 
@@ -67,7 +68,7 @@ export async function POST(request: Request) {
                     subject: "Thanks for reaching out to Sierra Strength!",
                     html: `
             <h2>We received your message!</h2>
-            <p>Hi ${data.name || "there"},</p>
+            <p>Hi ${escapeHtml(data.name || "there")},</p>
             <p>Thank you for reaching out to Sierra Strength. We've received your information and will be in touch within 2 hours during business hours.</p>
             <p>In the meantime, feel free to:</p>
             <ul>

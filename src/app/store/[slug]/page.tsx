@@ -139,7 +139,7 @@ export default async function ProductDetailPage({ params }: Props) {
                                 {[
                                     "Third-party tested for purity",
                                     "30-day money-back guarantee",
-                                    "Free shipping on orders over $75",
+                                    "Free shipping on orders over $80",
                                 ].map((item) => (
                                     <li
                                         key={item}

@@ -7,7 +7,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     const baseUrl = siteConfig.url;
 
     // Static routes
-    const routes = ["", "/services", "/pricing", "/about", "/contact", "/blog", "/case-studies", "/book", "/offer"].map(
+    const routes = ["", "/services", "/about", "/contact", "/blog", "/case-studies", "/book", "/offer"].map(
         (route) => ({
             url: `${baseUrl}${route}`,
             lastModified: new Date(),

@@ -4,6 +4,7 @@ export {
     leads,
     orders,
     products,
+    testimonials,
     productCategories,
     type ProductCategory,
 } from "./schema.pg";

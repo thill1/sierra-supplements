@@ -12,11 +12,10 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
-import { Accordion } from "@/components/ui/accordion";
+import { getTestimonials } from "@/lib/testimonials";
 import { HeroSection } from "@/components/sections/hero";
 import { TestimonialsSection } from "@/components/sections/testimonials";
 import { ServicesGrid } from "@/components/sections/services-grid";
-import { PricingTeaser } from "@/components/sections/pricing-teaser";
 import { TrustSection } from "@/components/sections/trust-section";
 import { FaqSection } from "@/components/sections/faq-section";
 import { LeadMagnetBanner } from "@/components/sections/lead-magnet-banner";
@@ -27,14 +26,14 @@ export const metadata: Metadata = {
   description: siteConfig.description,
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  const testimonials = await getTestimonials();
   return (
     <>
       <HeroSection />
       <TrustSection />
       <ServicesGrid />
-      <TestimonialsSection />
-      <PricingTeaser />
+      <TestimonialsSection testimonials={testimonials} />
       <LeadMagnetBanner />
       <FaqSection />
     </>

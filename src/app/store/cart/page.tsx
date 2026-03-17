@@ -2,8 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ShoppingCart, ArrowLeft, Trash2 } from "lucide-react";
+import { ShoppingCart, ArrowLeft, Trash2, Truck, RefreshCw } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
+import {
+    qualifiesForFreeShipping,
+    amountUntilFreeShipping,
+    FREE_SHIPPING_THRESHOLD_CENTS,
+} from "@/lib/shipping";
 
 export default function CartPage() {
     const { items, removeItem, updateQuantity, itemCount, subtotal } = useCart();
@@ -45,9 +50,9 @@ export default function CartPage() {
                         {items.map((item) => (
                             <div
                                 key={item.productId}
-                                className="card flex gap-4 p-4"
+                                className="card flex flex-wrap gap-4 p-4"
                             >
-                                <div className="w-24 h-24 rounded-lg bg-[var(--color-surface)] flex-shrink-0 overflow-hidden relative">
+                                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg bg-[var(--color-surface)] flex-shrink-0 overflow-hidden relative">
                                     {item.image ? (
                                         <Image
                                             src={item.image}
@@ -73,7 +78,7 @@ export default function CartPage() {
                                         ${((item.price * item.quantity) / 100).toFixed(2)}
                                     </p>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 w-full sm:w-auto sm:ml-auto">
                                     <select
                                         value={item.quantity}
                                         onChange={(e) =>
@@ -82,7 +87,7 @@ export default function CartPage() {
                                                 parseInt(e.target.value, 10)
                                             )
                                         }
-                                        className="input w-16 py-2 text-center"
+                                        className="input w-20 py-2.5 text-center min-h-[44px]"
                                     >
                                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                                             <option key={n} value={n}>
@@ -92,7 +97,7 @@ export default function CartPage() {
                                     </select>
                                     <button
                                         onClick={() => removeItem(item.productId)}
-                                        className="p-2 rounded-lg hover:bg-[var(--color-error)]/20 text-[var(--color-text-muted)] hover:text-[var(--color-error)] transition-colors"
+                                        className="p-3 rounded-lg hover:bg-[var(--color-error)]/20 text-[var(--color-text-muted)] hover:text-[var(--color-error)] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                                         aria-label="Remove from cart"
                                     >
                                         <Trash2 className="w-4 h-4" />
@@ -106,7 +111,7 @@ export default function CartPage() {
                     <div className="lg:col-span-1">
                         <div className="card sticky top-28">
                             <h2 className="font-semibold mb-4">Order Summary</h2>
-                            <div className="space-y-2 mb-6">
+                            <div className="space-y-2 mb-4">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-[var(--color-text-muted)]">
                                         Subtotal ({itemCount} items)
@@ -115,9 +120,23 @@ export default function CartPage() {
                                         ${(subtotal / 100).toFixed(2)}
                                     </span>
                                 </div>
+                                {qualifiesForFreeShipping(subtotal) ? (
+                                    <div className="flex items-center gap-2 text-sm text-[var(--color-success)]">
+                                        <Truck className="w-4 h-4" />
+                                        <span>Free shipping!</span>
+                                    </div>
+                                ) : (
+                                    <p className="text-xs text-[var(--color-text-muted)]">
+                                        Add ${(amountUntilFreeShipping(subtotal) / 100).toFixed(2)} more for free shipping (orders over ${(FREE_SHIPPING_THRESHOLD_CENTS / 100).toFixed(0)}).
+                                    </p>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-[var(--color-text-muted)] mb-6 p-2 rounded-lg bg-[var(--color-accent-subtle)]/50">
+                                <RefreshCw className="w-3.5 h-3.5 text-[var(--color-accent)]" />
+                                <span>Save 10% with monthly auto-pay at checkout</span>
                             </div>
                             <p className="text-xs text-[var(--color-text-muted)] mb-6">
-                                Shipping & taxes calculated at checkout.
+                                Taxes calculated at checkout.
                             </p>
                             <Link
                                 href="/store/checkout"

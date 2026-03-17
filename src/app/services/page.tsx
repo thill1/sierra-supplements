@@ -6,6 +6,7 @@ import {
     Users,
     ShoppingBag,
     ArrowRight,
+    Sparkles,
 } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 import type { Metadata } from "next";
@@ -65,6 +66,22 @@ export default function ServicesPage() {
                             </Link>
                         );
                     })}
+                    <div className="card flex flex-col md:flex-row gap-6 opacity-75 border-dashed border-[var(--color-border-subtle)]">
+                        <div className="w-16 h-16 rounded-xl bg-[var(--color-bg-muted)] flex items-center justify-center flex-shrink-0">
+                            <Sparkles className="w-8 h-8 text-[var(--color-text-muted)]" />
+                        </div>
+                        <div>
+                            <h2 className="heading-sm mb-2 text-[var(--color-text-secondary)]">
+                                Membership Plans
+                            </h2>
+                            <p className="body-sm mb-3 text-[var(--color-text-muted)]">
+                                Custom plans and ongoing support. Coming soon.
+                            </p>
+                            <span className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
+                                Coming Soon
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </section>
 

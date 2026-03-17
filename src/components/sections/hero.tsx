@@ -6,15 +6,26 @@ import { ArrowRight, ShoppingBag, ChevronDown } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef, useMemo } from "react";
 
+/* ── Seeded random for SSR/client hydration consistency ───────── */
+function mulberry32(seed: number) {
+    return function () {
+        let t = (seed += 0x6d2b79f5);
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
+
 /* ── Ember particle config ────────────────────────────────────── */
-function generateEmbers(count: number) {
+function generateEmbers(count: number, seed = 42) {
+    const rng = mulberry32(seed);
     return Array.from({ length: count }, (_, i) => ({
         id: i,
-        left: `${Math.random() * 100}%`,
-        bottom: `${Math.random() * 30}%`,
-        size: `${2 + Math.random() * 4}px`,
-        duration: `${5 + Math.random() * 7}s`,
-        delay: `${Math.random() * 8}s`,
+        left: `${rng() * 100}%`,
+        bottom: `${rng() * 30}%`,
+        size: `${2 + rng() * 4}px`,
+        duration: `${5 + rng() * 7}s`,
+        delay: `${rng() * 8}s`,
     }));
 }
 
@@ -122,8 +133,8 @@ export function HeroSection() {
                 initial="hidden"
                 animate="visible"
             >
-                {/* Spacer — lets the brand image breathe */}
-                <div className="flex-1" aria-hidden="true" />
+                {/* Spacer — lets the brand image breathe (desktop only; mobile keeps CTAs higher) */}
+                <div className="flex-none sm:flex-1" aria-hidden="true" />
 
                 {/* CTA overlay */}
                 <motion.div
