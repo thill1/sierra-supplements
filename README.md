@@ -1,4 +1,4 @@
-# 🏔️ Sierra Supplements – Marketing Website & Admin Dashboard
+# 🏔️ Sierra Strength Supplements – Marketing Website & Admin Dashboard
 
 A production-ready, high-converting marketing website for local service businesses or agencies. Designed with a **Sierra Mountain** premium aesthetic.
 
