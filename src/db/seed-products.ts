@@ -10,6 +10,7 @@ import { products, testimonials } from "./schema.pg";
 import { siteConfig } from "@/lib/site-config";
 
 // Products from inventory spreadsheet – price in cents (retail)
+// Images: /images/store/{slug}.jpg (files named by slug in public/images/store)
 const INVENTORY_PRODUCTS = [
     // Protein Powders – $49
     {
@@ -19,7 +20,6 @@ const INVENTORY_PRODUCTS = [
         description: "Premium protein from Allmax. Peanut butter chocolate flavor.",
         price: 4900,
         category: "protein",
-        image: "/images/store/protein.jpg",
         published: true,
         featured: true,
     },
@@ -30,7 +30,6 @@ const INVENTORY_PRODUCTS = [
         description: "Premium protein from Allmax. Chocolate mint flavor.",
         price: 4900,
         category: "protein",
-        image: "/images/store/protein.jpg",
         published: true,
     },
     {
@@ -40,7 +39,6 @@ const INVENTORY_PRODUCTS = [
         description: "Muscle Sport protein. Monster cookie flavor.",
         price: 4900,
         category: "protein",
-        image: "/images/store/protein.jpg",
         published: true,
     },
     {
@@ -50,7 +48,6 @@ const INVENTORY_PRODUCTS = [
         description: "Muscle Sport protein. White chocolate peanut butter flavor.",
         price: 4900,
         category: "protein",
-        image: "/images/store/protein.jpg",
         published: true,
     },
     {
@@ -60,7 +57,6 @@ const INVENTORY_PRODUCTS = [
         description: "Muscle Sport protein. Dubai chocolate flavor.",
         price: 4900,
         category: "protein",
-        image: "/images/store/protein.jpg",
         published: true,
     },
     {
@@ -70,7 +66,6 @@ const INVENTORY_PRODUCTS = [
         description: "Muscle Sport protein. Fluffer nutter flavor.",
         price: 4900,
         category: "protein",
-        image: "/images/store/protein.jpg",
         published: true,
     },
     {
@@ -80,7 +75,6 @@ const INVENTORY_PRODUCTS = [
         description: "Muscle Sport protein. Carrot cake flavor.",
         price: 4900,
         category: "protein",
-        image: "/images/store/protein.jpg",
         published: true,
     },
     // Pre-Workout Stim – $39
@@ -91,7 +85,6 @@ const INVENTORY_PRODUCTS = [
         description: "Afterdark pre-workout with caffeine. Snowcone flavor.",
         price: 3900,
         category: "pre-workout",
-        image: "/images/store/preworkout.jpg",
         published: true,
         featured: true,
     },
@@ -103,7 +96,6 @@ const INVENTORY_PRODUCTS = [
         description: "Pump Sauce non-stimulant pre-workout. Gummy worm flavor.",
         price: 3900,
         category: "pre-workout",
-        image: "/images/store/stim-free.jpg",
         published: true,
     },
     {
@@ -113,7 +105,6 @@ const INVENTORY_PRODUCTS = [
         description: "Pump Sauce non-stimulant pre-workout. Clappin peach flavor.",
         price: 3900,
         category: "pre-workout",
-        image: "/images/store/stim-free.jpg",
         published: true,
     },
     {
@@ -123,7 +114,6 @@ const INVENTORY_PRODUCTS = [
         description: "Pump Sauce non-stimulant pre-workout. Gummy shark flavor.",
         price: 3900,
         category: "pre-workout",
-        image: "/images/store/stim-free.jpg",
         published: true,
     },
     // Cream of Rice – $25
@@ -134,7 +124,6 @@ const INVENTORY_PRODUCTS = [
         description: "Elev8 cream of rice. Peanut butter flavor. Ideal pre-workout carb.",
         price: 2500,
         category: "carbs",
-        image: "/images/store/electrolytes.jpg",
         published: true,
     },
     {
@@ -144,7 +133,6 @@ const INVENTORY_PRODUCTS = [
         description: "Elev8 cream of rice. Carrot cake flavor. Ideal pre-workout carb.",
         price: 2500,
         category: "carbs",
-        image: "/images/store/electrolytes.jpg",
         published: true,
     },
     {
@@ -154,7 +142,6 @@ const INVENTORY_PRODUCTS = [
         description: "Elev8 cream of rice. Cookie butter flavor. Ideal pre-workout carb.",
         price: 2500,
         category: "carbs",
-        image: "/images/store/electrolytes.jpg",
         published: true,
     },
     // Vitamins
@@ -165,7 +152,6 @@ const INVENTORY_PRODUCTS = [
         description: "Liver and organ support supplement.",
         price: 3900,
         category: "vitamins",
-        image: "/images/store/fish-oil.jpg",
         published: true,
     },
     {
@@ -175,7 +161,6 @@ const INVENTORY_PRODUCTS = [
         description: "Liver and kidney support. 60 capsules.",
         price: 2000,
         category: "vitamins",
-        image: "/images/store/fish-oil.jpg",
         published: true,
     },
     {
@@ -185,7 +170,6 @@ const INVENTORY_PRODUCTS = [
         description: "Digestive enzymes. 60 count.",
         price: 2000,
         category: "vitamins",
-        image: "/images/store/fish-oil.jpg",
         published: true,
     },
     // Bars – $4
@@ -196,7 +180,6 @@ const INVENTORY_PRODUCTS = [
         description: "Anabar protein bar. Fluff n butter flavor.",
         price: 400,
         category: "bars",
-        image: "/images/store/electrolytes.jpg",
         published: true,
     },
     // Aminos – $29
@@ -207,7 +190,6 @@ const INVENTORY_PRODUCTS = [
         description: "Amino acids with hydration support. Patriot pop flavor.",
         price: 2900,
         category: "bcaas",
-        image: "/images/store/electrolytes.jpg",
         published: true,
     },
     {
@@ -217,7 +199,6 @@ const INVENTORY_PRODUCTS = [
         description: "Amino acids with hydration support. Italian ice flavor.",
         price: 2900,
         category: "bcaas",
-        image: "/images/store/electrolytes.jpg",
         published: true,
     },
     // Creatine – $29
@@ -228,7 +209,6 @@ const INVENTORY_PRODUCTS = [
         description: "Creatine with hydration. Blueberry lemon flavor.",
         price: 2900,
         category: "creatine",
-        image: "/images/store/creatine-mono.jpg",
         published: true,
         featured: true,
     },
@@ -239,7 +219,6 @@ const INVENTORY_PRODUCTS = [
         description: "Creatine with hydration. Italian lemon ice flavor.",
         price: 2900,
         category: "creatine",
-        image: "/images/store/creatine-mono.jpg",
         published: true,
     },
     // Carb Powder – $39
@@ -250,7 +229,6 @@ const INVENTORY_PRODUCTS = [
         description: "Karbolyn fast-digesting carb powder. Unflavored.",
         price: 3900,
         category: "carbs",
-        image: "/images/store/electrolytes.jpg",
         published: true,
     },
     // L-Carnitine – $29
@@ -261,7 +239,6 @@ const INVENTORY_PRODUCTS = [
         description: "L-Carnitine. Miami sunrise flavor.",
         price: 2900,
         category: "fat-burners",
-        image: "/images/store/fish-oil.jpg",
         published: true,
     },
     {
@@ -271,7 +248,6 @@ const INVENTORY_PRODUCTS = [
         description: "L-Carnitine. Patriot pop flavor.",
         price: 2900,
         category: "fat-burners",
-        image: "/images/store/fish-oil.jpg",
         published: true,
     },
 ];
@@ -300,10 +276,12 @@ async function seed() {
     console.log("Seeding products from Sierra Strength Inventory...");
     for (const p of INVENTORY_PRODUCTS) {
         try {
+            const image = `/images/store/${p.slug}.jpg`;
             await db
                 .insert(products)
                 .values({
                     ...p,
+                    image,
                     inStock: true,
                 })
                 .onConflictDoUpdate({
@@ -314,7 +292,7 @@ async function seed() {
                         description: p.description,
                         price: p.price,
                         category: p.category,
-                        image: p.image,
+                        image,
                         published: p.published,
                         featured: p.featured,
                         updatedAt: new Date(),

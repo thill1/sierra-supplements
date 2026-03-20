@@ -1,5 +1,7 @@
 # Before Launch Checklist
 
+**→ See `docs/MONDAY-LAUNCH.md` for a focused Monday launch plan.**
+
 ## Database (required for store/admin)
 
 The store uses **db-first with hardcoded fallback** – it works without `DATABASE_URL`, but admin, leads, and orders need the database.
