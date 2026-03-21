@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, CheckCircle, ShoppingBag } from "lucide-react";
 import type { Metadata } from "next";
+import { siteConfig } from "@/lib/site-config";
+import { formatPhone } from "@/lib/utils";
 
 export const metadata: Metadata = {
     title: "Order Confirmed",
@@ -23,8 +25,8 @@ export default function OrderThankYouPage() {
 
                 <p className="body-sm text-[var(--color-text-muted)] mb-8">
                     Check your email for a confirmation. Questions? Call us at{" "}
-                    <a href="tel:+15305550142" className="text-[var(--color-accent)] hover:underline">
-                        (530) 555-0142
+                    <a href={`tel:${formatPhone(siteConfig.phone)}`} className="text-[var(--color-accent)] hover:underline">
+                        {siteConfig.phone}
                     </a>
                 </p>
 

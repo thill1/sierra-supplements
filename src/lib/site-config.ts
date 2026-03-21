@@ -12,8 +12,8 @@ export const siteConfig = {
   ogImage: "/og-image.jpg",
 
   // ── Contact ────────────────────────────────────
-  phone: "(530) 555-0142",
-  smsNumber: "+15305550142",
+  phone: "(916) 824-5497",
+  smsNumber: "+19168245497",
   email: "hello@sierrastrengthsupplements.com",
   adminEmail: "admin@sierrastrengthsupplements.com",
   address: {
