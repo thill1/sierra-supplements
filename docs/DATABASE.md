@@ -21,6 +21,8 @@ This project uses **PostgreSQL** with Drizzle ORM. It works with any Postgres pr
 
 ## Supabase
 
+Production project notes (ref, URL, RLS, Storage): **`docs/SUPABASE-PRODUCTION.md`**.
+
 1. Create a project at [supabase.com](https://supabase.com)
 2. **Project Settings → Database → Connection string**
 3. Choose **URI** (Transaction mode, port 6543) for serverless
