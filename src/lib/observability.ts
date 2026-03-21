@@ -1,3 +1,5 @@
+import * as Sentry from "@sentry/nextjs";
+
 type LogPayload = Record<string, unknown>;
 
 function emit(level: "error" | "warn" | "info", payload: LogPayload) {
@@ -32,8 +34,11 @@ export function logAdminAuthzFailure(context: string, email: string) {
 }
 
 /**
- * Hook for a future Sentry (or similar) SDK: call from instrumentation or error boundaries.
+ * Sends to Sentry when `SENTRY_DSN` is set (server); always logs JSON to stdout/stderr.
  */
 export function captureException(err: unknown, context?: string) {
     logServerError(context ?? "capture", err);
+    if (process.env.SENTRY_DSN) {
+        Sentry.captureException(err, context ? { tags: { context } } : undefined);
+    }
 }

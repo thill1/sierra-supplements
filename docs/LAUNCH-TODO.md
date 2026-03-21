@@ -36,5 +36,5 @@
 ## After launch
 
 - Monitor Vercel logs and `/api/health`.  
-- Add Sentry (or similar) via `captureException` in `src/lib/observability.ts`.  
+- Enable Sentry by setting **`SENTRY_DSN`** and **`NEXT_PUBLIC_SENTRY_DSN`** in Vercel; optional source maps via `SENTRY_AUTH_TOKEN` / org / project.  
 - Consider Upstash Redis (or Vercel KV) for **distributed** rate limiting if traffic grows (current limits are per instance).

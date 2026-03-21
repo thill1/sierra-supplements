@@ -93,6 +93,6 @@ vercel --prod
 
 ## 6. Observability
 
-- Structured JSON logs: `src/lib/observability.ts` (`logServerError`, `logAdminFailure`).  
-- Hook `captureException` there when you add Sentry or another APM.  
+- Structured JSON logs: `src/lib/observability.ts` (`logServerError`, `logAdminFailure`, `captureException`).  
+- **Sentry** (optional): add **`SENTRY_DSN`** (server) and **`NEXT_PUBLIC_SENTRY_DSN`** (client — use the same DSN string) in Vercel. Events are sent via the built-in **`/monitoring`** tunnel to reduce ad-blocker interference. For source maps and releases, add **`SENTRY_AUTH_TOKEN`**, **`SENTRY_ORG`**, and **`SENTRY_PROJECT`** to CI or Vercel build env.  
 - Vercel **Runtime Logs** and **Speed Insights** cover baseline monitoring.

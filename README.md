@@ -40,8 +40,14 @@ pnpm setup:check
 | `NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | Optional; admin product image uploads (`docs/SUPABASE-STORAGE.md`) |
 | `ALLOW_HARDCODED_CATALOG` | Set `true` only if you intentionally want static catalog fallback in production (not recommended). |
 | `DISABLE_HARDCODED_CATALOG` | Local: `true` to test DB-only catalog behavior. |
+| `SENTRY_DSN` | Server/edge error reporting (optional). |
+| `NEXT_PUBLIC_SENTRY_DSN` | Same DSN for browser + `/monitoring` tunnel (optional). |
 
 Full template: `.env.example`. Admin model: **`docs/ADMIN-AUTH.md`**.
+
+### Sentry
+
+The app includes `@sentry/nextjs`. Set **`SENTRY_DSN`** and **`NEXT_PUBLIC_SENTRY_DSN`** (same value) in Vercel to enable reporting. Without them, the SDK stays disabled. Optional: **`SENTRY_AUTH_TOKEN`**, **`SENTRY_ORG`**, **`SENTRY_PROJECT`** for release/source map upload on CI.
 
 ## Scripts
 

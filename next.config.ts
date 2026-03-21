@@ -1,3 +1,4 @@
+import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV !== "production";
@@ -8,7 +9,7 @@ const productionCsp = [
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https:",
-    "connect-src 'self' https://*.supabase.co https://app.cal.com https://cal.com https://vitals.vercel-insights.com",
+    "connect-src 'self' https://*.supabase.co https://app.cal.com https://cal.com https://vitals.vercel-insights.com https://*.ingest.sentry.io https://*.ingest.de.sentry.io",
     "frame-src https://cal.com https://app.cal.com",
     "base-uri 'self'",
     "form-action 'self'",
@@ -56,4 +57,9 @@ const nextConfig: NextConfig = {
     },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+    silent: true,
+    /** Avoid ad-blockers blocking ingest; same-origin tunnel forwards to Sentry. */
+    tunnelRoute: "/monitoring",
+    widenClientFileUpload: true,
+});
