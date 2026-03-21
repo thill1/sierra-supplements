@@ -1,85 +1,98 @@
-# Sierra Supplements – Vercel + Supabase Setup
+# Sierra Supplements – Vercel + Supabase
 
-## 1. Supabase Database
+## 1. Supabase database
 
 ### Create project (if needed)
-1. Go to [supabase.com](https://supabase.com) → New Project
-2. Choose org, name, region, set a DB password (save it)
 
-### Get connection string
-1. Supabase Dashboard → **Project Settings** (gear) → **Database**
-2. Under **Connection string**, select **URI**
-3. Choose **Transaction** (connection pooler) – required for Vercel serverless
-4. Copy the URI – it uses port **6543**
-5. Replace `[YOUR-PASSWORD]` with your actual DB password
+1. [supabase.com](https://supabase.com) → New Project  
+2. Save the database password  
 
-Example format:
-```
+### Connection string
+
+1. **Project Settings → Database**  
+2. **Connection string → URI**  
+3. Use **Transaction** (pooler), port **6543**  
+4. Replace `[YOUR-PASSWORD]` in the URI  
+
+Example:
+
+```text
 postgresql://postgres.[project-ref]:[YOUR-PASSWORD]@aws-0-[region].pooler.supabase.com:6543/postgres
 ```
 
-### Run migrations & seed
+### Schema and seed
+
 ```bash
-# Set DATABASE_URL in .env, then:
-pnpm db:push
-pnpm db:seed
+DATABASE_URL="postgresql://..." pnpm db:push
+DATABASE_URL="postgresql://..." pnpm db:seed
 ```
 
 ---
 
-## 2. Vercel Environment Variables
+## 2. Vercel environment variables
 
-### Option A: Vercel Dashboard (recommended)
-1. [vercel.com](https://vercel.com) → your project → **Settings** → **Environment Variables**
-2. Add:
+**Project → Settings → Environment Variables** (set for **Production** and **Preview** as needed):
 
-| Name | Value | Environments |
-|------|-------|--------------|
-| `DATABASE_URL` | (Supabase pooler URI from step 1) | Production, Preview |
-| `NEXTAUTH_SECRET` | `openssl rand -base64 32` output | Production, Preview |
-| `NEXTAUTH_URL` | `https://your-domain.vercel.app` | Production |
-| `NEXT_PUBLIC_APP_URL` | `https://your-domain.vercel.app` | Production |
-| `NEXT_PUBLIC_SUPABASE_URL` | Project URL (Settings → API) – admin product image uploads | Production, Preview |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Secret** – server only; same project as DB is fine | Production, Preview |
-| `SUPABASE_STORAGE_BUCKET` | Optional; default `store-images` – must match your Storage bucket name | Production, Preview |
+| Name | Purpose |
+|------|---------|
+| `DATABASE_URL` | Supabase pooler URI (port **6543**) |
+| `NEXTAUTH_SECRET` | Output of `openssl rand -base64 32` |
+| `NEXTAUTH_URL` | `https://your-domain.vercel.app` (production) or preview URL |
+| `NEXT_PUBLIC_APP_URL` | Same canonical URL as the site |
+| `ADMIN_EMAILS` | **Required.** Comma-separated emails allowed to sign in and access `/admin` |
+| `RESEND_API_KEY` | Transactional email |
+| `ADMIN_EMAIL` | Where lead/order notifications are sent |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Optional OAuth |
+| `NEXT_PUBLIC_SUPABASE_URL` | Same project as DB is fine — admin uploads |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Server only** — never expose to the browser |
+| `SUPABASE_STORAGE_BUCKET` | Optional; default `store-images` |
 
-See **`docs/SUPABASE-STORAGE.md`** to create the public `store-images` bucket.
+See **`docs/SUPABASE-STORAGE.md`** for the public `store-images` bucket.
 
-3. **Redeploy** after adding vars (Deployments → ⋮ → Redeploy)
+On deploy, Next.js runs **`src/instrumentation.ts`**: if `VERCEL=1` and `NODE_ENV=production`, missing `ADMIN_EMAILS`, auth secrets, or database URL **fails startup** so misconfiguration is obvious.
 
-### Option B: Vercel CLI
+**Local parity:** `FORCE_PRODUCTION_ENV_CHECK=true pnpm start` runs the same assertions.
+
+**Emergency bypass (avoid):** `SKIP_PRODUCTION_ENV_CHECK=true`
+
+### TLS to Postgres
+
+By default the app uses `rejectUnauthorized: true` for non-localhost connections. If your provider requires a custom CA, set `DATABASE_SSL_REJECT_UNAUTHORIZED=false` only after understanding the risk.
+
+---
+
+## 3. Admin access
+
+Only emails listed in **`ADMIN_EMAILS`** can sign in. Everyone else is blocked at login.
+
+Details: **`docs/ADMIN-AUTH.md`**.
+
+---
+
+## 4. Post-deploy checks
+
+- Store: `https://your-domain.vercel.app/store`  
+- Health: `https://your-domain.vercel.app/api/health` (`database: true` when Postgres is reachable)  
+- Admin: `https://your-domain.vercel.app/admin` (should redirect to sign-in, then allow only allowlisted users)  
+
+If you see 500s: **Vercel → Logs** (Functions).
+
+---
+
+## 5. Vercel CLI (optional)
+
 ```bash
 vercel login
-vercel link   # if not linked
-
-# Add each var (will prompt for value)
+vercel link
 vercel env add DATABASE_URL production
-vercel env add NEXTAUTH_SECRET production
-vercel env add NEXTAUTH_URL production
-vercel env add NEXT_PUBLIC_APP_URL production
-
-# Redeploy
+# ... repeat for each variable
 vercel --prod
 ```
 
 ---
 
-## 3. One-time database sync
+## 6. Observability
 
-After deployment, ensure production DB has schema and seed data:
-
-```bash
-# Temporarily use production DATABASE_URL
-DATABASE_URL="postgresql://..." pnpm db:push
-DATABASE_URL="postgresql://..." pnpm db:seed
-```
-
-Or from Supabase: **SQL Editor** → run migrations manually if you have SQL files.
-
----
-
-## 4. Verify
-
-- Store: `https://your-domain.vercel.app/store`
-- Admin: `https://your-domain.vercel.app/admin`
-- If 500: check Vercel **Functions** → logs for the real error
+- Structured JSON logs: `src/lib/observability.ts` (`logServerError`, `logAdminFailure`).  
+- Hook `captureException` there when you add Sentry or another APM.  
+- Vercel **Runtime Logs** and **Speed Insights** cover baseline monitoring.

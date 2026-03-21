@@ -4,13 +4,18 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, CheckCircle } from "lucide-react";
 import { formatCategory } from "@/lib/store-categories";
 import { AddToCartButton } from "@/components/store/add-to-cart-button";
-import { getHardcodedProductBySlug, HARDCODED_PRODUCTS } from "@/lib/products-data";
+import { getHardcodedProductBySlug } from "@/lib/products-data";
+import { allowHardcodedCatalogFallback } from "@/lib/catalog-policy";
+import { CatalogUnavailableError } from "@/lib/catalog-errors";
 import type { Metadata } from "next";
 import type { Product } from "@/types/store";
 
 type Props = { params: Promise<{ slug: string }> };
 
+export const dynamic = "force-dynamic";
+
 async function getProductBySlug(slug: string): Promise<Product | null> {
+    const fallback = allowHardcodedCatalogFallback();
     try {
         const { db } = await import("@/db");
         const { products } = await import("@/db/schema");
@@ -21,7 +26,10 @@ async function getProductBySlug(slug: string): Promise<Product | null> {
             .where(and(eq(products.slug, slug), eq(products.published, true)))
             .limit(1);
         const row = result[0];
-        if (!row) return null;
+        if (!row) {
+            if (fallback) return getHardcodedProductBySlug(slug);
+            return null;
+        }
         return {
             id: row.id,
             slug: row.slug,
@@ -35,28 +43,28 @@ async function getProductBySlug(slug: string): Promise<Product | null> {
             featured: row.featured ?? false,
         };
     } catch {
-        return null;
+        if (fallback) return getHardcodedProductBySlug(slug);
+        throw new CatalogUnavailableError();
     }
-}
-
-export function generateStaticParams() {
-    return HARDCODED_PRODUCTS.map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
-    const product = (await getProductBySlug(slug)) ?? getHardcodedProductBySlug(slug);
-    if (!product) return {};
-    return {
-        title: product.name,
-        description: product.shortDescription || product.description,
-    };
+    try {
+        const product = await getProductBySlug(slug);
+        if (!product) return {};
+        return {
+            title: product.name,
+            description: product.shortDescription || product.description,
+        };
+    } catch {
+        return {};
+    }
 }
 
 export default async function ProductDetailPage({ params }: Props) {
     const { slug } = await params;
-    const dbProduct = await getProductBySlug(slug);
-    const product = dbProduct ?? getHardcodedProductBySlug(slug);
+    const product = await getProductBySlug(slug);
     if (!product) notFound();
 
     const priceFormatted = (product.price / 100).toFixed(2);
@@ -75,7 +83,6 @@ export default async function ProductDetailPage({ params }: Props) {
                 </Link>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-5xl">
-                    {/* Image */}
                     <div className="aspect-square bg-[var(--color-surface)] rounded-xl overflow-hidden relative">
                         {product.image ? (
                             <Image
@@ -98,7 +105,6 @@ export default async function ProductDetailPage({ params }: Props) {
                         )}
                     </div>
 
-                    {/* Details */}
                     <div>
                         <span className="label text-[var(--color-accent)]">
                             {formatCategory(product.category)}
@@ -123,13 +129,8 @@ export default async function ProductDetailPage({ params }: Props) {
                         </div>
 
                         <div className="flex flex-wrap gap-4">
-                            <AddToCartButton
-                                product={product}
-                            />
-                            <Link
-                                href="/book"
-                                className="btn btn-secondary"
-                            >
+                            <AddToCartButton product={product} />
+                            <Link href="/book" className="btn btn-secondary">
                                 Book Consultation
                             </Link>
                         </div>

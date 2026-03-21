@@ -1,9 +1,7 @@
 /**
  * Hardcoded product catalog (Sierra Strength Inventory).
- * Used when DATABASE_URL is not configured – store works without DB.
- *
- * ⚠️ REMINDER: Before launch, configure DATABASE_URL in Vercel and switch
- * the store back to the database. See docs/LAUNCH-TODO.md for steps.
+ * Used only when `allowHardcodedCatalogFallback()` is true (local dev by default;
+ * production uses DB only unless `ALLOW_HARDCODED_CATALOG=true`).
  */
 
 import type { Product } from "@/types/store";

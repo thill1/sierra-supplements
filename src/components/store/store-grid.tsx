@@ -1,5 +1,7 @@
 import { ProductCard } from "./product-card";
 import { getHardcodedProducts } from "@/lib/products-data";
+import { allowHardcodedCatalogFallback } from "@/lib/catalog-policy";
+import { CatalogUnavailableError } from "@/lib/catalog-errors";
 import type { Product } from "@/types/store";
 
 function dbRowToProduct(row: {
@@ -28,7 +30,9 @@ function dbRowToProduct(row: {
     };
 }
 
-async function getProductsFromDb(category?: string | null): Promise<Product[] | null> {
+async function getProductsFromDb(
+    category?: string | null,
+): Promise<{ ok: true; products: Product[] } | { ok: false }> {
     try {
         const { db } = await import("@/db");
         const { products } = await import("@/db/schema");
@@ -40,20 +44,35 @@ async function getProductsFromDb(category?: string | null): Promise<Product[] | 
             .from(products)
             .where(and(...conditions))
             .orderBy(desc(products.featured), desc(products.createdAt));
-        return rows.map(dbRowToProduct);
+        return { ok: true, products: rows.map(dbRowToProduct) };
     } catch {
-        return null;
+        return { ok: false };
     }
 }
 
 export async function StoreGrid({
     category,
 }: { category?: string | null } = {}) {
-    const dbProducts = await getProductsFromDb(category);
-    const items = dbProducts && dbProducts.length > 0
-        ? dbProducts
-        : getHardcodedProducts(category);
+    const fallback = allowHardcodedCatalogFallback();
+    const dbResult = await getProductsFromDb(category);
 
+    if (!dbResult.ok) {
+        if (fallback) {
+            const items = getHardcodedProducts(category);
+            return <ProductGrid items={items} />;
+        }
+        throw new CatalogUnavailableError();
+    }
+
+    let items = dbResult.products;
+    if (items.length === 0 && fallback) {
+        items = getHardcodedProducts(category);
+    }
+
+    return <ProductGrid items={items} />;
+}
+
+function ProductGrid({ items }: { items: Product[] }) {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {items.length === 0 ? (
@@ -64,10 +83,7 @@ export async function StoreGrid({
                 </div>
             ) : (
                 items.map((product: Product) => (
-                    <ProductCard
-                        key={product.id}
-                        product={product}
-                    />
+                    <ProductCard key={product.id} product={product} />
                 ))
             )}
         </div>

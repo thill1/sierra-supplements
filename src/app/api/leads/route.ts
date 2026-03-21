@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { escapeHtml } from "@/lib/escape-html";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimits } from "@/lib/rate-limit";
+import { logServerError } from "@/lib/observability";
 
-// Schema validation for lead capture
 const leadSchema = z.object({
     name: z.string().max(200).optional(),
     email: z.string().email(),
@@ -13,15 +13,19 @@ const leadSchema = z.object({
     page: z.string().max(500).optional(),
 });
 
+const isProd = process.env.NODE_ENV === "production";
+
 export async function POST(request: Request) {
-    const limited = checkRateLimit(request, "leads", 25, 60 * 60 * 1000);
+    const limited = checkRateLimits(request, [
+        { namespace: "leads-15m", limit: 5, windowMs: 15 * 60 * 1000 },
+        { namespace: "leads-1h", limit: 12, windowMs: 60 * 60 * 1000 },
+    ]);
     if (limited) return limited;
 
     try {
         const body = await request.json();
         const data = leadSchema.parse(body);
 
-        // Dynamically import DB to avoid build-time errors if DATABASE_URL isn't set
         let leadId: number | null = null;
         try {
             const { db } = await import("@/db");
@@ -40,16 +44,28 @@ export async function POST(request: Request) {
                 .returning({ id: leads.id });
             leadId = result[0]?.id ?? null;
         } catch (dbError) {
-            console.warn("DB not available, lead stored in memory only:", dbError);
+            if (isProd) {
+                logServerError("leads_db_insert", dbError);
+                return NextResponse.json(
+                    { error: "Service temporarily unavailable" },
+                    { status: 503 },
+                );
+            }
+            console.warn("DB not available, lead not persisted:", dbError);
         }
 
-        // Send notification email via Resend (if configured)
+        if (isProd && leadId === null) {
+            return NextResponse.json(
+                { error: "Service temporarily unavailable" },
+                { status: 503 },
+            );
+        }
+
         if (process.env.RESEND_API_KEY) {
             try {
                 const { Resend } = await import("resend");
                 const resend = new Resend(process.env.RESEND_API_KEY);
 
-                // Notify admin
                 await resend.emails.send({
                     from: "Sierra Strength <noreply@sierrastrengthsupplements.com>",
                     to: process.env.ADMIN_EMAIL || "admin@sierrastrengthsupplements.com",
@@ -65,7 +81,6 @@ export async function POST(request: Request) {
           `,
                 });
 
-                // Send confirmation to user
                 await resend.emails.send({
                     from: "Sierra Strength <noreply@sierrastrengthsupplements.com>",
                     to: data.email,
@@ -83,7 +98,7 @@ export async function POST(request: Request) {
           `,
                 });
             } catch (emailError) {
-                console.warn("Email sending failed:", emailError);
+                logServerError("leads_resend", emailError);
             }
         }
 
@@ -98,7 +113,7 @@ export async function POST(request: Request) {
                 { status: 400 }
             );
         }
-        console.error("Lead capture error:", error);
+        logServerError("leads_post", error);
         return NextResponse.json(
             { error: "Internal server error" },
             { status: 500 }

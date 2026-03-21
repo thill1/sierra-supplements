@@ -3,7 +3,8 @@ import { db } from "@/db";
 import { products, productCategories } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod/v4";
-import { requireAuth } from "@/lib/require-auth";
+import { requireAdmin } from "@/lib/require-admin";
+import { logAdminFailure } from "@/lib/observability";
 
 const updateSchema = z.object({
     slug: z.string().min(1).optional(),
@@ -22,7 +23,7 @@ const updateSchema = z.object({
 type Params = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, { params }: Params) {
-    const { response } = await requireAuth();
+    const { response } = await requireAdmin();
     if (response) return response;
 
     try {
@@ -43,7 +44,7 @@ export async function GET(_request: Request, { params }: Params) {
         }
         return NextResponse.json(product);
     } catch (error) {
-        console.error("Admin product GET error:", error);
+        logAdminFailure("product_get", error);
         return NextResponse.json(
             { error: "Failed to fetch product" },
             { status: 500 }
@@ -52,7 +53,7 @@ export async function GET(_request: Request, { params }: Params) {
 }
 
 export async function PUT(request: Request, { params }: Params) {
-    const { response } = await requireAuth();
+    const { response } = await requireAdmin();
     if (response) return response;
 
     try {
@@ -92,7 +93,7 @@ export async function PUT(request: Request, { params }: Params) {
                 { status: 400 }
             );
         }
-        console.error("Admin product update error:", error);
+        logAdminFailure("product_update", error);
         return NextResponse.json(
             { error: "Failed to update product" },
             { status: 500 }
@@ -101,7 +102,7 @@ export async function PUT(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_request: Request, { params }: Params) {
-    const { response } = await requireAuth();
+    const { response } = await requireAdmin();
     if (response) return response;
 
     try {
@@ -114,7 +115,7 @@ export async function DELETE(_request: Request, { params }: Params) {
         await db.delete(products).where(eq(products.id, productId));
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error("Admin product delete error:", error);
+        logAdminFailure("product_delete", error);
         return NextResponse.json(
             { error: "Failed to delete product" },
             { status: 500 }

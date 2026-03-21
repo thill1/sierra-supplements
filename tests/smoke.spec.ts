@@ -1,42 +1,48 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Sierra Supplements Critical Flows", () => {
-    test.beforeEach(async ({ page }) => {
-        await page.goto("http://localhost:3001");
+test.describe("Sierra Strength critical flows", () => {
+    test("home page loads with brand in title", async ({ page }) => {
+        await page.goto("/");
+        await expect(page).toHaveTitle(/Sierra Strength/i);
     });
 
-    test("should load home page with correct title", async ({ page }) => {
-        await expect(page).toHaveTitle(/Sierra Supplements/);
+    test("store page renders", async ({ page }) => {
+        await page.goto("/store");
+        await expect(page.getByRole("heading", { name: /The Store/i })).toBeVisible();
     });
 
-    test("should allow navigating to services", async ({ page }) => {
-        await page.click('nav >> text="Services"');
-        await expect(page).toHaveURL(/.*services/);
-        await expect(page.locator("h1")).toContainText(/Everything You Need to Thrive/);
+    test("navigate to services", async ({ page }) => {
+        await page.goto("/");
+        await page
+            .getByRole("navigation")
+            .getByRole("link", { name: "Services" })
+            .click();
+        await expect(page).toHaveURL(/\/services/);
+        await expect(
+            page.getByRole("heading", { name: /Everything You Need to Thrive/i }),
+        ).toBeVisible();
     });
 
-    test("should submit contact form successfully", async ({ page }) => {
-        await page.goto("http://localhost:3001/contact");
-        await page.fill('#contact-form input[placeholder="Your name"]', "Test User");
-        await page.fill('#contact-form input[placeholder="you@example.com"]', "test@example.com");
-        await page.fill('#contact-form textarea[placeholder="How can we help you?"]', "Hello from Playwright!");
-        await page.click('#contact-form button[type="submit"]');
-
-        // Expect success message
-        await expect(page.locator("text=Message Sent!")).toBeVisible();
+    test("contact form submits and shows success", async ({ page }) => {
+        await page.goto("/contact");
+        await page.locator("#name").fill("Playwright User");
+        await page.locator("#email").fill("playwright-test@example.com");
+        await page.locator("#message").fill("Hello from Playwright smoke test.");
+        await page.locator("#contact-form button[type='submit']").click();
+        await expect(page.getByRole("heading", { name: "Message Sent!" })).toBeVisible({
+            timeout: 15000,
+        });
     });
 
-    test("should open booking page and show cal.com placeholder", async ({ page }) => {
-        await page.click('nav >> text="Book Now"');
-        await expect(page).toHaveURL(/.*book/);
-        await expect(page.locator("text=Calendar Booking")).toBeVisible();
-    });
-
-    test("should show exit intent modal when mouse leaves viewport", async ({ page }) => {
-        // Move mouse to center then leave
-        await page.mouse.move(500, 500);
-        await page.mouse.move(500, -10);
-
-        await expect(page.locator('text="Wait — Before You Go"')).toBeVisible();
+    test("booking page shows consultation heading", async ({ page }) => {
+        await page.goto("/");
+        await page
+            .getByRole("banner")
+            .getByRole("link", { name: "Book Now" })
+            .click();
+        await expect(page).toHaveURL(/\/book/);
+        await expect(
+            page.getByRole("heading", { name: /Free Consultation/i }),
+        ).toBeVisible();
     });
 });

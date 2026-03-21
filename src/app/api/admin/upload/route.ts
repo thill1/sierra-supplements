@@ -1,9 +1,11 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/require-auth";
+import { requireAdmin } from "@/lib/require-admin";
+import { validateImageMagicBytes } from "@/lib/image-magic";
+import { logAdminFailure } from "@/lib/observability";
 import { createSupabaseAdmin, getSupabaseStorageBucket } from "@/lib/supabase-admin";
 
-const MAX_BYTES = 6 * 1024 * 1024; // 6 MB (Supabase standard upload guidance)
+const MAX_BYTES = 6 * 1024 * 1024;
 
 const ALLOWED_MIME = new Set([
     "image/jpeg",
@@ -21,7 +23,7 @@ function extensionForMime(mime: string): string {
 }
 
 export async function POST(request: Request) {
-    const { response } = await requireAuth();
+    const { response } = await requireAdmin();
     if (response) return response;
 
     const supabase = createSupabaseAdmin();
@@ -55,7 +57,7 @@ export async function POST(request: Request) {
         }
 
         const lowerName = file.name.toLowerCase();
-        let mime = file.type || "";
+        const mime = file.type || "";
         let payload: Buffer = buf;
         let outMime = mime;
 
@@ -79,7 +81,7 @@ export async function POST(request: Request) {
                         : Buffer.from(jpegBuffer);
                 outMime = "image/jpeg";
             } catch (e) {
-                console.warn("HEIC conversion failed:", e);
+                logAdminFailure("upload_heic_convert", e);
                 return NextResponse.json(
                     { error: "Could not convert HEIC image. Try JPG or PNG." },
                     { status: 400 },
@@ -106,6 +108,19 @@ export async function POST(request: Request) {
             }
         }
 
+        if (
+            outMime === "image/jpeg" ||
+            outMime === "image/png" ||
+            outMime === "image/webp"
+        ) {
+            if (!validateImageMagicBytes(payload, outMime)) {
+                return NextResponse.json(
+                    { error: "File content does not match an allowed image type" },
+                    { status: 400 },
+                );
+            }
+        }
+
         const ext = extensionForMime(outMime);
         const objectPath = `products/${Date.now()}-${randomBytes(8).toString("hex")}.${ext}`;
         const bucket = getSupabaseStorageBucket();
@@ -118,7 +133,7 @@ export async function POST(request: Request) {
             });
 
         if (uploadError) {
-            console.error("Supabase upload error:", uploadError);
+            logAdminFailure("upload_supabase", uploadError);
             return NextResponse.json(
                 {
                     error:
@@ -133,7 +148,7 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ url: urlData.publicUrl });
     } catch (e) {
-        console.error("Admin upload error:", e);
+        logAdminFailure("upload_unhandled", e);
         return NextResponse.json({ error: "Upload failed" }, { status: 500 });
     }
 }

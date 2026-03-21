@@ -60,3 +60,24 @@ export function checkRateLimit(
 
     return null;
 }
+
+export type RateRule = { namespace: string; limit: number; windowMs: number };
+
+/**
+ * Apply multiple windows (e.g. burst + hourly). First exceeded limit wins.
+ */
+export function checkRateLimits(
+    request: Request,
+    rules: RateRule[],
+): NextResponse | null {
+    for (const rule of rules) {
+        const res = checkRateLimit(
+            request,
+            rule.namespace,
+            rule.limit,
+            rule.windowMs,
+        );
+        if (res) return res;
+    }
+    return null;
+}

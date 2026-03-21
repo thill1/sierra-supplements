@@ -3,7 +3,8 @@ import { db } from "@/db";
 import { products, productCategories } from "@/db/schema";
 import { desc } from "drizzle-orm";
 import { z } from "zod/v4";
-import { requireAuth } from "@/lib/require-auth";
+import { requireAdmin } from "@/lib/require-admin";
+import { logAdminFailure } from "@/lib/observability";
 
 const createSchema = z.object({
     slug: z.string().min(1),
@@ -20,7 +21,7 @@ const createSchema = z.object({
 });
 
 export async function GET() {
-    const { response } = await requireAuth();
+    const { response } = await requireAdmin();
     if (response) return response;
 
     try {
@@ -30,7 +31,7 @@ export async function GET() {
             .orderBy(desc(products.createdAt));
         return NextResponse.json(result);
     } catch (error) {
-        console.error("Admin products fetch error:", error);
+        logAdminFailure("products_list", error);
         return NextResponse.json(
             { error: "Failed to fetch products" },
             { status: 500 }
@@ -39,7 +40,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-    const { response } = await requireAuth();
+    const { response } = await requireAdmin();
     if (response) return response;
 
     try {
@@ -77,7 +78,7 @@ export async function POST(request: Request) {
                 { status: 400 }
             );
         }
-        console.error("Admin product create error:", error);
+        logAdminFailure("product_create", error);
         return NextResponse.json(
             { error: "Failed to create product" },
             { status: 500 }

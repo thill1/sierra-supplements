@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod/v4";
-import { checkRateLimit } from "@/lib/rate-limit";
+import { checkRateLimits } from "@/lib/rate-limit";
+import { logServerError } from "@/lib/observability";
 
 const eventSchema = z.object({
     type: z.enum(["view", "click", "submit", "book", "purchase"]),
@@ -10,8 +11,13 @@ const eventSchema = z.object({
     sessionId: z.string().optional(),
 });
 
+const isProd = process.env.NODE_ENV === "production";
+
 export async function POST(request: Request) {
-    const limited = checkRateLimit(request, "events", 180, 60 * 60 * 1000);
+    const limited = checkRateLimits(request, [
+        { namespace: "events-5m", limit: 40, windowMs: 5 * 60 * 1000 },
+        { namespace: "events-1h", limit: 150, windowMs: 60 * 60 * 1000 },
+    ]);
     if (limited) return limited;
 
     try {
@@ -29,6 +35,13 @@ export async function POST(request: Request) {
                 sessionId: data.sessionId || null,
             });
         } catch (dbError) {
+            if (isProd) {
+                logServerError("events_db_insert", dbError);
+                return NextResponse.json(
+                    { error: "Service temporarily unavailable" },
+                    { status: 503 },
+                );
+            }
             console.warn("DB not available for event tracking:", dbError);
         }
 
@@ -40,6 +53,7 @@ export async function POST(request: Request) {
                 { status: 400 }
             );
         }
+        logServerError("events_post", error);
         return NextResponse.json(
             { error: "Internal server error" },
             { status: 500 }

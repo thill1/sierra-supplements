@@ -1,102 +1,79 @@
-# 🏔️ Sierra Strength Supplements – Marketing Website & Admin Dashboard
+# Sierra Strength Supplements
 
-A production-ready, high-converting marketing website for local service businesses or agencies. Designed with a **Sierra Mountain** premium aesthetic.
+Marketing site, supplement store (order intake — not payment capture), and admin portal. Stack: **Next.js 16 (App Router)**, **TypeScript**, **Postgres + Drizzle**, **Auth.js**, **Resend**, optional **Supabase Storage** for admin image uploads.
 
-## 🚀 Quick Start
+## Requirements
 
-### 1. Requirements
-- Node.js 18+
-- pnpm
-- (Optional) Docker for Postgres — the app uses local SQLite by default
+- **Node.js 20+** (see `package.json` `engines`)
+- **pnpm**
 
-### 2. Installation
+## Quick start
+
 ```bash
 pnpm install
-```
-
-### 3. Environment Setup
-Copy the example environment file and update your variables:
-```bash
 cp .env.example .env
-```
-Key variables to update:
-- `DATABASE_URL`: Your Postgres connection string.
-- `NEXTAUTH_SECRET`: Generate with `npx auth secret`.
-- `RESEND_API_KEY`: For email notifications.
-- `ADMIN_EMAIL`: Where you want lead notifications sent.
-
-### 4. Database Setup (Local SQLite — no Docker required)
-Create tables and seed placeholder products:
-```bash
+# Edit .env — at minimum DATABASE_URL, NEXTAUTH_SECRET, NEXTAUTH_URL, ADMIN_EMAILS
 pnpm db:push
 pnpm db:seed
-```
-The database file is saved to `data/sierra.db`.
-
-### 5. Running the App
-```bash
 pnpm dev
 ```
-Open [http://localhost:3000](http://localhost:3000) to view the site.
 
----
+Open [http://localhost:3000](http://localhost:3000).
 
-## 🏗️ Tech Stack
-- **Framework**: Next.js 14+ (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS 4 + shadcn/ui
-- **Animations**: Framer Motion
-- **Database**: Postgres (local Docker) + Drizzle ORM
-- **Auth**: Auth.js (NextAuth) with Email Magic Links & Google
-- **Forms**: Server Actions + Zod
-- **Email**: Resend
-- **Testing**: Playwright
-
----
-
-## 📂 Information Architecture
-- **Home**: Hero, Social Proof, Services, Pricing, FAQ, Lead Magnet
-- **Services**: Listing and individual detail pages
-- **Pricing**: Comparison table & tier cards
-- **Admin**: Dashboard, Lead Management, Content Blocks Editor
-- **Booking**: Calendar integration via Cal.com
-- **Landing Pages**: Minimal lead magnet offer pages
-
----
-
-## 🛠️ Configuration
-Most site-wide content (services, pricing, brand info) is managed in:
-`src/lib/site-config.ts`
-
-To customize for a different business:
-1. Update `siteConfig` in that file.
-2. Update CSS variables in `src/app/globals.css`.
-3. Swap images in `public/images/`.
-
----
-
-## 🧪 Testing
-Run smoke tests for critical flows:
-```bash
-pnpm exec playwright test
-```
-
-## 🚀 Deployment
-
-### Client preview (GitHub Pages)
-The repo is set up to deploy a **public preview** on GitHub Pages for client feedback:
-
-1. In the repo, go to **Settings → Pages**.
-2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
-3. Each push to `main` runs the workflow and publishes the site to:
-   **https://thill1.github.io/sierra-supplements/**
-4. Share that URL with your client for feedback.
-
-Note: The GitHub Pages build is a static export (no API routes or form submissions). For full auth and forms, run locally or deploy to Vercel/Railway.
-
-### Docker
-The repo is Docker-ready. Use the provided `Dockerfile` and `docker-compose.yml` for production deployments on platforms like Coolify, Railway, or VPS.
+Validate environment (recommended after editing `.env`):
 
 ```bash
-docker build -t sierra-supplements .
+pnpm setup:check
 ```
+
+## Environment variables
+
+| Variable | Notes |
+|----------|--------|
+| `DATABASE_URL` | Postgres (Supabase pooler **6543** on Vercel). See `docs/DATABASE.md`. |
+| `NEXTAUTH_SECRET` | `openssl rand -base64 32` |
+| `NEXTAUTH_URL` | Public origin, e.g. `http://localhost:3000` or `https://your-domain.vercel.app` |
+| `ADMIN_EMAILS` | **Comma-separated** emails that may sign in and use `/admin` and `/api/admin/*`. Required on Vercel. |
+| `RESEND_API_KEY` | Contact + order notification email |
+| `ADMIN_EMAIL` | Inbound address for lead/order notifications |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Optional Google sign-in |
+| `NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | Optional; admin product image uploads (`docs/SUPABASE-STORAGE.md`) |
+| `ALLOW_HARDCODED_CATALOG` | Set `true` only if you intentionally want static catalog fallback in production (not recommended). |
+| `DISABLE_HARDCODED_CATALOG` | Local: `true` to test DB-only catalog behavior. |
+
+Full template: `.env.example`. Admin model: **`docs/ADMIN-AUTH.md`**.
+
+## Scripts
+
+| Command | Purpose |
+|---------|---------|
+| `pnpm dev` | Dev server (Turbopack) |
+| `pnpm build` / `pnpm start` | Production build and run |
+| `pnpm db:push` | Apply Drizzle schema to Postgres |
+| `pnpm db:seed` | Seed products |
+| `pnpm setup:check` | Env sanity check |
+| `pnpm test:e2e` | Playwright tests |
+
+## Testing
+
+```bash
+pnpm test:e2e
+```
+
+Uses the dev server on port **3001** (see `playwright.config.ts`). Tests cover homepage, store, contact form, public API validation, and unauthenticated admin API rejection.
+
+## Deployment (Vercel)
+
+See **`docs/DEPLOYMENT.md`** for Supabase connection strings, Vercel env vars, and verification. **`docs/LAUNCH-TODO.md`** is the launch checklist.
+
+**Production hardening (summary):**
+
+- Admin is allowlist-based (`ADMIN_EMAILS`); sign-in and APIs enforce it.
+- Public POST endpoints use stricter in-memory rate limits (approximate on serverless).
+- Production catalog uses the database unless `ALLOW_HARDCODED_CATALOG=true`.
+- Content-Security-Policy and security headers apply in production builds.
+- `GET /api/health` for uptime / DB connectivity checks.
+
+## Customization
+
+Site copy and structure: `src/lib/site-config.ts`. Visual tokens: `src/app/globals.css`.
