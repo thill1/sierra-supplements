@@ -1,39 +1,40 @@
-# Before Launch Checklist
+# Launch checklist
 
-**→ See `docs/MONDAY-LAUNCH.md` for a focused Monday launch plan.**
+**→ See `docs/MONDAY-LAUNCH.md` for a focused launch plan.**
 
-## Database (required for store/admin)
+## Required before production traffic
 
-The store uses **db-first with hardcoded fallback** – it works without `DATABASE_URL`, but admin, leads, and orders need the database.
+1. **Postgres** — Supabase (or other) with **pooler 6543** on Vercel. `pnpm db:push` + `pnpm db:seed` (or equivalent) on production.
 
-1. **Choose a provider** — Supabase, Neon, or Vercel Postgres. See `docs/DATABASE.md`.
+2. **Environment variables on Vercel (Production + Preview)**  
+   - `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `NEXT_PUBLIC_APP_URL`  
+   - **`ADMIN_EMAILS`** — comma-separated; who may sign in and use admin  
+   - `RESEND_API_KEY`, `ADMIN_EMAIL`  
+   - Optional: Google OAuth, Supabase Storage for uploads  
 
-2. **Add `DATABASE_URL` to Vercel**
-   - Supabase: Transaction pooler URI (port 6543)
-   - Neon: Connection string from dashboard
-   - Vercel Postgres: `POSTGRES_URL` is auto-injected
+3. **Verify**  
+   - `/store` loads products from DB (not static fallback — do **not** set `ALLOW_HARDCODED_CATALOG` unless intentional).  
+   - `/api/health` returns `"database": true`.  
+   - Non-allowlisted email **cannot** sign in.  
+   - Allowlisted email can use `/admin` and uploads (if Storage configured).  
 
-3. **Sync the database**
-   ```bash
-   pnpm db:push
-   pnpm db:seed
-   ```
+4. **Security**  
+   - CSP + headers active in production (`next.config.ts`).  
+   - `SUPABASE_SERVICE_ROLE_KEY` only in server env.  
 
-4. **Redeploy** on Vercel after env vars.
+5. **Backups** — `docs/BACKUP-RECOVERY.md`
 
-## Other env vars (Vercel)
+## Reference docs
 
-| Variable | Purpose |
-|----------|---------|
-| `NEXTAUTH_SECRET` | Auth sessions |
-| `NEXTAUTH_URL` | Production URL |
-| `NEXT_PUBLIC_APP_URL` | Same as production site URL |
-| `RESEND_API_KEY` | Order + contact emails |
-| `ADMIN_EMAIL` | Where to send notifications |
-| `NEXT_PUBLIC_SUPABASE_URL` | (Optional) Admin image uploads – see `docs/SUPABASE-STORAGE.md` |
-| `SUPABASE_SERVICE_ROLE_KEY` | (Optional) Server-only; never expose to the browser |
-| `SUPABASE_STORAGE_BUCKET` | (Optional) Default `store-images` |
+| Doc | Topic |
+|-----|--------|
+| `docs/ADMIN-AUTH.md` | Allowlist admin model |
+| `docs/DEPLOYMENT.md` | Vercel + Supabase setup |
+| `docs/DATABASE.md` | Database providers |
+| `docs/SUPABASE-STORAGE.md` | Image uploads |
 
-## Backups
+## After launch
 
-See **`docs/BACKUP-RECOVERY.md`** for database, Storage, and recovery steps.
+- Monitor Vercel logs and `/api/health`.  
+- Enable Sentry by setting **`SENTRY_DSN`** and **`NEXT_PUBLIC_SENTRY_DSN`** in Vercel; optional source maps via `SENTRY_AUTH_TOKEN` / org / project.  
+- Consider Upstash Redis (or Vercel KV) for **distributed** rate limiting if traffic grows (current limits are per instance).

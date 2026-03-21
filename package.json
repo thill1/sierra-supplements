@@ -2,14 +2,21 @@
   "name": "sierra-supplements",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/db/seed-products.ts",
+    "db:seed-admins": "tsx src/db/seed-admins.ts",
     "setup:check": "node scripts/check-env.js",
     "setup:vercel": "echo 'See docs/DEPLOYMENT.md for Vercel env setup'"
   },
@@ -24,7 +31,9 @@
     "@mdx-js/mdx": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
     "@neondatabase/serverless": "^1.0.2",
+    "@sentry/nextjs": "^10.45.0",
     "@supabase/supabase-js": "^2.99.3",
+    "@vercel/blob": "^2.3.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.1",
@@ -39,6 +48,9 @@
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "resend": "^6.9.2",
+    "sharp": "^0.34.5",
+    "sonner": "^2.0.7",
+    "stripe": "^20.4.1",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.3.6"
   },
@@ -55,6 +67,7 @@
     "prettier": "^3.8.1",
     "tailwindcss": "^4",
     "tsx": "^4.19.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^2.1.9"
   }
 }

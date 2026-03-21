@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { products } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, gt } from "drizzle-orm";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -11,7 +11,14 @@ export async function GET(_request: Request, { params }: Params) {
         const result = await db
             .select()
             .from(products)
-            .where(and(eq(products.slug, slug), eq(products.published, true)))
+            .where(
+                and(
+                    eq(products.slug, slug),
+                    eq(products.published, true),
+                    eq(products.status, "active"),
+                    gt(products.stockQuantity, 0),
+                ),
+            )
             .limit(1);
 
         const product = result[0];

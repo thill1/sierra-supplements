@@ -1,107 +1,343 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { resolveAdmin } from "@/lib/admin-auth";
 import {
-    Users,
-    TrendingUp,
-    MessageSquare,
-    Clock,
+    Package,
+    AlertTriangle,
+    FileEdit,
+    ShoppingBag,
+    Store,
+    ClipboardList,
+    Boxes,
+    Activity,
 } from "lucide-react";
+import { db } from "@/db";
+import {
+    products,
+    orders,
+    inventoryMovements,
+    auditLogs,
+} from "@/db/schema";
+import {
+    and,
+    asc,
+    count,
+    desc,
+    eq,
+    gt,
+    gte,
+    lte,
+    notInArray,
+    sql,
+} from "drizzle-orm";
+
+export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
-    let recentLeads: { id: number; name: string | null; email: string; source: string | null; status: string | null; createdAt: Date | null }[] = [];
-    try {
-        const { db } = await import("@/db");
-        const { leads } = await import("@/db/schema");
-        const { desc } = await import("drizzle-orm");
-        recentLeads = await db.select().from(leads).orderBy(desc(leads.createdAt)).limit(5);
-    } catch (e) {
-        console.warn("Could not fetch leads for dashboard", e);
+    const session = await auth();
+    const email = session?.user?.email;
+    if (!email) {
+        redirect("/auth/signin?callbackUrl=/admin");
+    }
+    const admin = await resolveAdmin(email);
+    if (!admin) {
+        redirect("/auth/error?error=AccessDenied");
     }
 
-    const stats = [
-        { label: "Total Leads", value: "0", icon: Users, trend: "+0%" },
-        { label: "Conversion Rate", value: "0%", icon: TrendingUp, trend: "+0%" },
-        { label: "New Messages", value: "0", icon: MessageSquare, trend: "0" },
-        { label: "Avg. Response", value: "2h", icon: Clock, trend: "-10m" },
+    const startOfUtcDay = new Date();
+    startOfUtcDay.setUTCHours(0, 0, 0, 0);
+
+    const [
+        totalProducts,
+        activeProducts,
+        draftProducts,
+        lowStockCount,
+        outOfStockCount,
+        openOrdersCount,
+        inStoreToday,
+        noImageCount,
+    ] = await Promise.all([
+        db.select({ c: count() }).from(products),
+        db
+            .select({ c: count() })
+            .from(products)
+            .where(
+                and(eq(products.status, "active"), eq(products.published, true)),
+            ),
+        db.select({ c: count() }).from(products).where(eq(products.status, "draft")),
+        db
+            .select({ c: count() })
+            .from(products)
+            .where(
+                and(
+                    eq(products.status, "active"),
+                    gt(products.stockQuantity, 0),
+                    lte(products.stockQuantity, products.lowStockThreshold),
+                ),
+            ),
+        db
+            .select({ c: count() })
+            .from(products)
+            .where(
+                and(
+                    eq(products.status, "active"),
+                    lte(products.stockQuantity, 0),
+                ),
+            ),
+        db
+            .select({ c: count() })
+            .from(orders)
+            .where(
+                notInArray(orders.status, [
+                    "fulfilled",
+                    "cancelled",
+                    "refunded",
+                ]),
+            ),
+        db
+            .select({ c: count() })
+            .from(inventoryMovements)
+            .where(
+                and(
+                    eq(inventoryMovements.source, "in_store"),
+                    gte(inventoryMovements.createdAt, startOfUtcDay),
+                ),
+            ),
+        db
+            .select({ c: count() })
+            .from(products)
+            .where(
+                and(
+                    notInArray(products.status, ["archived"]),
+                    sql`coalesce(${products.primaryImageUrl}, '') = ''`,
+                    sql`coalesce(${products.image}, '') = ''`,
+                ),
+            ),
+    ]);
+
+    const recentAudit = await db
+        .select()
+        .from(auditLogs)
+        .orderBy(desc(auditLogs.createdAt))
+        .limit(12);
+
+    const alertDrafts = await db
+        .select({
+            id: products.id,
+            name: products.name,
+        })
+        .from(products)
+        .where(eq(products.status, "draft"))
+        .orderBy(desc(products.updatedAt))
+        .limit(5);
+
+    const alertLow = await db
+        .select({
+            id: products.id,
+            name: products.name,
+            stockQuantity: products.stockQuantity,
+        })
+        .from(products)
+        .where(
+            and(
+                eq(products.status, "active"),
+                gt(products.stockQuantity, 0),
+                lte(products.stockQuantity, products.lowStockThreshold),
+            ),
+        )
+        .orderBy(asc(products.stockQuantity))
+        .limit(5);
+
+    const alertNoImg = await db
+        .select({ id: products.id, name: products.name })
+        .from(products)
+        .where(
+            and(
+                notInArray(products.status, ["archived"]),
+                sql`coalesce(${products.primaryImageUrl}, '') = ''`,
+                sql`coalesce(${products.image}, '') = ''`,
+            ),
+        )
+        .limit(5);
+
+    const kpi = (v: { c: number }[]) => v[0]?.c ?? 0;
+
+    const cards = [
+        {
+            label: "Total products",
+            value: kpi(totalProducts),
+            icon: Package,
+        },
+        {
+            label: "Active (published)",
+            value: kpi(activeProducts),
+            icon: Package,
+        },
+        { label: "Drafts", value: kpi(draftProducts), icon: FileEdit },
+        { label: "Low stock", value: kpi(lowStockCount), icon: AlertTriangle },
+        { label: "Out of stock", value: kpi(outOfStockCount), icon: Boxes },
+        { label: "Open orders", value: kpi(openOrdersCount), icon: ShoppingBag },
+        {
+            label: "In-store sales today",
+            value: kpi(inStoreToday),
+            icon: Store,
+        },
     ];
 
     return (
-        <div className="space-y-8">
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {stats.map((stat) => (
-                    <div key={stat.label} className="card p-6">
-                        <div className="flex items-center justify-between mb-4">
+        <div className="space-y-10">
+            <div>
+                <h2 className="text-xl font-bold mb-1">Control center</h2>
+                <p className="text-sm text-[var(--color-text-muted)]">
+                    Quick overview of catalog, inventory, and recent activity.
+                </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {cards.map((c) => (
+                    <div key={c.label} className="card p-5">
+                        <div className="flex items-center gap-3 mb-3">
                             <div className="w-10 h-10 rounded-lg bg-[var(--color-accent-subtle)] flex items-center justify-center">
-                                <stat.icon className="w-5 h-5 text-[var(--color-accent)]" />
+                                <c.icon className="w-5 h-5 text-[var(--color-accent)]" />
                             </div>
-                            <span className="text-xs font-medium text-[var(--color-success)] bg-green-500/10 px-2 py-1 rounded">
-                                {stat.trend}
+                            <span className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
+                                {c.label}
                             </span>
                         </div>
-                        <div className="text-2xl font-bold mb-1">{stat.value}</div>
-                        <div className="text-sm text-[var(--color-text-muted)]">{stat.label}</div>
+                        <div className="text-3xl font-bold tabular-nums">{c.value}</div>
                     </div>
                 ))}
             </div>
 
-            {/* Recent Leads Table */}
-            <div className="card !p-0 overflow-hidden">
-                <div className="px-6 py-4 border-b border-[var(--color-border-subtle)] flex items-center justify-between">
-                    <h2 className="font-semibold">Recent Leads</h2>
-                    <Link href="/admin/leads" className="text-sm text-[var(--color-accent)] hover:underline">
-                        View All
-                    </Link>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="card p-6 space-y-4">
+                    <h3 className="font-semibold flex items-center gap-2">
+                        <ClipboardList className="w-4 h-4" /> Quick actions
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                        <Link href="/admin/products/new" className="btn btn-primary text-sm">
+                            Add product
+                        </Link>
+                        <Link href="/admin/inventory" className="btn btn-secondary text-sm">
+                            Record in-store sale
+                        </Link>
+                        <Link href="/admin/inventory" className="btn btn-secondary text-sm">
+                            Adjust inventory
+                        </Link>
+                        <Link href="/admin/products/new" className="btn btn-secondary text-sm">
+                            Upload photos
+                        </Link>
+                        <Link href="/admin/orders" className="btn btn-secondary text-sm">
+                            Review orders
+                        </Link>
+                    </div>
+                    <p className="text-xs text-[var(--color-text-muted)]">
+                        Photo uploads live in the product editor (per product). Use{" "}
+                        <span className="text-[var(--color-accent)]">Inventory</span> for
+                        gym-floor sales and stock counts.
+                    </p>
                 </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr className="bg-[var(--color-bg-muted)]/50">
-                                <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
-                                    Lead
-                                </th>
-                                <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
-                                    Source
-                                </th>
-                                <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
-                                    Status
-                                </th>
-                                <th className="px-6 py-3 text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
-                                    Date
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[var(--color-border-subtle)]">
-                            {recentLeads.length > 0 ? (
-                                recentLeads.map((lead) => (
-                                    <tr key={lead.id} className="hover:bg-[var(--color-bg-muted)]/30 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="font-medium text-sm">{lead.name || lead.email}</div>
-                                            <div className="text-xs text-[var(--color-text-muted)]">{lead.email}</div>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="text-xs px-2 py-1 rounded bg-[var(--color-surface)] border border-[var(--color-border-subtle)] capitalize">
-                                                {lead.source?.replace("_", " ")}
+
+                <div className="card p-6 space-y-4">
+                    <h3 className="font-semibold flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-amber-500" /> Alerts
+                    </h3>
+                    <div className="space-y-4 text-sm">
+                        <div>
+                            <p className="text-[var(--color-text-muted)] mb-2">
+                                Products with no image ({kpi(noImageCount)})
+                            </p>
+                            <ul className="space-y-1">
+                                {alertNoImg.length === 0 ? (
+                                    <li className="text-[var(--color-text-muted)]">None</li>
+                                ) : (
+                                    alertNoImg.map((p) => (
+                                        <li key={p.id}>
+                                            <Link
+                                                href={`/admin/products/${p.id}`}
+                                                className="text-[var(--color-accent)] hover:underline"
+                                            >
+                                                {p.name}
+                                            </Link>
+                                        </li>
+                                    ))
+                                )}
+                            </ul>
+                        </div>
+                        <div>
+                            <p className="text-[var(--color-text-muted)] mb-2">Low stock</p>
+                            <ul className="space-y-1">
+                                {alertLow.length === 0 ? (
+                                    <li className="text-[var(--color-text-muted)]">None</li>
+                                ) : (
+                                    alertLow.map((p) => (
+                                        <li key={p.id}>
+                                            <Link
+                                                href={`/admin/products/${p.id}`}
+                                                className="text-[var(--color-accent)] hover:underline"
+                                            >
+                                                {p.name}
+                                            </Link>
+                                            <span className="text-[var(--color-text-muted)]">
+                                                {" "}
+                                                — {p.stockQuantity} left
                                             </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <span className="text-xs font-medium text-[var(--color-accent)]">
-                                                {lead.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 text-xs text-[var(--color-text-muted)]">
-                                            {lead.createdAt?.toLocaleDateString()}
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={4} className="px-6 py-12 text-center text-[var(--color-text-muted)]">
-                                        No leads found yet. They will appear here once users submit forms.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                                        </li>
+                                    ))
+                                )}
+                            </ul>
+                        </div>
+                        <div>
+                            <p className="text-[var(--color-text-muted)] mb-2">Drafts</p>
+                            <ul className="space-y-1">
+                                {alertDrafts.length === 0 ? (
+                                    <li className="text-[var(--color-text-muted)]">None</li>
+                                ) : (
+                                    alertDrafts.map((p) => (
+                                        <li key={p.id}>
+                                            <Link
+                                                href={`/admin/products/${p.id}`}
+                                                className="text-[var(--color-accent)] hover:underline"
+                                            >
+                                                {p.name}
+                                            </Link>
+                                        </li>
+                                    ))
+                                )}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="card !p-0 overflow-hidden">
+                <div className="px-6 py-4 border-b border-[var(--color-border-subtle)] flex items-center gap-2">
+                    <Activity className="w-4 h-4" />
+                    <h3 className="font-semibold">Recent activity</h3>
+                </div>
+                <div className="divide-y divide-[var(--color-border-subtle)] max-h-[420px] overflow-y-auto">
+                    {recentAudit.length === 0 ? (
+                        <p className="p-6 text-sm text-[var(--color-text-muted)]">
+                            No audit events yet. Changes to products and inventory will appear
+                            here.
+                        </p>
+                    ) : (
+                        recentAudit.map((a) => (
+                            <div
+                                key={a.id}
+                                className="px-6 py-3 text-sm flex flex-wrap gap-x-3 gap-y-1"
+                            >
+                                <span className="text-[var(--color-text-muted)] tabular-nums">
+                                    {a.createdAt?.toLocaleString?.() ?? "—"}
+                                </span>
+                                <span className="font-medium">{a.action}</span>
+                                <span className="text-[var(--color-text-secondary)]">
+                                    {a.entityType} #{a.entityId}
+                                </span>
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
         </div>

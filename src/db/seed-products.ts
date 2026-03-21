@@ -283,6 +283,9 @@ async function seed() {
                     ...p,
                     image,
                     inStock: true,
+                    stockQuantity: 10,
+                    lowStockThreshold: 2,
+                    status: "active",
                 })
                 .onConflictDoUpdate({
                     target: products.slug,

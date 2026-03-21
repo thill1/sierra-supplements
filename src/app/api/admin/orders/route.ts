@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { desc } from "drizzle-orm";
-import { requireAuth } from "@/lib/require-auth";
+import { requireAdmin } from "@/lib/require-admin";
+import { logAdminFailure } from "@/lib/observability";
 
 export async function GET() {
-    const { response } = await requireAuth();
+    const { response } = await requireAdmin();
     if (response) return response;
 
     try {
@@ -14,7 +15,11 @@ export async function GET() {
             .from(orders)
             .orderBy(desc(orders.createdAt));
         return NextResponse.json(result);
-    } catch {
-        return NextResponse.json([]);
+    } catch (error) {
+        logAdminFailure("orders_list", error);
+        return NextResponse.json(
+            { error: "Failed to fetch orders" },
+            { status: 500 },
+        );
     }
 }

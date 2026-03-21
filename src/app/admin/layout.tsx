@@ -12,13 +12,16 @@ import {
     Package,
     ShoppingBag,
     Star,
+    Boxes,
 } from "lucide-react";
+import { Toaster } from "sonner";
 import { SignOutButton } from "@/components/admin/sign-out-button";
 import { cn } from "@/lib/utils";
 
 const sidebarLinks = [
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { label: "Products", href: "/admin/products", icon: Package },
+    { label: "Inventory", href: "/admin/inventory", icon: Boxes },
     { label: "Orders", href: "/admin/orders", icon: ShoppingBag },
     { label: "Leads", href: "/admin/leads", icon: Users },
     { label: "Content", href: "/admin/content", icon: FileText },
@@ -36,6 +39,7 @@ export default function AdminLayout({
 
     return (
         <div className="flex min-h-screen bg-[var(--color-bg)]">
+            <Toaster richColors position="top-right" closeButton />
             {/* Sidebar */}
             <aside className="w-64 border-r border-[var(--color-border-subtle)] bg-[var(--color-bg-elevated)] hidden md:flex flex-col">
                 <div className="p-6 border-b border-[var(--color-border-subtle)]">

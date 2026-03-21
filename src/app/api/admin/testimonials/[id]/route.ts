@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { z } from "zod/v4";
-import { requireAuth } from "@/lib/require-auth";
+import { requireAdmin } from "@/lib/require-admin";
+import { rateLimitAdminWrite } from "@/lib/admin-rate-limit";
+import { logAdminFailure } from "@/lib/observability";
 import { db } from "@/db";
 import { testimonials } from "@/db/schema";
 
 type Params = { params: Promise<{ id: string }> };
 
 export async function GET(_request: Request, { params }: Params) {
-    const { response } = await requireAuth();
+    const { response } = await requireAdmin();
     if (response) return response;
 
     try {
@@ -26,7 +28,7 @@ export async function GET(_request: Request, { params }: Params) {
         }
         return NextResponse.json(row);
     } catch (error) {
-        console.error("Admin testimonial fetch error:", error);
+        logAdminFailure("testimonial_get", error);
         return NextResponse.json(
             { error: "Failed to fetch testimonial" },
             { status: 500 }
@@ -45,7 +47,10 @@ const updateSchema = z.object({
 });
 
 export async function PUT(request: Request, { params }: Params) {
-    const { response } = await requireAuth();
+    const limited = rateLimitAdminWrite(request);
+    if (limited) return limited;
+
+    const { response } = await requireAdmin();
     if (response) return response;
 
     try {
@@ -72,7 +77,7 @@ export async function PUT(request: Request, { params }: Params) {
                 { status: 400 }
             );
         }
-        console.error("Admin testimonial update error:", error);
+        logAdminFailure("testimonial_update", error);
         return NextResponse.json(
             { error: "Failed to update testimonial" },
             { status: 500 }
@@ -80,8 +85,11 @@ export async function PUT(request: Request, { params }: Params) {
     }
 }
 
-export async function DELETE(_request: Request, { params }: Params) {
-    const { response } = await requireAuth();
+export async function DELETE(request: Request, { params }: Params) {
+    const limited = rateLimitAdminWrite(request);
+    if (limited) return limited;
+
+    const { response } = await requireAdmin();
     if (response) return response;
 
     try {
@@ -93,7 +101,7 @@ export async function DELETE(_request: Request, { params }: Params) {
         await db.delete(testimonials).where(eq(testimonials.id, testimonialId));
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error("Admin testimonial delete error:", error);
+        logAdminFailure("testimonial_delete", error);
         return NextResponse.json(
             { error: "Failed to delete testimonial" },
             { status: 500 }

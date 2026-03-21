@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { asc } from "drizzle-orm";
 import { z } from "zod/v4";
-import { requireAuth } from "@/lib/require-auth";
+import { requireAdmin } from "@/lib/require-admin";
+import { rateLimitAdminWrite } from "@/lib/admin-rate-limit";
+import { logAdminFailure } from "@/lib/observability";
 import { db } from "@/db";
 import { testimonials } from "@/db/schema";
 
@@ -16,7 +18,7 @@ const createSchema = z.object({
 });
 
 export async function GET() {
-    const { response } = await requireAuth();
+    const { response } = await requireAdmin();
     if (response) return response;
 
     try {
@@ -26,7 +28,7 @@ export async function GET() {
             .orderBy(asc(testimonials.sortOrder), asc(testimonials.id));
         return NextResponse.json(rows);
     } catch (error) {
-        console.error("Admin testimonials fetch error:", error);
+        logAdminFailure("testimonials_list", error);
         return NextResponse.json(
             { error: "Failed to fetch testimonials" },
             { status: 500 }
@@ -35,7 +37,10 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-    const { response } = await requireAuth();
+    const limited = rateLimitAdminWrite(request);
+    if (limited) return limited;
+
+    const { response } = await requireAdmin();
     if (response) return response;
 
     try {
@@ -61,7 +66,7 @@ export async function POST(request: Request) {
                 { status: 400 }
             );
         }
-        console.error("Admin testimonial create error:", error);
+        logAdminFailure("testimonial_create", error);
         return NextResponse.json(
             { error: "Failed to create testimonial" },
             { status: 500 }

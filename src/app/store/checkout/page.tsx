@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Truck, RefreshCw } from "lucide-react";
+import { ArrowLeft, Truck, RefreshCw, CreditCard } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
 import { qualifiesForFreeShipping, applyAutoPayDiscount } from "@/lib/shipping";
 
@@ -11,6 +11,7 @@ export default function CheckoutPage() {
     const router = useRouter();
     const { items, subtotal, itemCount, clearCart } = useCart();
     const [loading, setLoading] = useState(false);
+    const [stripeBusy, setStripeBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [autoPay, setAutoPay] = useState(false);
     const [form, setForm] = useState({
@@ -62,6 +63,42 @@ export default function CheckoutPage() {
         } catch (err) {
             setError(err instanceof Error ? err.message : "Something went wrong");
             setLoading(false);
+        }
+    };
+
+    const handleStripeCheckout = async () => {
+        setStripeBusy(true);
+        setError(null);
+        try {
+            const res = await fetch("/api/checkout/session", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    items: items.map((i) => ({
+                        productId: i.productId,
+                        quantity: i.quantity,
+                    })),
+                    email: form.email?.trim() || undefined,
+                }),
+            });
+            const data = (await res.json().catch(() => ({}))) as {
+                error?: string;
+                url?: string;
+            };
+            if (!res.ok) {
+                throw new Error(
+                    data.error || "Card checkout is not available right now.",
+                );
+            }
+            if (data.url) {
+                window.location.href = data.url;
+                return;
+            }
+            throw new Error("No checkout URL returned");
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Checkout failed");
+        } finally {
+            setStripeBusy(false);
         }
     };
 
@@ -238,10 +275,19 @@ export default function CheckoutPage() {
                     <div className="flex flex-col sm:flex-row gap-4">
                         <button
                             type="submit"
-                            disabled={loading}
+                            disabled={loading || stripeBusy}
                             className="btn btn-primary flex-1 sm:max-w-xs"
                         >
-                            {loading ? "Submitting…" : "Place order"}
+                            {loading ? "Submitting…" : "Place order (pay offline)"}
+                        </button>
+                        <button
+                            type="button"
+                            disabled={loading || stripeBusy}
+                            onClick={() => void handleStripeCheckout()}
+                            className="btn btn-secondary flex-1 sm:max-w-xs inline-flex items-center justify-center gap-2"
+                        >
+                            <CreditCard className="w-4 h-4" />
+                            {stripeBusy ? "Redirecting…" : "Pay with card"}
                         </button>
                         <Link href="/store/cart" className="btn btn-secondary">
                             Cancel
@@ -249,7 +295,10 @@ export default function CheckoutPage() {
                     </div>
 
                     <p className="text-xs text-[var(--color-text-muted)] mt-4">
-                        We&apos;ll contact you to confirm payment and shipping details.
+                        <strong>Place order</strong> sends your request to the team
+                        (no card charge). <strong>Pay with card</strong> uses Stripe
+                        Checkout when configured — inventory updates after payment
+                        succeeds.
                     </p>
                 </form>
             </section>

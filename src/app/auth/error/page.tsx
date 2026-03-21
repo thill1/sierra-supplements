@@ -13,7 +13,8 @@ export default async function AuthErrorPage({
 
     const messages: Record<string, string> = {
         Configuration: "There is a problem with the server configuration.",
-        AccessDenied: "Access denied. You do not have permission to sign in.",
+        AccessDenied:
+            "Access denied. This account is not authorized for admin access, or sign-in was blocked.",
         Verification:
             "The sign-in link has expired or has already been used.",
         Default: "An error occurred during sign in.",

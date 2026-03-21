@@ -10,7 +10,15 @@ const required = {
     NEXTAUTH_URL: "http://localhost:3000 (local) or https://your-domain.vercel.app (prod)",
 };
 
+const recommended = {
+    ADMIN_EMAILS:
+        "Comma-separated admin emails — required on Vercel; restricts who can sign in and use /admin",
+};
+
 const optional = {
+    BLOB_READ_WRITE_TOKEN: "Vercel Blob — admin product image uploads",
+    STRIPE_SECRET_KEY: "Stripe Checkout (server)",
+    STRIPE_WEBHOOK_SECRET: "Stripe webhook signing secret",
     NEXT_PUBLIC_APP_URL: "Same as NEXTAUTH_URL",
     RESEND_API_KEY: "For contact form email",
     GOOGLE_CLIENT_ID: "For Google auth",
@@ -18,6 +26,7 @@ const optional = {
     NEXT_PUBLIC_SUPABASE_URL: "Admin image uploads – see docs/SUPABASE-STORAGE.md",
     SUPABASE_SERVICE_ROLE_KEY: "Server-only; pair with NEXT_PUBLIC_SUPABASE_URL",
     SUPABASE_STORAGE_BUCKET: "Optional; default store-images",
+    ALLOW_HARDCODED_CATALOG: "Never in prod unless demo — see README",
 };
 
 const env = process.env;
@@ -34,6 +43,13 @@ for (const [key, hint] of Object.entries(required)) {
                 `DATABASE_URL uses port 5432. For Vercel, use the pooler (port 6543) to avoid connection issues.`,
             );
         }
+    }
+}
+
+for (const [key, hint] of Object.entries(recommended)) {
+    const val = env[key];
+    if (!val?.trim()) {
+        warnings.push(`Set ${key}: ${hint}`);
     }
 }
 

@@ -1,25 +1,29 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Resend from "next-auth/providers/resend";
+import { isUserAdmin } from "@/lib/admin-allowlist";
 
+/**
+ * Keep this module free of `pg` / Drizzle imports so middleware and
+ * `next-auth/react` clients can bundle safely. Authoritative admin checks for
+ * mutations live in `requireAdmin()` (`src/lib/require-admin.ts`).
+ */
 export const { handlers, auth, signIn, signOut } = NextAuth({
     providers: [
-        // Email magic link via Resend
         ...(process.env.RESEND_API_KEY
             ? [
-                Resend({
-                    from: "Sierra Strength <noreply@sierrastrengthsupplements.com>",
-                }),
-            ]
+                  Resend({
+                      from: "Sierra Strength <noreply@sierrastrengthsupplements.com>",
+                  }),
+              ]
             : []),
-        // Google OAuth (optional)
         ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
             ? [
-                Google({
-                    clientId: process.env.GOOGLE_CLIENT_ID,
-                    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-                }),
-            ]
+                  Google({
+                      clientId: process.env.GOOGLE_CLIENT_ID,
+                      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+                  }),
+              ]
             : []),
     ],
     pages: {
@@ -27,16 +31,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         error: "/auth/error",
     },
     callbacks: {
+        async signIn({ user }) {
+            return isUserAdmin(user?.email ?? null);
+        },
         async session({ session, token }) {
             if (token?.sub) {
                 session.user.id = token.sub;
             }
+            if (typeof token.email === "string") {
+                session.user.email = token.email;
+            }
+            session.user.isAdmin = Boolean(token.isAdmin);
+            session.user.adminRole = undefined;
+            session.user.adminDbId = null;
             return session;
         },
-        async jwt({ token }) {
+        async jwt({ token, user }) {
+            if (user?.email) {
+                token.email = user.email;
+            }
+            const email =
+                typeof token.email === "string" ? token.email : null;
+            token.isAdmin = isUserAdmin(email);
+            token.adminRole = undefined;
+            token.adminDbId = null;
             return token;
         },
     },
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
     trustHost: true,
 });

@@ -102,7 +102,7 @@ SUPABASE_STORAGE_BUCKET=store-images   # optional; default store-images
 1. **Install:** `@supabase/supabase-js`, `heic-convert`
 2. **Create bucket** in Supabase: `store-images` (public)
 3. **API route:** `POST /api/admin/upload`
-   - Check auth via `requireAuth()`
+   - Check admin auth via `requireAdmin()` (allowlisted session)
    - Accept `multipart/form-data` (file)
    - If HEIC: convert to JPG with heic-convert
    - Upload to `products/{timestamp}-{random}.jpg` (or `.png` / `.webp`)
