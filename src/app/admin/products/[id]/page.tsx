@@ -1,15 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { STORE_CATEGORIES } from "@/lib/store-categories";
 import { ProductImageUpload } from "@/components/admin/product-image-upload";
 
-export default function AdminNewProductPage() {
+export default function AdminEditProductPage() {
     const router = useRouter();
-    const [loading, setLoading] = useState(false);
+    const params = useParams();
+    const id = params.id as string;
+
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [form, setForm] = useState<{
         slug: string;
         name: string;
@@ -36,18 +40,63 @@ export default function AdminNewProductPage() {
         featured: false,
     });
 
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await fetch(`/api/admin/products/${id}`);
+                if (!res.ok) throw new Error("Not found");
+                const p = (await res.json()) as {
+                    slug: string;
+                    name: string;
+                    shortDescription: string | null;
+                    description: string;
+                    price: number;
+                    compareAtPrice: number | null;
+                    category: string;
+                    image: string | null;
+                    inStock: boolean | null;
+                    published: boolean | null;
+                    featured: boolean | null;
+                };
+                if (cancelled) return;
+                setForm({
+                    slug: p.slug,
+                    name: p.name,
+                    shortDescription: p.shortDescription ?? "",
+                    description: p.description,
+                    price: (p.price / 100).toFixed(2),
+                    compareAtPrice:
+                        p.compareAtPrice != null ? (p.compareAtPrice / 100).toFixed(2) : "",
+                    category: p.category,
+                    image: p.image ?? "",
+                    inStock: p.inStock ?? true,
+                    published: p.published ?? false,
+                    featured: p.featured ?? false,
+                });
+            } catch {
+                router.push("/admin/products");
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [id, router]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
+        setSaving(true);
         try {
-            const res = await fetch("/api/admin/products", {
-                method: "POST",
+            const res = await fetch(`/api/admin/products/${id}`, {
+                method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    slug: form.slug || form.name.toLowerCase().replace(/\s+/g, "-"),
+                    slug: form.slug,
                     name: form.name,
-                    shortDescription: form.shortDescription || undefined,
-                    description: form.description || form.shortDescription,
+                    shortDescription: form.shortDescription || null,
+                    description: form.description,
                     price: parseFloat(form.price) || 0,
                     compareAtPrice: form.compareAtPrice
                         ? parseFloat(form.compareAtPrice)
@@ -60,17 +109,23 @@ export default function AdminNewProductPage() {
                 }),
             });
             if (!res.ok) {
-                const err = await res.json();
-                throw new Error(err.error || "Failed to create");
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || "Failed to update");
             }
-            const product = await res.json();
-            router.push(`/admin/products`);
+            router.push("/admin/products");
         } catch (e) {
-            alert(e instanceof Error ? e.message : "Failed to create product");
-        } finally {
-            setLoading(false);
+            alert(e instanceof Error ? e.message : "Failed to update product");
+            setSaving(false);
         }
     };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center py-20">
+                <p className="text-[var(--color-text-muted)]">Loading product…</p>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-2xl">
@@ -81,7 +136,7 @@ export default function AdminNewProductPage() {
                 <ArrowLeft className="w-4 h-4" /> Back to Products
             </Link>
 
-            <h2 className="text-xl font-bold mb-6">Add Product</h2>
+            <h2 className="text-xl font-bold mb-6">Edit Product</h2>
 
             <form onSubmit={handleSubmit} className="card space-y-6">
                 <div>
@@ -95,13 +150,13 @@ export default function AdminNewProductPage() {
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium mb-1.5">Slug (URL)</label>
+                    <label className="block text-sm font-medium mb-1.5">Slug (URL) *</label>
                     <input
                         type="text"
                         className="input"
-                        placeholder="auto-generated from name"
                         value={form.slug}
                         onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                        required
                     />
                 </div>
                 <div>
@@ -132,7 +187,7 @@ export default function AdminNewProductPage() {
                 <div>
                     <label className="block text-sm font-medium mb-1.5">Description *</label>
                     <textarea
-                        className="input min-h-[100px]"
+                        className="input min-h-[120px]"
                         value={form.description}
                         onChange={(e) => setForm({ ...form, description: e.target.value })}
                         required
@@ -163,11 +218,8 @@ export default function AdminNewProductPage() {
                         />
                     </div>
                 </div>
-                <ProductImageUpload
-                    value={form.image}
-                    onChange={(url) => setForm({ ...form, image: url })}
-                />
-                <div className="flex gap-6">
+                <ProductImageUpload value={form.image} onChange={(url) => setForm({ ...form, image: url })} />
+                <div className="flex gap-6 flex-wrap">
                     <label className="flex items-center gap-2 cursor-pointer">
                         <input
                             type="checkbox"
@@ -200,12 +252,8 @@ export default function AdminNewProductPage() {
                     </label>
                 </div>
                 <div className="flex gap-3">
-                    <button
-                        type="submit"
-                        className="btn btn-primary"
-                        disabled={loading}
-                    >
-                        {loading ? "Creating…" : "Create Product"}
+                    <button type="submit" className="btn btn-primary" disabled={saving}>
+                        {saving ? "Saving…" : "Save changes"}
                     </button>
                     <Link href="/admin/products" className="btn btn-secondary">
                         Cancel

@@ -15,6 +15,9 @@ const optional = {
     RESEND_API_KEY: "For contact form email",
     GOOGLE_CLIENT_ID: "For Google auth",
     GOOGLE_CLIENT_SECRET: "For Google auth",
+    NEXT_PUBLIC_SUPABASE_URL: "Admin image uploads – see docs/SUPABASE-STORAGE.md",
+    SUPABASE_SERVICE_ROLE_KEY: "Server-only; pair with NEXT_PUBLIC_SUPABASE_URL",
+    SUPABASE_STORAGE_BUCKET: "Optional; default store-images",
 };
 
 const env = process.env;

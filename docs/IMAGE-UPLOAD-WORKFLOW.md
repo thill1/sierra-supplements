@@ -62,7 +62,12 @@ Run: `npx tsx scripts/convert-heic.ts`
 
 ---
 
-## Phase 2: Admin Upload to Supabase Storage (Build This)
+## Phase 2: Admin Upload to Supabase Storage ✅ (implemented)
+
+See **`docs/SUPABASE-STORAGE.md`** for bucket setup. The app exposes:
+
+- `POST /api/admin/upload` (authenticated)
+- **Upload image** on **Add product** and **Edit product** in `/admin/products`
 
 ### Architecture
 
@@ -71,7 +76,7 @@ Admin page (/admin/media or /admin/products → upload)
   → User selects HEIC/JPG/PNG
   → POST /api/admin/upload
   → Server: convert HEIC → JPG if needed
-  → Upload to Supabase Storage bucket "images"
+  → Upload to Supabase Storage bucket `store-images` (or `SUPABASE_STORAGE_BUCKET`)
   → Return public URL
   → Admin can paste URL into product form, or we auto-link
 ```
@@ -82,25 +87,26 @@ Admin page (/admin/media or /admin/products → upload)
 |------|--------------|
 | **Supabase URL** | Supabase Dashboard → Project Settings → API → Project URL |
 | **Supabase Service Role Key** | Same page → `service_role` key (secret – server only) |
-| **Storage bucket** | Dashboard → Storage → New bucket, e.g. `images`, set to **Public** if images should be served directly |
+| **Storage bucket** | Dashboard → Storage → New bucket **`store-images`**, **Public** (or set `SUPABASE_STORAGE_BUCKET` to match) |
 
 ### Env vars
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=eyJ...   # Server-side only, never expose to client
+SUPABASE_STORAGE_BUCKET=store-images   # optional; default store-images
 ```
 
 ### Implementation Outline
 
 1. **Install:** `@supabase/supabase-js`, `heic-convert`
-2. **Create bucket** in Supabase: `images` (public)
+2. **Create bucket** in Supabase: `store-images` (public)
 3. **API route:** `POST /api/admin/upload`
    - Check auth via `requireAuth()`
    - Accept `multipart/form-data` (file)
    - If HEIC: convert to JPG with heic-convert
-   - Upload to `images/{timestamp}-{slug}.jpg`
-   - Return `{ url: "https://xxx.supabase.co/storage/v1/object/public/images/..." }`
+   - Upload to `products/{timestamp}-{random}.jpg` (or `.png` / `.webp`)
+   - Return `{ url: "https://xxx.supabase.co/storage/v1/object/public/store-images/products/..." }`
 4. **Admin UI:** File input + dropzone, call API, show preview + copy URL
 5. **Product form:** Add image URL field (or picker that uses upload API)
 

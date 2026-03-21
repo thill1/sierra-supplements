@@ -21,6 +21,36 @@ const updateSchema = z.object({
 
 type Params = { params: Promise<{ id: string }> };
 
+export async function GET(_request: Request, { params }: Params) {
+    const { response } = await requireAuth();
+    if (response) return response;
+
+    try {
+        const { id } = await params;
+        const productId = parseInt(id, 10);
+        if (isNaN(productId)) {
+            return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+        }
+
+        const [product] = await db
+            .select()
+            .from(products)
+            .where(eq(products.id, productId))
+            .limit(1);
+
+        if (!product) {
+            return NextResponse.json({ error: "Product not found" }, { status: 404 });
+        }
+        return NextResponse.json(product);
+    } catch (error) {
+        console.error("Admin product GET error:", error);
+        return NextResponse.json(
+            { error: "Failed to fetch product" },
+            { status: 500 }
+        );
+    }
+}
+
 export async function PUT(request: Request, { params }: Params) {
     const { response } = await requireAuth();
     if (response) return response;

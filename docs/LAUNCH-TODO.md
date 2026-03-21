@@ -27,5 +27,13 @@ The store uses **db-first with hardcoded fallback** – it works without `DATABA
 |----------|---------|
 | `NEXTAUTH_SECRET` | Auth sessions |
 | `NEXTAUTH_URL` | Production URL |
+| `NEXT_PUBLIC_APP_URL` | Same as production site URL |
 | `RESEND_API_KEY` | Order + contact emails |
 | `ADMIN_EMAIL` | Where to send notifications |
+| `NEXT_PUBLIC_SUPABASE_URL` | (Optional) Admin image uploads – see `docs/SUPABASE-STORAGE.md` |
+| `SUPABASE_SERVICE_ROLE_KEY` | (Optional) Server-only; never expose to the browser |
+| `SUPABASE_STORAGE_BUCKET` | (Optional) Default `store-images` |
+
+## Backups
+
+See **`docs/BACKUP-RECOVERY.md`** for database, Storage, and recovery steps.

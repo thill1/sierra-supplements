@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod/v4";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const eventSchema = z.object({
     type: z.enum(["view", "click", "submit", "book", "purchase"]),
@@ -10,6 +11,9 @@ const eventSchema = z.object({
 });
 
 export async function POST(request: Request) {
+    const limited = checkRateLimit(request, "events", 180, 60 * 60 * 1000);
+    if (limited) return limited;
+
     try {
         const body = await request.json();
         const data = eventSchema.parse(body);

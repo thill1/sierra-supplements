@@ -39,6 +39,11 @@ pnpm db:seed
 | `NEXTAUTH_SECRET` | `openssl rand -base64 32` output | Production, Preview |
 | `NEXTAUTH_URL` | `https://your-domain.vercel.app` | Production |
 | `NEXT_PUBLIC_APP_URL` | `https://your-domain.vercel.app` | Production |
+| `NEXT_PUBLIC_SUPABASE_URL` | Project URL (Settings → API) – admin product image uploads | Production, Preview |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Secret** – server only; same project as DB is fine | Production, Preview |
+| `SUPABASE_STORAGE_BUCKET` | Optional; default `store-images` – must match your Storage bucket name | Production, Preview |
+
+See **`docs/SUPABASE-STORAGE.md`** to create the public `store-images` bucket.
 
 3. **Redeploy** after adding vars (Deployments → ⋮ → Redeploy)
 

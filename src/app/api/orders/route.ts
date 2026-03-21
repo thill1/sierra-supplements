@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { inArray } from "drizzle-orm";
 import { escapeHtml } from "@/lib/escape-html";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const orderItemSchema = z.object({
     slug: z.string().min(1).max(200),
@@ -23,6 +24,9 @@ const orderSchema = z.object({
 });
 
 export async function POST(request: Request) {
+    const limited = checkRateLimit(request, "orders", 12, 60 * 60 * 1000);
+    if (limited) return limited;
+
     try {
         const body = await request.json();
         const parsed = orderSchema.parse(body);

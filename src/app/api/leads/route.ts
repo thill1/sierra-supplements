@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { escapeHtml } from "@/lib/escape-html";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 // Schema validation for lead capture
 const leadSchema = z.object({
@@ -13,6 +14,9 @@ const leadSchema = z.object({
 });
 
 export async function POST(request: Request) {
+    const limited = checkRateLimit(request, "leads", 25, 60 * 60 * 1000);
+    if (limited) return limited;
+
     try {
         const body = await request.json();
         const data = leadSchema.parse(body);
