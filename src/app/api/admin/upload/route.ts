@@ -1,37 +1,34 @@
 import { randomBytes } from "node:crypto";
+import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/require-admin";
 import { validateImageMagicBytes } from "@/lib/image-magic";
 import { logAdminFailure } from "@/lib/observability";
-import { createSupabaseAdmin, getSupabaseStorageBucket } from "@/lib/supabase-admin";
+import { processProductImage } from "@/lib/media/process-product-image";
+import { rateLimitAdminUpload } from "@/lib/admin-rate-limit";
 
 const MAX_BYTES = 6 * 1024 * 1024;
 
 const ALLOWED_MIME = new Set([
     "image/jpeg",
     "image/png",
-    "image/webp",
     "image/heic",
     "image/heif",
     "",
 ]);
 
-function extensionForMime(mime: string): string {
-    if (mime === "image/png") return "png";
-    if (mime === "image/webp") return "webp";
-    return "jpg";
-}
-
 export async function POST(request: Request) {
+    const limited = rateLimitAdminUpload(request);
+    if (limited) return limited;
+
     const { response } = await requireAdmin();
     if (response) return response;
 
-    const supabase = createSupabaseAdmin();
-    if (!supabase) {
+    if (!process.env.BLOB_READ_WRITE_TOKEN?.trim()) {
         return NextResponse.json(
             {
                 error:
-                    "Image storage is not configured. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
+                    "Image storage is not configured. Set BLOB_READ_WRITE_TOKEN (Vercel Blob).",
             },
             { status: 503 },
         );
@@ -59,7 +56,7 @@ export async function POST(request: Request) {
         const lowerName = file.name.toLowerCase();
         const mime = file.type || "";
         let payload: Buffer = buf;
-        let outMime = mime;
+        let treatAsMime: "image/jpeg" | "image/png" = "image/jpeg";
 
         const isHeic =
             mime === "image/heic" ||
@@ -79,7 +76,7 @@ export async function POST(request: Request) {
                     jpegBuffer instanceof ArrayBuffer
                         ? Buffer.from(new Uint8Array(jpegBuffer))
                         : Buffer.from(jpegBuffer);
-                outMime = "image/jpeg";
+                treatAsMime = "image/jpeg";
             } catch (e) {
                 logAdminFailure("upload_heic_convert", e);
                 return NextResponse.json(
@@ -90,63 +87,71 @@ export async function POST(request: Request) {
         } else {
             if (mime && !ALLOWED_MIME.has(mime)) {
                 return NextResponse.json(
-                    { error: "Only JPEG, PNG, WebP, or HEIC are allowed" },
+                    { error: "Only JPEG, PNG, or HEIC are allowed" },
                     { status: 400 },
                 );
             }
             if (!mime) {
-                if (lowerName.endsWith(".png")) outMime = "image/png";
-                else if (lowerName.endsWith(".webp")) outMime = "image/webp";
-                else if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")) {
-                    outMime = "image/jpeg";
+                if (lowerName.endsWith(".png")) treatAsMime = "image/png";
+                else if (
+                    lowerName.endsWith(".jpg") ||
+                    lowerName.endsWith(".jpeg")
+                ) {
+                    treatAsMime = "image/jpeg";
                 } else {
                     return NextResponse.json(
                         { error: "Unrecognized image type" },
                         { status: 400 },
                     );
                 }
+            } else if (mime === "image/png") {
+                treatAsMime = "image/png";
+            } else {
+                treatAsMime = "image/jpeg";
             }
         }
 
-        if (
-            outMime === "image/jpeg" ||
-            outMime === "image/png" ||
-            outMime === "image/webp"
-        ) {
-            if (!validateImageMagicBytes(payload, outMime)) {
-                return NextResponse.json(
-                    { error: "File content does not match an allowed image type" },
-                    { status: 400 },
-                );
-            }
-        }
-
-        const ext = extensionForMime(outMime);
-        const objectPath = `products/${Date.now()}-${randomBytes(8).toString("hex")}.${ext}`;
-        const bucket = getSupabaseStorageBucket();
-
-        const { error: uploadError } = await supabase.storage
-            .from(bucket)
-            .upload(objectPath, payload, {
-                contentType: outMime,
-                upsert: false,
-            });
-
-        if (uploadError) {
-            logAdminFailure("upload_supabase", uploadError);
+        if (!validateImageMagicBytes(payload, treatAsMime)) {
             return NextResponse.json(
-                {
-                    error:
-                        uploadError.message ||
-                        "Upload failed. Ensure the Storage bucket exists and is public.",
-                },
-                { status: 502 },
+                { error: "File content does not match an allowed image type" },
+                { status: 400 },
             );
         }
 
-        const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(objectPath);
+        let processed;
+        try {
+            processed = await processProductImage(payload);
+        } catch (e) {
+            logAdminFailure("upload_sharp_decode", e);
+            return NextResponse.json(
+                { error: "Could not read this image. Try another photo." },
+                { status: 400 },
+            );
+        }
 
-        return NextResponse.json({ url: urlData.publicUrl });
+        const id = randomBytes(8).toString("hex");
+        const prefix = `products/${Date.now()}-${id}`;
+        const mainPath = `${prefix}-main.jpg`;
+        const thumbPath = `${prefix}-thumb.jpg`;
+
+        const [mainBlob, thumbBlob] = await Promise.all([
+            put(mainPath, processed.mainJpeg, {
+                access: "public",
+                token: process.env.BLOB_READ_WRITE_TOKEN,
+                contentType: "image/jpeg",
+            }),
+            put(thumbPath, processed.thumbJpeg, {
+                access: "public",
+                token: process.env.BLOB_READ_WRITE_TOKEN,
+                contentType: "image/jpeg",
+            }),
+        ]);
+
+        return NextResponse.json({
+            url: mainBlob.url,
+            thumbnailUrl: thumbBlob.url,
+            maxBytes: MAX_BYTES,
+        });
     } catch (e) {
         logAdminFailure("upload_unhandled", e);
         return NextResponse.json({ error: "Upload failed" }, { status: 500 });

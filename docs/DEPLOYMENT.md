@@ -24,6 +24,7 @@ postgresql://postgres.[project-ref]:[YOUR-PASSWORD]@aws-0-[region].pooler.supaba
 
 ```bash
 DATABASE_URL="postgresql://..." pnpm db:push
+DATABASE_URL="postgresql://..." pnpm db:seed-admins
 DATABASE_URL="postgresql://..." pnpm db:seed
 ```
 
@@ -39,15 +40,17 @@ DATABASE_URL="postgresql://..." pnpm db:seed
 | `NEXTAUTH_SECRET` | Output of `openssl rand -base64 32` |
 | `NEXTAUTH_URL` | `https://your-domain.vercel.app` (production) or preview URL |
 | `NEXT_PUBLIC_APP_URL` | Same canonical URL as the site |
-| `ADMIN_EMAILS` | **Required.** Comma-separated emails allowed to sign in and access `/admin` |
+| `ADMIN_EMAILS` | **Required.** Used to bootstrap `admin_users` (`db:seed-admins`) and as temporary allowlist if the table is empty |
+| `BLOB_READ_WRITE_TOKEN` | **Vercel Blob** (server) for admin product photos |
+| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Optional — Stripe Checkout + webhook (`/api/webhooks/stripe`) |
 | `RESEND_API_KEY` | Transactional email |
 | `ADMIN_EMAIL` | Where lead/order notifications are sent |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Optional OAuth |
-| `NEXT_PUBLIC_SUPABASE_URL` | Same project as DB is fine — admin uploads |
+| `NEXT_PUBLIC_SUPABASE_URL` | Legacy optional — Supabase Storage uploads |
 | `SUPABASE_SERVICE_ROLE_KEY` | **Server only** — never expose to the browser |
 | `SUPABASE_STORAGE_BUCKET` | Optional; default `store-images` |
 
-See **`docs/SUPABASE-STORAGE.md`** for the public `store-images` bucket.
+Prefer **Vercel Blob** for new deployments. See **`docs/SUPABASE-STORAGE.md`** only if you still use Supabase Storage.
 
 On deploy, Next.js runs **`src/instrumentation.ts`**: if `VERCEL=1` and `NODE_ENV=production`, missing `ADMIN_EMAILS`, auth secrets, or database URL **fails startup** so misconfiguration is obvious.
 
@@ -63,9 +66,9 @@ By default the app uses `rejectUnauthorized: true` for non-localhost connections
 
 ## 3. Admin access
 
-Only emails listed in **`ADMIN_EMAILS`** can sign in. Everyone else is blocked at login.
+After `db:push`, run **`pnpm db:seed-admins`** so **`admin_users`** contains your team. Sign-in is then gated by active rows in that table (with a temporary `ADMIN_EMAILS` fallback only while the table is empty).
 
-Details: **`docs/ADMIN-AUTH.md`**.
+Details: **`docs/ADMIN-AUTH.md`**, **`docs/ADMIN-OPERATIONS.md`**.
 
 ---
 

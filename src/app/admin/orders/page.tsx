@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 type OrderItem = { slug: string; name: string; price: number; quantity: number };
 
@@ -120,7 +121,12 @@ export default function AdminOrdersPage() {
                                             className="hover:bg-[var(--color-bg-muted)]/30 transition-colors"
                                         >
                                             <td className="px-6 py-4">
-                                                <div className="font-medium text-sm">#{order.id}</div>
+                                                <Link
+                                                    href={`/admin/orders/${order.id}`}
+                                                    className="font-medium text-sm text-[var(--color-accent)] hover:underline"
+                                                >
+                                                    #{order.id}
+                                                </Link>
                                                 <div className="text-xs text-[var(--color-text-muted)]">
                                                     {items.length} item{items.length !== 1 ? "s" : ""}
                                                     {order.autoPay && (

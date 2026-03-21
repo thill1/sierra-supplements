@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { z } from "zod/v4";
 import { requireAdmin } from "@/lib/require-admin";
+import { rateLimitAdminWrite } from "@/lib/admin-rate-limit";
 import { logAdminFailure } from "@/lib/observability";
 import { db } from "@/db";
 import { testimonials } from "@/db/schema";
@@ -46,6 +47,9 @@ const updateSchema = z.object({
 });
 
 export async function PUT(request: Request, { params }: Params) {
+    const limited = rateLimitAdminWrite(request);
+    if (limited) return limited;
+
     const { response } = await requireAdmin();
     if (response) return response;
 
@@ -81,7 +85,10 @@ export async function PUT(request: Request, { params }: Params) {
     }
 }
 
-export async function DELETE(_request: Request, { params }: Params) {
+export async function DELETE(request: Request, { params }: Params) {
+    const limited = rateLimitAdminWrite(request);
+    if (limited) return limited;
+
     const { response } = await requireAdmin();
     if (response) return response;
 

@@ -5,6 +5,12 @@ import { escapeHtml } from "@/lib/escape-html";
 import { checkRateLimits } from "@/lib/rate-limit";
 import { logServerError } from "@/lib/observability";
 
+/**
+ * Legacy order-intake endpoint (email + shipping + pay-offline flow).
+ * Does not decrement inventory — stock is reserved/reduced only when payment
+ * is confirmed (Stripe webhook) or via admin in-store sale / restock tools.
+ */
+
 const orderItemSchema = z.object({
     slug: z.string().min(1).max(200),
     quantity: z.number().int().positive().max(99),
@@ -53,13 +59,19 @@ export async function POST(request: Request) {
         }
 
         const slugs = [...new Set(parsed.items.map((i) => i.slug))];
-        let dbProducts: { slug: string; name: string; price: number }[];
+        let dbProducts: {
+            slug: string;
+            name: string;
+            price: number;
+            stockQuantity: number;
+        }[];
         try {
             dbProducts = await db
                 .select({
                     slug: productsTable.slug,
                     name: productsTable.name,
                     price: productsTable.price,
+                    stockQuantity: productsTable.stockQuantity,
                 })
                 .from(productsTable)
                 .where(inArray(productsTable.slug, slugs));
@@ -82,6 +94,15 @@ export async function POST(request: Request) {
                 return NextResponse.json(
                     { error: "Invalid product", slug: item.slug },
                     { status: 400 }
+                );
+            }
+            if (product.stockQuantity < item.quantity) {
+                return NextResponse.json(
+                    {
+                        error: "Not enough stock for this order",
+                        slug: item.slug,
+                    },
+                    { status: 400 },
                 );
             }
             const lineTotal = product.price * item.quantity;

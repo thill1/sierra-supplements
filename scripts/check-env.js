@@ -16,6 +16,9 @@ const recommended = {
 };
 
 const optional = {
+    BLOB_READ_WRITE_TOKEN: "Vercel Blob — admin product image uploads",
+    STRIPE_SECRET_KEY: "Stripe Checkout (server)",
+    STRIPE_WEBHOOK_SECRET: "Stripe webhook signing secret",
     NEXT_PUBLIC_APP_URL: "Same as NEXTAUTH_URL",
     RESEND_API_KEY: "For contact form email",
     GOOGLE_CLIENT_ID: "For Google auth",

@@ -19,11 +19,18 @@ async function getProductBySlug(slug: string): Promise<Product | null> {
     try {
         const { db } = await import("@/db");
         const { products } = await import("@/db/schema");
-        const { eq, and } = await import("drizzle-orm");
+        const { eq, and, gt } = await import("drizzle-orm");
         const result = await db
             .select()
             .from(products)
-            .where(and(eq(products.slug, slug), eq(products.published, true)))
+            .where(
+                and(
+                    eq(products.slug, slug),
+                    eq(products.published, true),
+                    eq(products.status, "active"),
+                    gt(products.stockQuantity, 0),
+                ),
+            )
             .limit(1);
         const row = result[0];
         if (!row) {

@@ -3,6 +3,11 @@ import Google from "next-auth/providers/google";
 import Resend from "next-auth/providers/resend";
 import { isUserAdmin } from "@/lib/admin-allowlist";
 
+/**
+ * Keep this module free of `pg` / Drizzle imports so middleware and
+ * `next-auth/react` clients can bundle safely. Authoritative admin checks for
+ * mutations live in `requireAdmin()` (`src/lib/require-admin.ts`).
+ */
 export const { handlers, auth, signIn, signOut } = NextAuth({
     providers: [
         ...(process.env.RESEND_API_KEY
@@ -37,15 +42,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 session.user.email = token.email;
             }
             session.user.isAdmin = Boolean(token.isAdmin);
+            session.user.adminRole = undefined;
+            session.user.adminDbId = null;
             return session;
         },
         async jwt({ token, user }) {
             if (user?.email) {
                 token.email = user.email;
             }
-            token.isAdmin = isUserAdmin(
-                typeof token.email === "string" ? token.email : null,
-            );
+            const email =
+                typeof token.email === "string" ? token.email : null;
+            token.isAdmin = isUserAdmin(email);
+            token.adminRole = undefined;
+            token.adminDbId = null;
             return token;
         },
     },

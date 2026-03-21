@@ -2,33 +2,38 @@
 
 ## Model
 
-- **Authentication**: Auth.js (NextAuth v5) with Resend magic links and/or Google OAuth, configured in `src/lib/auth.ts`.
-- **Authorization**: Email **allowlist** via the `ADMIN_EMAILS` environment variable (comma-separated, case-insensitive).
+- **Authentication**: Auth.js (NextAuth v5) with Resend magic links and/or Google OAuth (`src/lib/auth.ts`).
+- **Authorization (two layers)**:
+  - **Login + middleware**: **`ADMIN_EMAILS`** only (Edge-safe; see `src/lib/auth.ts` and `middleware.ts`).
+  - **Mutations + sensitive APIs**: **`admin_users`** via `requireAdmin()` in `src/lib/require-admin.ts` (`resolveAdmin()` in `src/lib/admin-auth.ts`), with a **bootstrap fallback** while `admin_users` is empty. Keep env allowlist aligned with real admins.
 
-Only addresses in `ADMIN_EMAILS` may complete sign-in. The `signIn` callback rejects everyone else, so non-admin users never receive a valid session.
+Roles (highest to lowest): **owner**, **manager**, **editor**.
+
+- **Editors** cannot change pricing, inventory counts, publish flags, product status, or Stripe price IDs through the API (fields are stripped server-side).
+- **Managers** (and owners) can create products, archive, inventory mutations, and order status updates.
 
 ## Enforcement layers
 
-1. **`signIn` callback** — blocks login for emails not on the allowlist (production and preview on Vercel always use a non-empty list).
-2. **Middleware** (`middleware.ts`) — `/admin/*` and `/api/admin/*` require a session with `user.isAdmin === true` (derived from the same allowlist in the JWT/session callbacks).
-3. **Route handlers** — each `/api/admin/*` handler calls `requireAdmin()`, which re-checks the session and allowlist before performing work.
+1. **`signIn` callback** — allows login when the email is on **`ADMIN_EMAILS`** (or dev bootstrap rules in `admin-allowlist.ts`).
+2. **Middleware** (`middleware.ts`) — `/admin/*` and `/api/admin/*` require a session with `user.isAdmin === true` derived from **`ADMIN_EMAILS`** (Edge-safe; no Postgres in the middleware bundle).
+3. **Route handlers** — mutations call `requireAdmin()`, which loads the admin row again (or bootstrap) and attaches `admin` with `id` (nullable during bootstrap) for audit FKs.
 
-## Environment
+## Bootstrap admins
 
-| Variable        | Required on Vercel | Purpose                                      |
-|-----------------|--------------------|----------------------------------------------|
-| `ADMIN_EMAILS`  | Yes                | Comma-separated admin emails                 |
-| `NEXTAUTH_SECRET` | Yes              | Session encryption                           |
-| `NEXTAUTH_URL`  | Yes                | Canonical site URL for Auth.js               |
-| `DATABASE_URL`  | Yes                | Postgres (store, leads, orders, admin data)  |
+After the first schema deploy:
 
-Startup validation: on Vercel (`VERCEL=1`) with `NODE_ENV=production`, `src/instrumentation.ts` runs `assertProductionEnv()` so missing critical variables fail deployment early.
+```bash
+DATABASE_URL="postgresql://..." pnpm db:seed-admins
+```
 
-## Local development
+This **upserts** `owner` rows for every email in `ADMIN_EMAILS`.
 
-- If `ADMIN_EMAILS` is **unset or empty**, any successful sign-in is treated as admin (convenience only). Set `ADMIN_EMAILS` locally to mirror production behavior.
-- To run the same env checks as production: `FORCE_PRODUCTION_ENV_CHECK=true pnpm start`
+## Audit and rate limits
 
-## Uploads
+- Product, image, inventory, and order status changes write to **`audit_logs`** where applicable.
+- Admin **writes** (including uploads) use in-memory per-IP rate limits (`src/lib/admin-rate-limit.ts`); limits are best-effort on multi-instance serverless.
 
-`/api/admin/upload` uses `requireAdmin()` and Supabase service role credentials **only on the server** (`SUPABASE_SERVICE_ROLE_KEY`). Never expose the service role to the client.
+## Related docs
+
+- **Operator guide**: `docs/ADMIN-OPERATIONS.md`
+- **Deployment / env**: `docs/DEPLOYMENT.md`, `README.md` (Admin control center section)

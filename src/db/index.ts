@@ -47,3 +47,7 @@ const pool = new Pool({
 
 export const db = drizzle(pool, { schema });
 export type Database = typeof db;
+/** Argument to `db.transaction(async (tx) => ...)` */
+export type DbTransaction = Parameters<
+    Parameters<Database["transaction"]>[0]
+>[0];

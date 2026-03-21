@@ -70,13 +70,14 @@ export function ProductImageUpload({ value, onChange }: Props) {
                     <input
                         type="file"
                         className="hidden"
-                        accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
+                        accept="image/jpeg,image/png,image/heic,image/heif,.heic,.heif"
                         disabled={uploading}
                         onChange={handleFile}
                     />
                 </label>
                 <span className="text-xs text-[var(--color-text-muted)]">
-                    JPEG, PNG, WebP, or HEIC (max 6 MB). Requires Supabase Storage (see docs).
+                    JPEG, PNG, or HEIC (max 6 MB). Stored on Vercel Blob; optimized on
+                    upload.
                 </span>
             </div>
             {error && (

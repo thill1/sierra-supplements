@@ -1,87 +1,165 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { products, productCategories } from "@/db/schema";
-import { desc } from "drizzle-orm";
+import { and, desc, eq, ilike, lte, or, sql, type SQL } from "drizzle-orm";
 import { z } from "zod/v4";
 import { requireAdmin } from "@/lib/require-admin";
+import { requireMinRole } from "@/lib/admin-auth";
 import { logAdminFailure } from "@/lib/observability";
+import { rateLimitAdminWrite } from "@/lib/admin-rate-limit";
+import {
+    adminProductCreateSchema,
+    productStatusSchema,
+} from "@/lib/admin/schemas/product";
+import {
+    applyEditorProductRestrictions,
+    dollarsToCents,
+} from "@/lib/admin/product-mutations";
+import { writeAuditLog } from "@/lib/audit/write-audit";
 
-const createSchema = z.object({
-    slug: z.string().min(1),
-    name: z.string().min(1),
-    shortDescription: z.string().optional(),
-    description: z.string().min(1),
-    price: z.number().int().positive(),
-    compareAtPrice: z.number().int().positive().optional().nullable(),
-    category: z.enum(productCategories),
-    image: z.string().optional().nullable(),
-    inStock: z.boolean().optional(),
-    published: z.boolean().optional(),
-    featured: z.boolean().optional(),
-});
-
-export async function GET() {
+export async function GET(request: Request) {
     const { response } = await requireAdmin();
     if (response) return response;
 
     try {
+        const { searchParams } = new URL(request.url);
+        const category = searchParams.get("category");
+        const status = searchParams.get("status");
+        const stock = searchParams.get("stock");
+        const q = searchParams.get("q")?.trim().slice(0, 120);
+
+        const conditions: SQL[] = [];
+
+        if (
+            category &&
+            (productCategories as readonly string[]).includes(category)
+        ) {
+            conditions.push(eq(products.category, category));
+        }
+        if (status) {
+            const parsed = productStatusSchema.safeParse(status);
+            if (parsed.success) {
+                conditions.push(eq(products.status, parsed.data));
+            }
+        }
+        if (stock === "low") {
+            conditions.push(
+                sql`${products.stockQuantity} > 0 AND ${products.stockQuantity} <= ${products.lowStockThreshold}`,
+            );
+        } else if (stock === "out") {
+            conditions.push(lte(products.stockQuantity, 0));
+        } else if (stock === "ok") {
+            conditions.push(sql`${products.stockQuantity} > ${products.lowStockThreshold}`);
+        }
+        if (q) {
+            const safe = q.replace(/[%_]/g, "\\$&");
+            const nameMatch = ilike(products.name, `%${safe}%`);
+            const slugMatch = ilike(products.slug, `%${safe}%`);
+            const skuMatch = ilike(products.sku, `%${safe}%`);
+            conditions.push(or(nameMatch, slugMatch, skuMatch)!);
+        }
+
+        const where =
+            conditions.length > 0 ? and(...conditions) : undefined;
+
         const result = await db
             .select()
             .from(products)
-            .orderBy(desc(products.createdAt));
+            .where(where)
+            .orderBy(desc(products.updatedAt));
+
         return NextResponse.json(result);
     } catch (error) {
         logAdminFailure("products_list", error);
         return NextResponse.json(
             { error: "Failed to fetch products" },
-            { status: 500 }
+            { status: 500 },
         );
     }
 }
 
 export async function POST(request: Request) {
-    const { response } = await requireAdmin();
-    if (response) return response;
+    const limited = rateLimitAdminWrite(request);
+    if (limited) return limited;
+
+    const { response, admin } = await requireAdmin();
+    if (response || !admin) return response!;
+
+    const forbidden = requireMinRole(admin, "manager");
+    if (forbidden) return forbidden;
 
     try {
         const body = await request.json();
-        const data = createSchema.parse({
-            ...body,
-            price: Math.round((body.price || 0) * 100),
-            compareAtPrice: body.compareAtPrice
-                ? Math.round(body.compareAtPrice * 100)
-                : null,
-        });
+        const data = adminProductCreateSchema.parse(
+            applyEditorProductRestrictions(
+                {
+                    ...body,
+                    price: body.price,
+                    compareAtPrice: body.compareAtPrice,
+                },
+                admin,
+            ),
+        );
 
-        const [product] = await db
-            .insert(products)
-            .values({
-                slug: data.slug,
-                name: data.name,
-                shortDescription: data.shortDescription ?? null,
-                description: data.description,
-                price: data.price,
-                compareAtPrice: data.compareAtPrice ?? null,
-                category: data.category,
-                image: data.image ?? null,
-                inStock: data.inStock ?? true,
-                published: data.published ?? false,
-                featured: data.featured ?? false,
-            })
-            .returning();
+        const priceCents = dollarsToCents(data.price);
+        const compareCents =
+            data.compareAtPrice != null
+                ? dollarsToCents(data.compareAtPrice)
+                : null;
+
+        const stockQty = data.stockQuantity ?? (data.inStock !== false ? 1 : 0);
+        const inStock = stockQty > 0;
+
+        const [product] = await db.transaction(async (tx) => {
+            const [p] = await tx
+                .insert(products)
+                .values({
+                    slug: data.slug,
+                    name: data.name,
+                    shortDescription: data.shortDescription ?? null,
+                    description: data.description,
+                    price: priceCents,
+                    compareAtPrice: compareCents,
+                    category: data.category,
+                    image: data.image ?? null,
+                    inStock,
+                    published: data.published ?? false,
+                    featured: data.featured ?? false,
+                    sku: data.sku ?? null,
+                    stockQuantity: stockQty,
+                    lowStockThreshold: data.lowStockThreshold ?? 2,
+                    status: data.status ?? "active",
+                    primaryImageUrl: data.primaryImageUrl ?? data.image ?? null,
+                    seoTitle: data.seoTitle ?? null,
+                    seoDescription: data.seoDescription ?? null,
+                    stripePriceId: data.stripePriceId ?? null,
+                })
+                .returning();
+
+            if (p) {
+                await writeAuditLog(tx, {
+                    actorUserId: admin.id,
+                    entityType: "product",
+                    entityId: String(p.id),
+                    action: "create",
+                    after: p,
+                });
+            }
+            return [p];
+        });
 
         return NextResponse.json(product, { status: 201 });
     } catch (error) {
         if (error instanceof z.ZodError) {
             return NextResponse.json(
                 { error: "Validation failed", details: error.issues },
-                { status: 400 }
+                { status: 400 },
             );
         }
         logAdminFailure("product_create", error);
         return NextResponse.json(
             { error: "Failed to create product" },
-            { status: 500 }
+            { status: 500 },
         );
     }
 }

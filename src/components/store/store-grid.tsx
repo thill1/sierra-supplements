@@ -36,8 +36,12 @@ async function getProductsFromDb(
     try {
         const { db } = await import("@/db");
         const { products } = await import("@/db/schema");
-        const { eq, desc, and } = await import("drizzle-orm");
-        const conditions = [eq(products.published, true)];
+        const { eq, desc, and, gt } = await import("drizzle-orm");
+        const conditions = [
+            eq(products.published, true),
+            eq(products.status, "active"),
+            gt(products.stockQuantity, 0),
+        ];
         if (category) conditions.push(eq(products.category, category));
         const rows = await db
             .select()

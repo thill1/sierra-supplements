@@ -5,6 +5,9 @@ import {
     timestamp,
     boolean,
     serial,
+    jsonb,
+    uniqueIndex,
+    index,
 } from "drizzle-orm/pg-core";
 
 // ─── Events ───────────────────────────────────────────────────
@@ -32,6 +35,18 @@ export const leads = pgTable("leads", {
     createdAt: timestamp("created_at").defaultNow(),
 });
 
+// ─── Admin RBAC ────────────────────────────────────────────────
+export const adminRoles = ["owner", "manager", "editor"] as const;
+export type AdminRole = (typeof adminRoles)[number];
+
+export const adminUsers = pgTable("admin_users", {
+    id: serial("id").primaryKey(),
+    email: text("email").notNull().unique(),
+    role: text("role").notNull().$type<AdminRole>(),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at").defaultNow(),
+});
+
 // ─── Products ────────────────────────────────────────────────
 export const productCategories = [
     "pre-workout",
@@ -52,24 +67,39 @@ export const productCategories = [
 
 export type ProductCategory = (typeof productCategories)[number];
 
+export const productStatuses = ["draft", "active", "archived"] as const;
+export type ProductStatus = (typeof productStatuses)[number];
+
+export const productImageKinds = ["hero", "facts", "label", "gallery"] as const;
+export type ProductImageKind = (typeof productImageKinds)[number];
+
 // ─── Orders ────────────────────────────────────────────────────
-export const orders = pgTable("orders", {
-    id: serial("id").primaryKey(),
-    email: text("email").notNull(),
-    name: text("name"),
-    phone: text("phone"),
-    addressLine1: text("address_line1"),
-    addressLine2: text("address_line2"),
-    city: text("city"),
-    state: text("state"),
-    zip: text("zip"),
-    items: text("items").notNull(), // JSON: [{ slug, name, price, quantity }]
-    subtotal: integer("subtotal").notNull(), // cents (final amount after discounts)
-    autoPay: boolean("auto_pay").default(false),
-    notes: text("notes"),
-    status: text("status").default("pending"),
-    createdAt: timestamp("created_at").defaultNow(),
-});
+export const orders = pgTable(
+    "orders",
+    {
+        id: serial("id").primaryKey(),
+        email: text("email").notNull(),
+        name: text("name"),
+        phone: text("phone"),
+        addressLine1: text("address_line1"),
+        addressLine2: text("address_line2"),
+        city: text("city"),
+        state: text("state"),
+        zip: text("zip"),
+        items: text("items").notNull(), // JSON legacy: [{ slug, name, price, quantity }]
+        subtotal: integer("subtotal").notNull(),
+        autoPay: boolean("auto_pay").default(false),
+        notes: text("notes"),
+        status: text("status").default("pending"),
+        stripeCheckoutSessionId: text("stripe_checkout_session_id"),
+        createdAt: timestamp("created_at").defaultNow(),
+    },
+    (t) => [
+        uniqueIndex("orders_stripe_checkout_session_id_unique").on(
+            t.stripeCheckoutSessionId,
+        ),
+    ],
+);
 
 // ─── Testimonials ──────────────────────────────────────────────
 export const testimonials = pgTable("testimonials", {
@@ -98,6 +128,85 @@ export const products = pgTable("products", {
     inStock: boolean("in_stock").default(true),
     published: boolean("published").default(false),
     featured: boolean("featured").default(false),
+    sku: text("sku"),
+    stockQuantity: integer("stock_quantity").notNull().default(0),
+    lowStockThreshold: integer("low_stock_threshold").notNull().default(2),
+    status: text("status").notNull().default("active").$type<ProductStatus>(),
+    primaryImageUrl: text("primary_image_url"),
+    seoTitle: text("seo_title"),
+    seoDescription: text("seo_description"),
+    stripePriceId: text("stripe_price_id"),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+export const productImages = pgTable(
+    "product_images",
+    {
+        id: serial("id").primaryKey(),
+        productId: integer("product_id")
+            .notNull()
+            .references(() => products.id, { onDelete: "cascade" }),
+        url: text("url").notNull(),
+        kind: text("kind").notNull().$type<ProductImageKind>(),
+        sortOrder: integer("sort_order").notNull().default(0),
+        altText: text("alt_text"),
+        createdAt: timestamp("created_at").defaultNow(),
+    },
+    (t) => [index("product_images_product_id_idx").on(t.productId)],
+);
+
+export const inventoryMovements = pgTable(
+    "inventory_movements",
+    {
+        id: serial("id").primaryKey(),
+        productId: integer("product_id")
+            .notNull()
+            .references(() => products.id, { onDelete: "cascade" }),
+        delta: integer("delta").notNull(),
+        reason: text("reason").notNull(),
+        source: text("source").notNull(),
+        note: text("note"),
+        actorUserId: integer("actor_user_id").references(() => adminUsers.id, {
+            onDelete: "set null",
+        }),
+        createdAt: timestamp("created_at").defaultNow(),
+    },
+    (t) => [index("inventory_movements_product_id_idx").on(t.productId)],
+);
+
+export const orderItems = pgTable(
+    "order_items",
+    {
+        id: serial("id").primaryKey(),
+        orderId: integer("order_id")
+            .notNull()
+            .references(() => orders.id, { onDelete: "cascade" }),
+        productId: integer("product_id").references(() => products.id, {
+            onDelete: "set null",
+        }),
+        productName: text("product_name").notNull(),
+        sku: text("sku"),
+        unitPrice: integer("unit_price").notNull(),
+        quantity: integer("quantity").notNull(),
+        lineTotal: integer("line_total").notNull(),
+    },
+    (t) => [index("order_items_order_id_idx").on(t.orderId)],
+);
+
+export const auditLogs = pgTable(
+    "audit_logs",
+    {
+        id: serial("id").primaryKey(),
+        actorUserId: integer("actor_user_id").references(() => adminUsers.id, {
+            onDelete: "set null",
+        }),
+        entityType: text("entity_type").notNull(),
+        entityId: text("entity_id").notNull(),
+        action: text("action").notNull(),
+        beforeJson: jsonb("before_json"),
+        afterJson: jsonb("after_json"),
+        createdAt: timestamp("created_at").defaultNow(),
+    },
+    (t) => [index("audit_logs_created_at_idx").on(t.createdAt)],
+);

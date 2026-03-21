@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { asc } from "drizzle-orm";
 import { z } from "zod/v4";
 import { requireAdmin } from "@/lib/require-admin";
+import { rateLimitAdminWrite } from "@/lib/admin-rate-limit";
 import { logAdminFailure } from "@/lib/observability";
 import { db } from "@/db";
 import { testimonials } from "@/db/schema";
@@ -36,6 +37,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+    const limited = rateLimitAdminWrite(request);
+    if (limited) return limited;
+
     const { response } = await requireAdmin();
     if (response) return response;
 

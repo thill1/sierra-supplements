@@ -1,35 +1,27 @@
 import { auth } from "@/lib/auth";
-import { isUserAdmin } from "@/lib/admin-allowlist";
 import { NextResponse } from "next/server";
 import type { Session } from "next-auth";
-import { logAdminAuthzFailure } from "@/lib/observability";
+import { requireAdminDb, type ResolvedAdmin } from "@/lib/admin-auth";
 
 export type RequireAdminResult =
-    | { session: Session; response: null }
-    | { session: null; response: NextResponse };
+    | { session: Session; admin: ResolvedAdmin; response: null }
+    | { session: null; admin: null; response: NextResponse };
 
 /**
- * Require an authenticated admin (ADMIN_EMAILS allowlist). Use on all /api/admin/* handlers.
+ * Require an authenticated admin (admin_users row or bootstrap env allowlist).
+ * Use on all /api/admin/* handlers that perform mutations or sensitive reads.
  */
 export async function requireAdmin(): Promise<RequireAdminResult> {
     const session = await auth();
-    const email = session?.user?.email;
-
-    if (!session?.user || !email) {
+    const { admin, response } = await requireAdminDb(session);
+    if (response || !session || !admin) {
         return {
             session: null,
-            response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+            admin: null,
+            response:
+                response ??
+                NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
         };
     }
-
-    const allowed = session.user.isAdmin === true && isUserAdmin(email);
-    if (!allowed) {
-        logAdminAuthzFailure("require_admin", email);
-        return {
-            session: null,
-            response: NextResponse.json({ error: "Forbidden" }, { status: 403 }),
-        };
-    }
-
-    return { session, response: null };
+    return { session, admin, response: null };
 }
