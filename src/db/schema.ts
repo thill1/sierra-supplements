@@ -9,6 +9,7 @@ export {
     inventoryMovements,
     auditLogs,
     adminUsers,
+    adminAppSettings,
     testimonials,
     productCategories,
     productStatuses,

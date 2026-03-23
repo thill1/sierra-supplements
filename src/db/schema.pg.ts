@@ -47,6 +47,18 @@ export const adminUsers = pgTable("admin_users", {
     createdAt: timestamp("created_at").defaultNow(),
 });
 
+/** Single-row app settings editable from Admin → Settings (id must remain 1). */
+export const adminAppSettings = pgTable("admin_app_settings", {
+    id: integer("id").primaryKey().default(1),
+    siteName: text("site_name").notNull(),
+    baseUrl: text("base_url").notNull(),
+    adminNotificationEmail: text("admin_notification_email").notNull(),
+    notifyEmailLeads: boolean("notify_email_leads").notNull().default(true),
+    notifySmsLeads: boolean("notify_sms_leads").notNull().default(false),
+    nurtureAuto: boolean("nurture_auto").notNull().default(true),
+    updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // ─── Products ────────────────────────────────────────────────
 export const productCategories = [
     "pre-workout",

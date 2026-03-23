@@ -1,7 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
-import { resolveAdmin } from "@/lib/admin-auth";
 import {
     Package,
     AlertTriangle,
@@ -35,16 +32,6 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
-    const session = await auth();
-    const email = session?.user?.email;
-    if (!email) {
-        redirect("/auth/signin?callbackUrl=/admin");
-    }
-    const admin = await resolveAdmin(email);
-    if (!admin) {
-        redirect("/auth/error?error=AccessDenied");
-    }
-
     const startOfUtcDay = new Date();
     startOfUtcDay.setUTCHours(0, 0, 0, 0);
 
