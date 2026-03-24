@@ -14,8 +14,8 @@ export const metadata: Metadata = {
   description: siteConfig.description,
 };
 
-/** Fresh HTML after deploys; purge CDN if you still see stale home layout. */
-export const revalidate = 60;
+/** Avoid stale home HTML at CDNs that ignore short ISR windows. */
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const [testimonials, homepage] = await Promise.all([

@@ -1,7 +1,10 @@
-import { execSync } from "node:child_process";
 import { existsSync, unlinkSync } from "node:fs";
 import path from "node:path";
 
+/**
+ * Do not stop Docker here: Playwright may still be serving `next start` while teardown runs.
+ * Stop containers with: `docker compose -f docker-compose.e2e.yml down -v`
+ */
 export default async function globalTeardown() {
     const root = path.resolve(__dirname, "..");
     const marker = path.join(root, ".playwright", "e2e-docker-started");
@@ -9,14 +12,10 @@ export default async function globalTeardown() {
 
     if (existsSync(marker)) {
         try {
-            execSync("docker compose -f docker-compose.e2e.yml down -v", {
-                cwd: root,
-                stdio: "inherit",
-            });
+            unlinkSync(marker);
         } catch {
             /* best-effort */
         }
-        unlinkSync(marker);
     }
 
     if (existsSync(runtimeEnv)) {

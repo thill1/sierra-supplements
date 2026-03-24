@@ -3,6 +3,9 @@ import { isE2eCredentialsAdminAuthEnabled } from "@/lib/e2e-admin-auth";
 import { siteConfig } from "@/lib/site-config";
 import { Mountain } from "lucide-react";
 
+/** Env-driven E2E block must not be baked at build time (Playwright injects secrets at runtime). */
+export const dynamic = "force-dynamic";
+
 export default function SignInPage() {
     return (
         <div className="min-h-screen flex items-center justify-center px-4 bg-[var(--color-bg)]">

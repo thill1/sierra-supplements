@@ -6,6 +6,9 @@ import {
     playwrightE2eAdminSecret,
 } from "./tests/e2e-constants";
 
+/** Playwright loads this file as CJS; use cwd (run `pnpm test:e2e` from repo root). */
+const projectRoot = process.cwd();
+
 /** Set PLAYWRIGHT_USE_EXISTING_SERVER=1 when port 3001 is already served (e.g. `pnpm build && PORT=3001 pnpm start`) to avoid a second `next dev` fighting `.next/dev/lock`. */
 const useExistingServer = process.env.PLAYWRIGHT_USE_EXISTING_SERVER === "1";
 
@@ -17,7 +20,7 @@ const authSecret =
 function webServerEnv(): Record<string, string> {
     const env: Record<string, string> = {};
     for (const [key, value] of Object.entries(process.env)) {
-        if (value !== undefined) env[key] = value;
+        if (value !== undefined && value !== "") env[key] = value;
     }
     env.AUTH_SECRET = authSecret;
     env.NEXTAUTH_SECRET = authSecret;
@@ -59,8 +62,9 @@ export default defineConfig({
         ? undefined
         : {
               // `next start` avoids `.next/dev/lock` when another `next dev` (Turbopack) is already running.
-              // Sources `.playwright/e2e-runtime.env` written by globalSetup (DATABASE_URL).
-              command: "bash scripts/playwright-e2e-serve.sh",
+              // Loads `.playwright/e2e-runtime.env` after globalSetup (see scripts/playwright-e2e-serve.cjs).
+              command: "node scripts/playwright-e2e-serve.cjs",
+              cwd: projectRoot,
               url: "http://localhost:3001",
               reuseExistingServer: !process.env.CI,
               timeout: 180_000,
