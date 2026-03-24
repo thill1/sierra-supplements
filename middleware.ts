@@ -5,8 +5,27 @@ import {
     getSessionCookieName,
 } from "@/lib/admin-middleware";
 import { logAuthDebug, logServerError } from "@/lib/observability";
+import { PRODUCTION_CSP } from "@/lib/production-csp";
+
+function withProductionCsp(response: NextResponse): NextResponse {
+    if (process.env.NODE_ENV === "production") {
+        response.headers.set("Content-Security-Policy", PRODUCTION_CSP);
+    }
+    return response;
+}
 
 export default async function middleware(req: NextRequest) {
+    const pathname = req.nextUrl.pathname;
+
+    const needsAdminAuth =
+        pathname.startsWith("/admin") ||
+        pathname.startsWith("/api/admin") ||
+        pathname.startsWith("/auth");
+
+    if (!needsAdminAuth) {
+        return withProductionCsp(NextResponse.next());
+    }
+
     let token = null;
     try {
         const cookieName = getSessionCookieName(req.nextUrl.protocol);
@@ -45,21 +64,22 @@ export default async function middleware(req: NextRequest) {
     }
 
     if (decision.type === "allow") {
-        return NextResponse.next();
+        return withProductionCsp(NextResponse.next());
     }
 
     if (decision.type === "redirect") {
-        return NextResponse.redirect(decision.location);
+        return withProductionCsp(NextResponse.redirect(decision.location));
     }
 
-    return NextResponse.json(decision.body, { status: decision.status });
+    return withProductionCsp(NextResponse.json(decision.body, { status: decision.status }));
 }
 
 export const config = {
     matcher: [
-        "/admin",
-        "/admin/:path+",
-        "/api/admin/:path*",
-        "/auth/:path*",
+        /*
+         * Run on all paths except Next static assets and favicon so CSP is set on
+         * every document (avoids stale frame-src from cached older deployments).
+         */
+        "/((?!_next/static|_next/image|favicon.ico).*)",
     ],
 };
