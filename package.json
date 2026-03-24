@@ -24,7 +24,8 @@
     "setup:check": "node scripts/check-env.js",
     "setup:vercel": "echo 'See docs/DEPLOYMENT.md for Vercel env setup'",
     "dns:cloudflare-vercel": "node scripts/sync-cloudflare-vercel-dns.mjs",
-    "dns:cloudflare-vercel:direct": "DNS_PROXIED=false node scripts/sync-cloudflare-vercel-dns.mjs"
+    "dns:cloudflare-vercel:direct": "DNS_PROXIED=false node scripts/sync-cloudflare-vercel-dns.mjs",
+    "icons:generate": "node scripts/generate-app-icons.mjs"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -70,6 +71,7 @@
     "drizzle-kit": "^0.31.9",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "png-to-ico": "^3.0.1",
     "prettier": "^3.8.1",
     "tailwindcss": "^4",
     "tsx": "^4.19.2",
