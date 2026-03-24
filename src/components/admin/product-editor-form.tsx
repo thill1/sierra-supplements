@@ -60,6 +60,90 @@ export type VariantEditorRow = {
     sortOrder: string;
 };
 
+function emptyVariantRow(): VariantEditorRow {
+    return {
+        label: "Default",
+        price: "",
+        compareAtPrice: "",
+        sku: "",
+        stockQuantity: "0",
+        lowStockThreshold: "2",
+        stripePriceId: "",
+        sortOrder: "0",
+    };
+}
+
+/** Build API body for PUT /variants. Optionally merge main form into a single new row when variant fields are left blank. */
+function variantRowsToApiPayload(
+    rows: VariantEditorRow[],
+    form: ProductEditorValues,
+    mergeSingleNewFromForm: boolean,
+): {
+    variants: Array<{
+        id?: number;
+        label: string;
+        price: number;
+        compareAtPrice: number | null;
+        sku: string | null;
+        stockQuantity: number;
+        lowStockThreshold: number;
+        stripePriceId: string | null;
+        sortOrder: number;
+    }>;
+} {
+    let work = rows;
+    if (mergeSingleNewFromForm && rows.length === 1) {
+        const v = rows[0]!;
+        work = [
+            {
+                ...v,
+                price: v.price.trim() !== "" ? v.price : form.price,
+                compareAtPrice:
+                    v.compareAtPrice.trim() !== ""
+                        ? v.compareAtPrice
+                        : form.compareAtPrice,
+                sku: v.sku.trim() !== "" ? v.sku : form.sku,
+                stockQuantity:
+                    v.stockQuantity.trim() !== ""
+                        ? v.stockQuantity
+                        : form.stockQuantity,
+                lowStockThreshold:
+                    v.lowStockThreshold.trim() !== ""
+                        ? v.lowStockThreshold
+                        : form.lowStockThreshold,
+                stripePriceId:
+                    v.stripePriceId.trim() !== ""
+                        ? v.stripePriceId
+                        : form.stripePriceId,
+            },
+        ];
+    }
+
+    return {
+        variants: work.map((v, idx) => ({
+            id: v.id,
+            label: v.label.trim() || "Variant",
+            price: parseFloat(v.price) || 0,
+            compareAtPrice: v.compareAtPrice.trim()
+                ? parseFloat(v.compareAtPrice)
+                : null,
+            sku: v.sku.trim() || null,
+            stockQuantity: Number.isFinite(parseInt(v.stockQuantity, 10))
+                ? parseInt(v.stockQuantity, 10)
+                : 0,
+            lowStockThreshold: Number.isFinite(
+                parseInt(v.lowStockThreshold, 10),
+            )
+                ? parseInt(v.lowStockThreshold, 10)
+                : 2,
+            stripePriceId: v.stripePriceId.trim() || null,
+            sortOrder: Number.isFinite(parseInt(v.sortOrder, 10))
+                ? parseInt(v.sortOrder, 10)
+                : idx,
+        })),
+    };
+}
+
 const emptyValues = (): ProductEditorValues => ({
     slug: "",
     name: "",
@@ -85,7 +169,7 @@ const emptyValues = (): ProductEditorValues => ({
 type Props = {
     productId: number | null;
     initial?: Partial<ProductEditorValues> | null;
-    /** Edit only: loaded from GET product (including default variant). */
+    /** Loaded from GET product when editing; ignored for new products. */
     initialVariants?: VariantEditorRow[];
 };
 
@@ -102,7 +186,9 @@ export function ProductEditorForm({
     const [advancedOpen, setAdvancedOpen] = useState(false);
     const [saving, setSaving] = useState(false);
     const [stagingUrls, setStagingUrls] = useState<string[]>([]);
-    const [variants, setVariants] = useState<VariantEditorRow[]>([]);
+    const [variants, setVariants] = useState<VariantEditorRow[]>(() => [
+        emptyVariantRow(),
+    ]);
 
     useEffect(() => {
         if (initial) {
@@ -146,7 +232,7 @@ export function ProductEditorForm({
     }, [form.name, slugManual, productId]);
 
     const isEdit = productId != null;
-    const multiVariant = isEdit && variants.length > 1;
+    const multiVariant = variants.length > 1;
 
     const payload = useMemo(() => {
         const stockQty = parseInt(form.stockQuantity, 10);
@@ -191,31 +277,11 @@ export function ProductEditorForm({
                     throw new Error(err.error || "Save failed");
                 }
 
-                const variantPayload = {
-                    variants: variants.map((v, idx) => ({
-                        id: v.id,
-                        label: v.label.trim() || "Variant",
-                        price: parseFloat(v.price) || 0,
-                        compareAtPrice: v.compareAtPrice.trim()
-                            ? parseFloat(v.compareAtPrice)
-                            : null,
-                        sku: v.sku.trim() || null,
-                        stockQuantity: Number.isFinite(
-                            parseInt(v.stockQuantity, 10),
-                        )
-                            ? parseInt(v.stockQuantity, 10)
-                            : 0,
-                        lowStockThreshold: Number.isFinite(
-                            parseInt(v.lowStockThreshold, 10),
-                        )
-                            ? parseInt(v.lowStockThreshold, 10)
-                            : 2,
-                        stripePriceId: v.stripePriceId.trim() || null,
-                        sortOrder: Number.isFinite(parseInt(v.sortOrder, 10))
-                            ? parseInt(v.sortOrder, 10)
-                            : idx,
-                    })),
-                };
+                const variantPayload = variantRowsToApiPayload(
+                    variants,
+                    form,
+                    false,
+                );
 
                 const resVar = await fetch(
                     `/api/admin/products/${productId}/variants`,
@@ -298,6 +364,40 @@ export function ProductEditorForm({
                         }),
                     });
                 }
+
+                if (variants.length === 0) {
+                    throw new Error("Add at least one flavor or size variant.");
+                }
+
+                const createVariantPayload = variantRowsToApiPayload(
+                    variants,
+                    form,
+                    true,
+                );
+
+                const resVar = await fetch(
+                    `/api/admin/products/${created.id}/variants`,
+                    {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(createVariantPayload),
+                    },
+                );
+
+                if (!resVar.ok) {
+                    if (resVar.status === 403) {
+                        toast.warning(
+                            "Product created. Setting variants requires a manager — open this product to finish.",
+                        );
+                    } else {
+                        const err = await resVar.json().catch(() => ({}));
+                        throw new Error(
+                            err.error ||
+                                "Product created but variants failed to save",
+                        );
+                    }
+                }
+
                 toast.success("Product created.");
                 router.push(`/admin/products/${created.id}`);
             }
@@ -592,8 +692,7 @@ export function ProductEditorForm({
                     </p>
                 </section>
 
-                {isEdit && (
-                    <section className="card space-y-4 p-6">
+                <section className="card space-y-4 p-6">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                             <h3 className="font-semibold text-sm uppercase tracking-wide text-[var(--color-text-muted)]">
                                 Variants (flavor / size)
@@ -622,8 +721,13 @@ export function ProductEditorForm({
                             </button>
                         </div>
                         <p className="text-xs text-[var(--color-text-muted)]">
-                            Each variant has its own price, SKU, Stripe price ID,
-                            and stock. Customers pick one on the product page.
+                            Add one row per flavor, size, or other option.
+                            Customers choose on the store product page (radio or
+                            dropdown). Each variant can have its own price, SKU,
+                            Stripe price ID, and stock. For a single SKU, keep one
+                            row (label it clearly, e.g. &quot;2 lb&quot;); you can
+                            use the Pricing and Inventory fields above and leave
+                            duplicate fields here blank — they copy on save.
                         </p>
                         <div className="space-y-6">
                             {variants.map((v, idx) => (
@@ -863,7 +967,6 @@ export function ProductEditorForm({
                             ))}
                         </div>
                     </section>
-                )}
 
                 <section className="card space-y-4 p-6">
                     <h3 className="font-semibold text-sm uppercase tracking-wide text-[var(--color-text-muted)]">
