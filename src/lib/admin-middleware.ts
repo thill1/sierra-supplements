@@ -1,3 +1,5 @@
+import type { NextRequest } from "next/server";
+
 type AdminToken = {
     isAdmin?: boolean;
 } | null;
@@ -18,6 +20,34 @@ export function getSessionCookieName(protocol: string): string {
     return protocol === "https:"
         ? "__Secure-authjs.session-token"
         : "authjs.session-token";
+}
+
+/**
+ * Public URL scheme as seen by the client. On Vercel (and other proxies),
+ * `request.nextUrl.protocol` can be `http:` in middleware while the browser
+ * uses HTTPS and Auth.js sets `__Secure-authjs.session-token`. Prefer
+ * `x-forwarded-proto` so `getToken` uses the correct cookie name and
+ * `secureCookie` flag.
+ */
+export function isPublicRequestHttps(request: NextRequest): boolean {
+    const raw = request.headers.get("x-forwarded-proto");
+    if (raw) {
+        const first = raw.split(",")[0]?.trim().toLowerCase();
+        if (first === "https") return true;
+        if (first === "http") return false;
+    }
+    return request.nextUrl.protocol === "https:";
+}
+
+export function getAuthSessionCookieOptions(request: NextRequest): {
+    cookieName: string;
+    secureCookie: boolean;
+} {
+    const https = isPublicRequestHttps(request);
+    return {
+        cookieName: getSessionCookieName(https ? "https:" : "http:"),
+        secureCookie: https,
+    };
 }
 
 export function getAdminMiddlewareDecision({

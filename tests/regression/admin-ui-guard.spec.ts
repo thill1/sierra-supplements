@@ -20,4 +20,13 @@ test.describe("Regression: admin UI — unauthenticated guard", () => {
         const res = await request.get("/api/admin/settings");
         expect(res.status()).toBe(401);
     });
+
+    test("returns 401 for admin API without session when x-forwarded-proto is https (Vercel-style)", async ({
+        request,
+    }) => {
+        const res = await request.get("/api/admin/settings", {
+            headers: { "x-forwarded-proto": "https" },
+        });
+        expect(res.status()).toBe(401);
+    });
 });

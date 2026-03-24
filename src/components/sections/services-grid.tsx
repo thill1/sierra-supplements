@@ -1,80 +1,164 @@
 "use client";
 
 import Link from "next/link";
-import {
-    Dumbbell,
-    Apple,
-    TestTube,
-    Users,
-    ShoppingBag,
-    ArrowRight,
-    Sparkles,
-} from "lucide-react";
-import { FadeIn, StaggerContainer, StaggerItem } from "@/components/ui/motion";
+import { ArrowRight } from "lucide-react";
+import { FadeIn } from "@/components/ui/motion";
 import { siteConfig } from "@/lib/site-config";
 
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-    Dumbbell,
-    Apple,
-    TestTube,
-    Users,
-    ShoppingBag,
-};
-
 export function ServicesGrid() {
+    const peak = siteConfig.services.find((s) => s.slug === "sierra-stack-systems");
+    const coaching = siteConfig.services.find((s) => s.slug === "high-elevation-coaching");
+    const base = siteConfig.services.find((s) => s.slug === "ascent-nutrition");
+
+    if (!peak || !coaching || !base) {
+        return null;
+    }
+
     return (
         <section className="section-padding" id="services">
             <div className="section-container">
-                <FadeIn className="text-center mb-12">
+                <FadeIn className="text-center mb-10 md:mb-14">
                     <span className="label">What We Offer</span>
                     <h2 className="heading-lg mt-2 mb-4">
                         Peak Performance <span className="gradient-text">Services</span>
                     </h2>
                     <p className="body-lg max-w-2xl mx-auto">
-                        From custom supplement plans to nutrition coaching, we offer everything you need to perform at your best in the mountains and beyond.
+                        Your path to the summit is layered: a strong nutritional base, coaching
+                        as you climb, and precision protocols at the peak. Each tier builds on the
+                        one below—select a level to learn more.
                     </p>
                 </FadeIn>
 
-                <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {siteConfig.services.map((service) => {
-                        const Icon = iconMap[service.icon] || Dumbbell;
-                        return (
-                            <StaggerItem key={service.slug}>
-                                <Link
-                                    href={`/services/${service.slug}`}
-                                    className="card group block h-full"
-                                >
-                                    <div className="w-12 h-12 rounded-xl bg-[var(--color-accent-subtle)] flex items-center justify-center mb-4 group-hover:bg-[var(--color-accent)] transition-colors">
-                                        <Icon className="w-6 h-6 text-[var(--color-accent)] group-hover:text-[var(--color-bg)] transition-colors" />
-                                    </div>
-                                    <h3 className="heading-sm mb-2">{service.title}</h3>
-                                    <p className="body-sm mb-4">{service.shortDescription}</p>
-                                    <span className="inline-flex items-center gap-1 text-sm font-medium text-[var(--color-accent)] group-hover:gap-2 transition-all">
-                                        Learn More <ArrowRight className="w-4 h-4" />
-                                    </span>
-                                </Link>
-                            </StaggerItem>
-                        );
-                    })}
-                    <StaggerItem>
-                        <Link
-                            href="/contact"
-                            className="card group block h-full border-[var(--color-accent)]/25 hover:border-[var(--color-accent)]/50 transition-colors"
+                <FadeIn delay={0.12} className="max-w-lg md:max-w-xl mx-auto">
+                    <div className="relative w-full aspect-[400/400] md:aspect-[400/380]">
+                        <svg
+                            className="absolute inset-0 h-full w-full drop-shadow-[0_20px_50px_rgba(0,0,0,0.45)]"
+                            viewBox="0 0 400 400"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                            aria-hidden
                         >
-                            <div className="w-12 h-12 rounded-xl bg-[var(--color-accent-subtle)] flex items-center justify-center mb-4 group-hover:bg-[var(--color-accent)] transition-colors">
-                                <Sparkles className="w-6 h-6 text-[var(--color-accent)] group-hover:text-[var(--color-bg)] transition-colors" />
+                            <defs>
+                                <linearGradient
+                                    id="pyramid-base-fill"
+                                    x1="200"
+                                    y1="230"
+                                    x2="200"
+                                    y2="400"
+                                    gradientUnits="userSpaceOnUse"
+                                >
+                                    <stop stopColor="#1a3d28" />
+                                    <stop offset="1" stopColor="var(--color-pine)" />
+                                </linearGradient>
+                                <linearGradient
+                                    id="pyramid-mid-fill"
+                                    x1="200"
+                                    y1="130"
+                                    x2="200"
+                                    y2="230"
+                                    gradientUnits="userSpaceOnUse"
+                                >
+                                    <stop stopColor="var(--color-pine)" />
+                                    <stop offset="1" stopColor="#3d6b4f" />
+                                </linearGradient>
+                                <linearGradient
+                                    id="pyramid-peak-fill"
+                                    x1="200"
+                                    y1="24"
+                                    x2="200"
+                                    y2="130"
+                                    gradientUnits="userSpaceOnUse"
+                                >
+                                    <stop stopColor="#b45309" />
+                                    <stop offset="0.55" stopColor="var(--color-accent)" />
+                                    <stop offset="1" stopColor="#fbbf24" />
+                                </linearGradient>
+                            </defs>
+
+                            {/* Base tier */}
+                            <a
+                                href={`/services/${base.slug}`}
+                                className="group outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)] rounded-sm"
+                                aria-label={`${base.title}: ${base.shortDescription}`}
+                            >
+                                <polygon
+                                    points="0,400 400,400 375,230 25,230"
+                                    fill="url(#pyramid-base-fill)"
+                                    stroke="var(--color-border)"
+                                    strokeWidth="1.5"
+                                    className="transition-[filter] duration-300 group-hover:brightness-110 group-focus-visible:brightness-110"
+                                />
+                            </a>
+                            {/* Middle tier */}
+                            <a
+                                href={`/services/${coaching.slug}`}
+                                className="group outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)] rounded-sm"
+                                aria-label={`${coaching.title}: ${coaching.shortDescription}`}
+                            >
+                                <polygon
+                                    points="25,230 375,230 335,130 65,130"
+                                    fill="url(#pyramid-mid-fill)"
+                                    stroke="var(--color-border)"
+                                    strokeWidth="1.5"
+                                    className="transition-[filter] duration-300 group-hover:brightness-110 group-focus-visible:brightness-110"
+                                />
+                            </a>
+                            {/* Peak tier */}
+                            <a
+                                href={`/services/${peak.slug}`}
+                                className="group outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)] rounded-sm"
+                                aria-label={`${peak.title}: ${peak.shortDescription}`}
+                            >
+                                <polygon
+                                    points="65,130 335,130 288,58 200,24 112,58"
+                                    fill="url(#pyramid-peak-fill)"
+                                    stroke="var(--color-border-subtle)"
+                                    strokeWidth="1.5"
+                                    className="transition-[filter] duration-300 group-hover:brightness-110 group-focus-visible:brightness-110"
+                                />
+                            </a>
+                        </svg>
+
+                        {/* Labels (pointer-events none so SVG links receive clicks) */}
+                        <div className="absolute inset-0 flex flex-col pointer-events-none text-center">
+                            <div className="flex-[0.28] flex flex-col items-center justify-center px-10 md:px-14 pt-2">
+                                <span className="font-[family-name:var(--font-outfit)] text-sm md:text-base font-semibold text-[var(--color-snow)] drop-shadow-[0_1px_8px_rgba(0,0,0,0.85)]">
+                                    {peak.title}
+                                </span>
+                                <span className="mt-1 text-xs md:text-sm text-[var(--color-snow)]/90 drop-shadow-[0_1px_6px_rgba(0,0,0,0.8)] line-clamp-2 max-w-[16rem] md:max-w-none leading-snug">
+                                    {peak.shortDescription}
+                                </span>
                             </div>
-                            <h3 className="heading-sm mb-2">Performance Protocols</h3>
-                            <p className="body-sm mb-4 text-[var(--color-text-secondary)]">
-                                Body builder approved—personalized stacks built around your goals,
-                                with room to adjust as you level up.
-                            </p>
-                            <span className="inline-flex items-center gap-1 text-sm font-medium text-[var(--color-accent)] group-hover:gap-2 transition-all">
-                                Contact Us Today <ArrowRight className="w-4 h-4" />
-                            </span>
+                            <div className="flex-[0.24] flex flex-col items-center justify-center px-9 md:px-12">
+                                <span className="font-[family-name:var(--font-outfit)] text-sm md:text-base font-semibold text-[var(--color-snow)] drop-shadow-[0_1px_8px_rgba(0,0,0,0.75)]">
+                                    {coaching.title}
+                                </span>
+                                <span className="mt-1 text-xs md:text-sm text-[var(--color-snow)]/90 drop-shadow-[0_1px_6px_rgba(0,0,0,0.7)] line-clamp-2 max-w-[17rem] md:max-w-none leading-snug">
+                                    {coaching.shortDescription}
+                                </span>
+                            </div>
+                            <div className="flex-[0.48] flex flex-col items-center justify-center px-8 md:px-10 pb-2">
+                                <span className="font-[family-name:var(--font-outfit)] text-sm md:text-base font-semibold text-[var(--color-snow)] drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)]">
+                                    {base.title}
+                                </span>
+                                <span className="mt-1 text-xs md:text-sm text-[var(--color-snow)]/90 drop-shadow-[0_1px_6px_rgba(0,0,0,0.6)] line-clamp-2 max-w-[18rem] md:max-w-none leading-snug">
+                                    {base.shortDescription}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p className="text-center text-sm text-[var(--color-text-muted)] mt-6">
+                        Prefer the full list?{" "}
+                        <Link
+                            href="/services"
+                            className="text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] inline-flex items-center gap-1 font-medium"
+                        >
+                            View all services
+                            <ArrowRight className="w-3.5 h-3.5" aria-hidden />
                         </Link>
-                    </StaggerItem>
-                </StaggerContainer>
+                    </p>
+                </FadeIn>
             </div>
         </section>
     );

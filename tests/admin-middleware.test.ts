@@ -1,7 +1,10 @@
+import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
 import {
     getAdminMiddlewareDecision,
+    getAuthSessionCookieOptions,
     getSessionCookieName,
+    isPublicRequestHttps,
 } from "@/lib/admin-middleware";
 
 describe("getAdminMiddlewareDecision", () => {
@@ -58,5 +61,33 @@ describe("getAdminMiddlewareDecision", () => {
 
     it("uses the non-secure Auth.js session cookie name on http", () => {
         expect(getSessionCookieName("http:")).toBe("authjs.session-token");
+    });
+});
+
+describe("isPublicRequestHttps (middleware / proxy)", () => {
+    it("trusts x-forwarded-proto https over nextUrl http (Vercel-style)", () => {
+        const req = new NextRequest("http://127.0.0.1:3000/admin", {
+            headers: { "x-forwarded-proto": "https" },
+        });
+        expect(isPublicRequestHttps(req)).toBe(true);
+        expect(getAuthSessionCookieOptions(req).cookieName).toBe(
+            "__Secure-authjs.session-token",
+        );
+        expect(getAuthSessionCookieOptions(req).secureCookie).toBe(true);
+    });
+
+    it("uses first forwarded proto value when comma-separated", () => {
+        const req = new NextRequest("http://internal/admin", {
+            headers: { "x-forwarded-proto": "https,http" },
+        });
+        expect(isPublicRequestHttps(req)).toBe(true);
+    });
+
+    it("falls back to nextUrl when forwarded proto is absent", () => {
+        const httpReq = new NextRequest("http://localhost/admin");
+        expect(isPublicRequestHttps(httpReq)).toBe(false);
+
+        const httpsReq = new NextRequest("https://localhost/admin");
+        expect(isPublicRequestHttps(httpsReq)).toBe(true);
     });
 });

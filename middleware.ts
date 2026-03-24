@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 import {
     getAdminMiddlewareDecision,
-    getSessionCookieName,
+    getAuthSessionCookieOptions,
 } from "@/lib/admin-middleware";
 import { logAuthDebug, logServerError } from "@/lib/observability";
 import { PRODUCTION_CSP } from "@/lib/production-csp";
@@ -26,13 +26,13 @@ export default async function middleware(req: NextRequest) {
         return withProductionCsp(NextResponse.next());
     }
 
+    const sessionCookieOpts = getAuthSessionCookieOptions(req);
     let token = null;
     try {
-        const cookieName = getSessionCookieName(req.nextUrl.protocol);
         token = await getToken({
             req,
-            cookieName,
-            secureCookie: req.nextUrl.protocol === "https:",
+            cookieName: sessionCookieOpts.cookieName,
+            secureCookie: sessionCookieOpts.secureCookie,
             secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,
         });
     } catch (error) {
@@ -56,7 +56,7 @@ export default async function middleware(req: NextRequest) {
             pathname: req.nextUrl.pathname,
             hasToken: Boolean(token),
             tokenIsAdmin: token?.isAdmin === true,
-            sessionCookieName: getSessionCookieName(req.nextUrl.protocol),
+            sessionCookieName: sessionCookieOpts.cookieName,
             cookieNames: req.cookies.getAll().map((cookie) => cookie.name),
             decision: decision.type,
             location: decision.type === "redirect" ? decision.location : undefined,

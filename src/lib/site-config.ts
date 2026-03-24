@@ -71,31 +71,31 @@ export const siteConfig = {
   services: [
     {
       slug: "sierra-stack-systems",
-      title: "Sierra Stack Systems",
+      title: "Peak Protocols",
       shortDescription:
-        "Custom supplement plans. Personalized vitamin & supplement protocols based on your unique goals.",
+        "Personalized supplement stacks and protocols—built around your goals, training, and recovery.",
       description:
-        "Our expert nutritionists create tailored supplement stacks designed around your health goals, lifestyle, and lab results. Whether you're training for a marathon or optimizing daily energy, we build a plan that works for you.",
+        "Our team builds Peak Protocols—tailored supplement stacks around your health goals, lifestyle, and lab results. Whether you're training for an ultra or optimizing daily energy, your protocol evolves as you do.",
       icon: "Dumbbell",
       image: "/images/services/custom-plans.jpg",
     },
     {
       slug: "high-elevation-coaching",
-      title: "High Elevation coaching",
+      title: "High Elevation Coaching",
       shortDescription:
-        "Workouts plus nutrition. 1-on-1 coaching to transform your diet and fuel your performance.",
+        "Training plus nutrition. One-on-one coaching to transform how you eat, move, and perform.",
       description:
-        "Work directly with a certified nutrition coach who understands the demands of mountain living. We combine whole-food strategies with targeted supplementation to unlock your full potential.",
+        "Work directly with a certified coach who understands mountain living. High Elevation Coaching combines whole-food strategy, training insight, and targeted supplementation so you can push higher with confidence.",
       icon: "Users",
       image: "/images/services/nutrition-coaching.jpg",
     },
     {
       slug: "ascent-nutrition",
-      title: "Ascent Nutrition",
+      title: "Base Camp Nutrition",
       shortDescription:
-        "Nutrition only. Focused nutritional guidance to fuel your daily life and training.",
+        "Nutrition-first guidance—the foundation that supports everything above it on your climb.",
       description:
-        "A dedicated program to transform your diet. Get personalized macro and micro-nutrient plans with supplement integration, designed specifically for your body and goals.",
+        "Base Camp Nutrition is your foundation: personalized macro and micronutrient planning, habit-building, and smart supplement integration—designed for your body before you add higher tiers of support.",
       icon: "Apple",
       image: "/images/services/group-wellness.jpg",
     },

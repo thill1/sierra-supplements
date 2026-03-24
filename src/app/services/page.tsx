@@ -1,13 +1,5 @@
 import Link from "next/link";
-import {
-    Dumbbell,
-    Apple,
-    TestTube,
-    Users,
-    ShoppingBag,
-    ArrowRight,
-    Sparkles,
-} from "lucide-react";
+import { Dumbbell, Apple, TestTube, Users, ShoppingBag, ArrowRight } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 import type { Metadata } from "next";
 
@@ -66,26 +58,6 @@ export default function ServicesPage() {
                             </Link>
                         );
                     })}
-                    <Link
-                        href="/contact"
-                        className="card group flex flex-col md:flex-row gap-6 border-[var(--color-accent)]/25 hover:border-[var(--color-accent)]/50 transition-colors"
-                    >
-                        <div className="w-16 h-16 rounded-xl bg-[var(--color-accent-subtle)] flex items-center justify-center flex-shrink-0 group-hover:bg-[var(--color-accent)] transition-colors">
-                            <Sparkles className="w-8 h-8 text-[var(--color-accent)] group-hover:text-[var(--color-bg)] transition-colors" />
-                        </div>
-                        <div>
-                            <h2 className="heading-sm mb-2 group-hover:text-[var(--color-accent)] transition-colors">
-                                Performance Protocols
-                            </h2>
-                            <p className="body-sm mb-3 text-[var(--color-text-secondary)]">
-                                Body builder approved—personalized stacks built around your goals,
-                                with room to adjust as you level up.
-                            </p>
-                            <span className="inline-flex items-center gap-1 text-sm font-medium text-[var(--color-accent)] group-hover:gap-2 transition-all">
-                                Contact Us Today <ArrowRight className="w-4 h-4" />
-                            </span>
-                        </div>
-                    </Link>
                 </div>
             </section>
 
