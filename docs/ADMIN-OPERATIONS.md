@@ -8,7 +8,7 @@
   - **In-store sale**: pick product, quantity, optional payment method — reduces stock and logs a movement.
   - **Quick adjustment**: positive or negative delta for corrections.
   - **Shipment / restock**: add units when new stock arrives.
-- **Orders**: open an order to see line items; **Save status** for fulfillment workflow.
+- **Orders**: open an order to see line items; **Save changes** updates fulfillment **status**, **internal notes**, and **shipping / customer contact** fields (not line items or payment totals — those come from checkout and Stripe).
 
 ## Photos
 

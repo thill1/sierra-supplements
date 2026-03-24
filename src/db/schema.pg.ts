@@ -222,3 +222,28 @@ export const auditLogs = pgTable(
     },
     (t) => [index("audit_logs_created_at_idx").on(t.createdAt)],
 );
+
+/** Single-row homepage copy editable from Admin → Content (id must remain 1). */
+export const homepageContent = pgTable("homepage_content", {
+    id: integer("id").primaryKey().default(1),
+    data: jsonb("data").notNull(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const blogPosts = pgTable(
+    "blog_posts",
+    {
+        id: serial("id").primaryKey(),
+        slug: text("slug").notNull().unique(),
+        title: text("title").notNull(),
+        excerpt: text("excerpt"),
+        category: text("category").notNull().default("General"),
+        readTime: text("read_time").notNull().default("5 min"),
+        body: text("body").notNull(),
+        published: boolean("published").notNull().default(false),
+        publishedAt: timestamp("published_at"),
+        createdAt: timestamp("created_at").defaultNow(),
+        updatedAt: timestamp("updated_at").defaultNow(),
+    },
+    (t) => [index("blog_posts_published_idx").on(t.published)],
+);

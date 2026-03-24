@@ -13,6 +13,9 @@ import {
     ShoppingBag,
     Star,
     Boxes,
+    Activity,
+    BarChart3,
+    UserCog,
 } from "lucide-react";
 import { Toaster } from "sonner";
 import { SignOutButton } from "@/components/admin/sign-out-button";
@@ -24,9 +27,12 @@ const sidebarLinks = [
     { label: "Inventory", href: "/admin/inventory", icon: Boxes },
     { label: "Orders", href: "/admin/orders", icon: ShoppingBag },
     { label: "Leads", href: "/admin/leads", icon: Users },
+    { label: "Audit log", href: "/admin/audit", icon: Activity },
+    { label: "Analytics", href: "/admin/events", icon: BarChart3 },
     { label: "Content", href: "/admin/content", icon: FileText },
     { label: "Testimonials", href: "/admin/testimonials", icon: Star },
     { label: "Blog", href: "/admin/blog", icon: MessageSquare },
+    { label: "Team", href: "/admin/users", icon: UserCog },
     { label: "Settings", href: "/admin/settings", icon: Settings },
 ];
 

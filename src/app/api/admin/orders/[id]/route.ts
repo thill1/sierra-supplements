@@ -18,9 +18,31 @@ const orderStatuses = [
     "refunded",
 ] as const;
 
-const patchSchema = z.object({
-    status: z.enum(orderStatuses),
-});
+const patchSchema = z
+    .object({
+        status: z.enum(orderStatuses).optional(),
+        notes: z.string().max(5000).nullable().optional(),
+        name: z.string().max(200).nullable().optional(),
+        phone: z.string().max(40).nullable().optional(),
+        addressLine1: z.string().max(200).nullable().optional(),
+        addressLine2: z.string().max(200).nullable().optional(),
+        city: z.string().max(120).nullable().optional(),
+        state: z.string().max(80).nullable().optional(),
+        zip: z.string().max(20).nullable().optional(),
+    })
+    .refine(
+        (d) =>
+            d.status !== undefined ||
+            d.notes !== undefined ||
+            d.name !== undefined ||
+            d.phone !== undefined ||
+            d.addressLine1 !== undefined ||
+            d.addressLine2 !== undefined ||
+            d.city !== undefined ||
+            d.state !== undefined ||
+            d.zip !== undefined,
+        { message: "At least one field is required" },
+    );
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -88,10 +110,38 @@ export async function PATCH(request: Request, { params }: Params) {
         const body = await request.json();
         const data = patchSchema.parse(body);
 
+        const set: Partial<typeof orders.$inferInsert> = {};
+        if (data.status !== undefined) set.status = data.status;
+        if (data.notes !== undefined) set.notes = data.notes;
+        if (data.name !== undefined) set.name = data.name;
+        if (data.phone !== undefined) set.phone = data.phone;
+        if (data.addressLine1 !== undefined) {
+            set.addressLine1 = data.addressLine1;
+        }
+        if (data.addressLine2 !== undefined) {
+            set.addressLine2 = data.addressLine2;
+        }
+        if (data.city !== undefined) set.city = data.city;
+        if (data.state !== undefined) set.state = data.state;
+        if (data.zip !== undefined) set.zip = data.zip;
+
+        const beforeSlice = {
+            status: before.status,
+            notes: before.notes,
+            name: before.name,
+            phone: before.phone,
+            addressLine1: before.addressLine1,
+            addressLine2: before.addressLine2,
+            city: before.city,
+            state: before.state,
+            zip: before.zip,
+        };
+        const afterSlice = { ...beforeSlice, ...set };
+
         const [order] = await db.transaction(async (tx) => {
             const [o] = await tx
                 .update(orders)
-                .set({ status: data.status })
+                .set(set)
                 .where(eq(orders.id, orderId))
                 .returning();
             if (o) {
@@ -99,9 +149,9 @@ export async function PATCH(request: Request, { params }: Params) {
                     actorUserId: admin.id,
                     entityType: "order",
                     entityId: String(orderId),
-                    action: "status_update",
-                    before: { status: before.status },
-                    after: { status: data.status },
+                    action: "update",
+                    before: beforeSlice,
+                    after: afterSlice,
                 });
             }
             return [o];

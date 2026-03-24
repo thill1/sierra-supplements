@@ -1,65 +1,170 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, FileText, ExternalLink } from "lucide-react";
+import { Plus, Pencil, ExternalLink, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { legacyBlogSummaries } from "@/lib/blog-legacy";
+
+type BlogPostRow = {
+    id: number;
+    slug: string;
+    title: string;
+    excerpt: string | null;
+    category: string;
+    readTime: string;
+    published: boolean;
+    publishedAt: string | null;
+};
 
 export default function AdminBlogPage() {
+    const [posts, setPosts] = useState<BlogPostRow[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    async function load() {
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await fetch("/api/admin/blog-posts");
+            if (!res.ok) throw new Error("Failed to load");
+            setPosts(await res.json());
+        } catch (e) {
+            setError(e instanceof Error ? e.message : "Error");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    useEffect(() => {
+        void load();
+    }, []);
+
+    async function remove(id: number) {
+        if (!confirm("Delete this post?")) return;
+        try {
+            const res = await fetch(`/api/admin/blog-posts/${id}`, {
+                method: "DELETE",
+            });
+            if (!res.ok) throw new Error("Delete failed");
+            toast.success("Deleted.");
+            await load();
+        } catch {
+            toast.error("Could not delete.");
+        }
+    }
+
+    if (loading) {
+        return (
+            <p className="text-[var(--color-text-muted)] py-12">Loading…</p>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="p-4 rounded-lg bg-[var(--color-error)]/10 border border-[var(--color-error)]/30 text-[var(--color-error)]">
+                {error}
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center flex-wrap gap-4">
                 <div>
-                    <h2 className="text-xl font-bold">Blog Posts</h2>
+                    <h2 className="text-xl font-bold">Blog posts</h2>
                     <p className="text-sm text-[var(--color-text-muted)]">
-                        Manage blog posts and articles.
+                        Database posts override legacy slugs. Built-in articles
+                        remain until you add a post with the same slug.
                     </p>
                 </div>
+                <Link href="/admin/blog/new" className="btn btn-primary text-sm">
+                    <Plus className="w-4 h-4" /> New post
+                </Link>
             </div>
 
-            <div className="card p-8">
-                <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-[var(--color-bg-muted)] flex items-center justify-center flex-shrink-0">
-                        <FileText className="w-6 h-6 text-[var(--color-text-muted)]" />
-                    </div>
-                    <div>
-                        <h3 className="font-semibold mb-2">Blog content is currently in code</h3>
-                        <p className="text-sm text-[var(--color-text-secondary)] mb-4">
-                            Blog posts are defined in <code className="text-[var(--color-accent)]">src/app/blog/</code>.
-                            To add or edit posts via the admin, we need to add a blog_posts table and wire up the editor.
-                        </p>
-                        <Link
-                            href="/blog"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-sm text-[var(--color-accent)] hover:underline"
-                        >
-                            View blog <ExternalLink className="w-3.5 h-3.5" />
-                        </Link>
-                    </div>
-                </div>
-            </div>
-
-            <div className="card !p-0 overflow-hidden">
-                <div className="px-6 py-4 border-b border-[var(--color-border-subtle)]">
-                    <h3 className="font-semibold">Current posts (from code)</h3>
-                </div>
-                <ul className="divide-y divide-[var(--color-border-subtle)]">
-                    {[
-                        { slug: "altitude-supplement-guide", title: "The Ultimate Guide to Supplements for High-Altitude Living" },
-                        { slug: "protein-timing-myth", title: "Protein Timing: Does the 'Anabolic Window' Really Matter?" },
-                    ].map((post) => (
-                        <li key={post.slug} className="px-6 py-4 flex items-center justify-between">
-                            <span className="text-sm">{post.title}</span>
+            <div className="card p-4">
+                <h3 className="font-semibold text-sm mb-2">
+                    Legacy slugs (from repo)
+                </h3>
+                <ul className="text-sm text-[var(--color-text-secondary)] space-y-1">
+                    {legacyBlogSummaries.map((p) => (
+                        <li key={p.slug} className="flex items-center gap-2">
+                            <code className="text-xs">{p.slug}</code>
                             <Link
-                                href={`/blog/${post.slug}`}
+                                href={`/blog/${p.slug}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-xs text-[var(--color-accent)] hover:underline"
+                                className="text-[var(--color-accent)] inline-flex items-center gap-1"
                             >
-                                View
+                                View <ExternalLink className="w-3 h-3" />
                             </Link>
                         </li>
                     ))}
                 </ul>
+            </div>
+
+            <div className="card !p-0 overflow-hidden">
+                <table className="w-full text-left text-sm">
+                    <thead className="bg-[var(--color-bg-muted)]/50">
+                        <tr>
+                            <th className="px-4 py-3">Title</th>
+                            <th className="px-4 py-3">Slug</th>
+                            <th className="px-4 py-3">Published</th>
+                            <th className="px-4 py-3 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[var(--color-border-subtle)]">
+                        {posts.length === 0 ? (
+                            <tr>
+                                <td
+                                    colSpan={4}
+                                    className="px-4 py-8 text-center text-[var(--color-text-muted)]"
+                                >
+                                    No CMS posts yet. Legacy articles still show
+                                    on the public blog.
+                                </td>
+                            </tr>
+                        ) : (
+                            posts.map((p) => (
+                                <tr key={p.id}>
+                                    <td className="px-4 py-3 font-medium">
+                                        {p.title}
+                                    </td>
+                                    <td className="px-4 py-3 font-mono text-xs">
+                                        {p.slug}
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        {p.published ? "Yes" : "Draft"}
+                                    </td>
+                                    <td className="px-4 py-3 text-right space-x-2">
+                                        <Link
+                                            href={`/admin/blog/${p.id}`}
+                                            className="inline-flex p-2 rounded-lg hover:bg-[var(--color-bg-muted)]"
+                                        >
+                                            <Pencil className="w-4 h-4" />
+                                        </Link>
+                                        <Link
+                                            href={`/blog/${p.slug}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex p-2 rounded-lg hover:bg-[var(--color-bg-muted)]"
+                                        >
+                                            <ExternalLink className="w-4 h-4" />
+                                        </Link>
+                                        <button
+                                            type="button"
+                                            className="inline-flex p-2 rounded-lg hover:bg-[var(--color-bg-muted)] text-[var(--color-error)]"
+                                            onClick={() => void remove(p.id)}
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
             </div>
         </div>
     );

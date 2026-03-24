@@ -5,7 +5,18 @@ import { ArrowRight, Gift } from "lucide-react";
 import { FadeIn } from "@/components/ui/motion";
 import { siteConfig } from "@/lib/site-config";
 
-export function LeadMagnetBanner() {
+type LeadMagnetCopy = {
+    title: string;
+    subtitle: string;
+    cta: string;
+};
+
+export function LeadMagnetBanner({
+    leadMagnet,
+}: {
+    leadMagnet?: LeadMagnetCopy;
+}) {
+    const copy = leadMagnet ?? siteConfig.leadMagnet;
     const [email, setEmail] = useState("");
     const [submitted, setSubmitted] = useState(false);
 
@@ -49,9 +60,9 @@ export function LeadMagnetBanner() {
                         ) : (
                             <>
                                 <h3 className="heading-md mb-2">
-                                    {siteConfig.leadMagnet.title}
+                                    {copy.title}
                                 </h3>
-                                <p className="body-lg mb-6">{siteConfig.leadMagnet.subtitle}</p>
+                                <p className="body-lg mb-6">{copy.subtitle}</p>
 
                                 <form
                                     onSubmit={handleSubmit}
@@ -67,7 +78,7 @@ export function LeadMagnetBanner() {
                                         required
                                     />
                                     <button type="submit" className="btn btn-primary whitespace-nowrap">
-                                        {siteConfig.leadMagnet.cta}
+                                        {copy.cta}
                                         <ArrowRight className="w-4 h-4" />
                                     </button>
                                 </form>

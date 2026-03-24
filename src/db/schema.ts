@@ -8,6 +8,8 @@ export {
     productImages,
     inventoryMovements,
     auditLogs,
+    homepageContent,
+    blogPosts,
     adminUsers,
     adminAppSettings,
     testimonials,

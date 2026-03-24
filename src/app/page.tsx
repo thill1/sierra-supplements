@@ -12,6 +12,7 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
+import { getHomepageContent } from "@/lib/homepage-content";
 import { getTestimonials } from "@/lib/testimonials";
 import { HeroSection } from "@/components/sections/hero";
 import { TestimonialsSection } from "@/components/sections/testimonials";
@@ -27,14 +28,17 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const testimonials = await getTestimonials();
+  const [testimonials, homepage] = await Promise.all([
+    getTestimonials(),
+    getHomepageContent(),
+  ]);
   return (
     <>
-      <HeroSection />
+      <HeroSection content={homepage.hero} />
       <TrustSection />
       <ServicesGrid />
       <TestimonialsSection testimonials={testimonials} />
-      <LeadMagnetBanner />
+      <LeadMagnetBanner leadMagnet={homepage.leadMagnet} />
       <FaqSection />
     </>
   );

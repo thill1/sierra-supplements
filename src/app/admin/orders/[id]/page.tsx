@@ -50,7 +50,16 @@ export default function AdminOrderDetailPage() {
     const [order, setOrder] = useState<Order | null>(null);
     const [lines, setLines] = useState<LineItem[]>([]);
     const [status, setStatus] = useState("");
+    const [notes, setNotes] = useState("");
+    const [custName, setCustName] = useState("");
+    const [custPhone, setCustPhone] = useState("");
+    const [addr1, setAddr1] = useState("");
+    const [addr2, setAddr2] = useState("");
+    const [city, setCity] = useState("");
+    const [stateVal, setStateVal] = useState("");
+    const [zip, setZip] = useState("");
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
         if (!Number.isFinite(id)) return;
@@ -66,7 +75,16 @@ export default function AdminOrderDetailPage() {
                 if (cancelled) return;
                 setOrder(data.order);
                 setLines(data.lineItems);
-                setStatus(data.order.status ?? "pending");
+                const o = data.order;
+                setStatus(o.status ?? "pending");
+                setNotes(o.notes ?? "");
+                setCustName(o.name ?? "");
+                setCustPhone(o.phone ?? "");
+                setAddr1(o.addressLine1 ?? "");
+                setAddr2(o.addressLine2 ?? "");
+                setCity(o.city ?? "");
+                setStateVal(o.state ?? "");
+                setZip(o.zip ?? "");
             } catch {
                 toast.error("Order not found");
                 router.push("/admin/orders");
@@ -79,19 +97,34 @@ export default function AdminOrderDetailPage() {
         };
     }, [id, router]);
 
-    async function saveStatus() {
+    async function saveOrder() {
+        setSaving(true);
         try {
             const res = await fetch(`/api/admin/orders/${id}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status }),
+                body: JSON.stringify({
+                    status,
+                    notes: notes.trim() === "" ? null : notes.trim(),
+                    name: custName.trim() === "" ? null : custName.trim(),
+                    phone: custPhone.trim() === "" ? null : custPhone.trim(),
+                    addressLine1:
+                        addr1.trim() === "" ? null : addr1.trim(),
+                    addressLine2:
+                        addr2.trim() === "" ? null : addr2.trim(),
+                    city: city.trim() === "" ? null : city.trim(),
+                    state: stateVal.trim() === "" ? null : stateVal.trim(),
+                    zip: zip.trim() === "" ? null : zip.trim(),
+                }),
             });
             if (!res.ok) throw new Error("Update failed");
-            toast.success("Status updated.");
+            toast.success("Order updated.");
             const data = await res.json();
             setOrder(data.order);
         } catch {
-            toast.error("Could not update status.");
+            toast.error("Could not save order.");
+        } finally {
+            setSaving(false);
         }
     }
 
@@ -163,38 +196,113 @@ export default function AdminOrderDetailPage() {
                             </option>
                         ))}
                     </select>
-                    <button
-                        type="button"
-                        className="btn btn-primary text-sm"
-                        onClick={() => saveStatus()}
-                    >
-                        Save status
-                    </button>
                 </div>
             </div>
 
-            <div className="card p-6 space-y-2 text-sm">
-                <p>
-                    <span className="text-[var(--color-text-muted)]">Customer</span>
-                    <br />
-                    {order.name ?? "—"} · {order.email}
+            <div className="card p-6 space-y-4 text-sm">
+                <p className="text-[var(--color-text-muted)]">
+                    Email (checkout) is fixed:{" "}
+                    <span className="text-[var(--color-text)] font-medium">
+                        {order.email}
+                    </span>
                 </p>
-                {order.phone && <p>Phone: {order.phone}</p>}
-                {(order.addressLine1 || order.city) && (
-                    <p>
-                        {order.addressLine1}
-                        <br />
-                        {order.addressLine2 ? `${order.addressLine2}\n` : ""}
-                        {order.city}, {order.state} {order.zip}
-                    </p>
-                )}
-                {order.notes && (
-                    <p>
-                        <span className="text-[var(--color-text-muted)]">Notes</span>
-                        <br />
-                        {order.notes}
-                    </p>
-                )}
+                <div className="grid gap-3 sm:grid-cols-2">
+                    <div>
+                        <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                            Customer name
+                        </label>
+                        <input
+                            className="input"
+                            value={custName}
+                            onChange={(e) => setCustName(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                            Phone
+                        </label>
+                        <input
+                            className="input"
+                            value={custPhone}
+                            onChange={(e) => setCustPhone(e.target.value)}
+                        />
+                    </div>
+                </div>
+                <div>
+                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                        Address line 1
+                    </label>
+                    <input
+                        className="input"
+                        value={addr1}
+                        onChange={(e) => setAddr1(e.target.value)}
+                    />
+                </div>
+                <div>
+                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                        Address line 2
+                    </label>
+                    <input
+                        className="input"
+                        value={addr2}
+                        onChange={(e) => setAddr2(e.target.value)}
+                    />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-3">
+                    <div>
+                        <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                            City
+                        </label>
+                        <input
+                            className="input"
+                            value={city}
+                            onChange={(e) => setCity(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                            State
+                        </label>
+                        <input
+                            className="input"
+                            value={stateVal}
+                            onChange={(e) => setStateVal(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                            ZIP
+                        </label>
+                        <input
+                            className="input"
+                            value={zip}
+                            onChange={(e) => setZip(e.target.value)}
+                        />
+                    </div>
+                </div>
+                <div>
+                    <label className="block text-xs font-medium text-[var(--color-text-muted)] mb-1">
+                        Internal notes
+                    </label>
+                    <textarea
+                        className="input min-h-[100px]"
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        placeholder="Fulfillment notes, gift messages, etc."
+                    />
+                </div>
+                <button
+                    type="button"
+                    className="btn btn-primary text-sm"
+                    disabled={saving}
+                    onClick={() => saveOrder()}
+                >
+                    {saving ? "Saving…" : "Save changes"}
+                </button>
+                <p className="text-xs text-[var(--color-text-muted)]">
+                    Line items and payment totals are not editable here; they
+                    come from checkout. See docs/ADMIN-OPERATIONS.md.
+                </p>
             </div>
 
             <div className="card !p-0 overflow-hidden">

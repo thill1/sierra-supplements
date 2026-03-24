@@ -54,7 +54,32 @@ const fadeIn = {
     },
 };
 
-export function HeroSection() {
+export type HeroSectionContent = {
+    footerTagline: string;
+    primaryCtaLabel: string;
+    secondaryCtaLabel: string;
+    servicesLinkLabel: string;
+    stats: { value: string; label: string }[];
+};
+
+const HERO_FALLBACK: HeroSectionContent = {
+    footerTagline: "Auburn, CA · Third-Party Tested · Science-Backed",
+    primaryCtaLabel: "Shop Supplements",
+    secondaryCtaLabel: "Free Consultation",
+    servicesLinkLabel: "Services",
+    stats: [
+        { value: "50+", label: "Premium Products" },
+        { value: "4.9★", label: "Google Rating" },
+        { value: "100%", label: "Third-Party Tested" },
+        { value: "500+", label: "Clients Served" },
+    ],
+};
+
+export function HeroSection({
+    content = HERO_FALLBACK,
+}: {
+    content?: HeroSectionContent;
+}) {
     const sectionRef = useRef<HTMLElement>(null);
     const embers = useMemo(() => generateEmbers(18), []);
 
@@ -148,7 +173,7 @@ export function HeroSection() {
                             id="hero-cta-store"
                         >
                             <ShoppingBag className="w-5 h-5" />
-                            Shop Supplements
+                            {content.primaryCtaLabel}
                             <ArrowRight className="w-5 h-5" />
                         </Link>
                         <Link
@@ -156,18 +181,18 @@ export function HeroSection() {
                             className="btn btn-secondary text-base px-6 py-4 border-[var(--color-accent)]/50 hover:border-[var(--color-accent)] hover:bg-[var(--color-accent)]/10"
                             id="hero-cta-book"
                         >
-                            Free Consultation
+                            {content.secondaryCtaLabel}
                         </Link>
                         <Link
                             href="/services"
                             className="btn-ghost text-base px-6 py-4 text-[var(--color-text-secondary)] hover:text-[var(--color-text)]"
                             id="hero-cta-services"
                         >
-                            Services
+                            {content.servicesLinkLabel}
                         </Link>
                     </div>
                     <p className="label tracking-[0.25em] text-[var(--color-accent)] text-center mt-5">
-                        Auburn, CA · Third-Party Tested · Science-Backed
+                        {content.footerTagline}
                     </p>
                 </motion.div>
 
@@ -184,12 +209,7 @@ export function HeroSection() {
                     className="flex flex-wrap justify-center gap-12 pt-6 pb-6 border-t border-white/10"
                     variants={fadeIn}
                 >
-                    {[
-                        { value: "50+", label: "Premium Products" },
-                        { value: "4.9★", label: "Google Rating" },
-                        { value: "100%", label: "Third-Party Tested" },
-                        { value: "500+", label: "Clients Served" },
-                    ].map((stat) => (
+                    {content.stats.map((stat) => (
                         <div key={stat.label} className="text-center">
                             <div
                                 className="text-2xl font-bold text-[var(--color-accent)]"
