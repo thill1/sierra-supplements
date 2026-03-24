@@ -22,7 +22,9 @@
     "db:seed-admins:vercel": "bash scripts/seed-admins-with-vercel-admin-emails.sh",
     "google:oauth-console": "bash scripts/open-google-oauth-console.sh",
     "setup:check": "node scripts/check-env.js",
-    "setup:vercel": "echo 'See docs/DEPLOYMENT.md for Vercel env setup'"
+    "setup:vercel": "echo 'See docs/DEPLOYMENT.md for Vercel env setup'",
+    "dns:cloudflare-vercel": "node scripts/sync-cloudflare-vercel-dns.mjs",
+    "dns:cloudflare-vercel:direct": "DNS_PROXIED=false node scripts/sync-cloudflare-vercel-dns.mjs"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
