@@ -3,6 +3,10 @@ import { z } from "zod/v4";
 import { escapeHtml } from "@/lib/escape-html";
 import { checkRateLimits } from "@/lib/rate-limit";
 import { logServerError } from "@/lib/observability";
+import {
+    EXIT_INTENT_DISCOUNT_CODE,
+    EXIT_INTENT_DISCOUNT_PERCENT,
+} from "@/lib/promo";
 
 const leadSchema = z.object({
     name: z.string().max(200).optional(),
@@ -81,11 +85,24 @@ export async function POST(request: Request) {
           `,
                 });
 
+                const isExitIntent = data.source === "exit_intent";
                 await resend.emails.send({
                     from: "Sierra Strength <noreply@sierrastrengthsupplements.com>",
                     to: data.email,
-                    subject: "Thanks for reaching out to Sierra Strength!",
-                    html: `
+                    subject: isExitIntent
+                        ? `Your ${EXIT_INTENT_DISCOUNT_PERCENT}% off first order — Sierra Strength`
+                        : "Thanks for reaching out to Sierra Strength!",
+                    html: isExitIntent
+                        ? `
+            <h2>Your ${EXIT_INTENT_DISCOUNT_PERCENT}% first-order discount code</h2>
+            <p>Hi ${escapeHtml(data.name || "there")},</p>
+            <p>Thanks for connecting with us. Use this code on your <strong>first order only</strong>—at checkout or mention it when you order:</p>
+            <p style="font-size:1.25rem;font-weight:600;letter-spacing:0.05em;font-family:ui-monospace,monospace;">${escapeHtml(EXIT_INTENT_DISCOUNT_CODE)}</p>
+            <p>This saves you ${EXIT_INTENT_DISCOUNT_PERCENT}% on your first purchase when the code is applied. One use per customer.</p>
+            <p><a href="https://sierrastrengthsupplements.com/store">Shop the store</a> · <a href="https://sierrastrengthsupplements.com/book">Book a free consultation</a></p>
+            <p>– The Sierra Strength Team</p>
+          `
+                        : `
             <h2>We received your message!</h2>
             <p>Hi ${escapeHtml(data.name || "there")},</p>
             <p>Thank you for reaching out to Sierra Strength. We've received your information and will be in touch within 2 hours during business hours.</p>

@@ -2,11 +2,15 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Gift } from "lucide-react";
-import { siteConfig } from "@/lib/site-config";
+import { X, Percent } from "lucide-react";
+import {
+    EXIT_INTENT_DISCOUNT_CODE,
+    EXIT_INTENT_DISCOUNT_PERCENT,
+} from "@/lib/promo";
 
 export function ExitIntentModal() {
     const [isOpen, setIsOpen] = useState(false);
+    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [submitted, setSubmitted] = useState(false);
     const [dismissed, setDismissed] = useState(false);
@@ -59,14 +63,15 @@ export function ExitIntentModal() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!email) return;
+        if (!email.trim() || !name.trim()) return;
 
         try {
             await fetch("/api/leads", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    email,
+                    name: name.trim(),
+                    email: email.trim(),
                     source: "exit_intent",
                     page: typeof window !== "undefined" ? window.location.pathname : "/",
                 }),
@@ -115,36 +120,60 @@ export function ExitIntentModal() {
                             {submitted ? (
                                 <div className="py-4">
                                     <div className="w-14 h-14 rounded-full bg-[var(--color-accent-subtle)] flex items-center justify-center mx-auto mb-4">
-                                        <Gift className="w-7 h-7 text-[var(--color-accent)]" />
+                                        <Percent className="w-7 h-7 text-[var(--color-accent)]" />
                                     </div>
-                                    <h3 className="heading-sm mb-2">Check Your Inbox!</h3>
-                                    <p className="body-sm">
-                                        Your free Mountain Performance Guide is on its way. Check
-                                        your email in the next few minutes.
+                                    <h3 className="heading-sm mb-2">
+                                        Here&apos;s your {EXIT_INTENT_DISCOUNT_PERCENT}% off code
+                                    </h3>
+                                    <p className="body-sm mb-4">
+                                        Use it on your <strong>first order only</strong>—enter at
+                                        checkout or mention it when you order to save{" "}
+                                        {EXIT_INTENT_DISCOUNT_PERCENT}% on that purchase.
+                                    </p>
+                                    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-muted)] px-4 py-3 font-mono text-lg font-semibold tracking-wide text-[var(--color-text)] select-all">
+                                        {EXIT_INTENT_DISCOUNT_CODE}
+                                    </div>
+                                    <p className="body-sm mt-4 text-[var(--color-text-muted)]">
+                                        We&apos;ve also emailed you a copy so you don&apos;t lose it.
                                     </p>
                                 </div>
                             ) : (
                                 <>
                                     <div className="w-14 h-14 rounded-full bg-[var(--color-accent-subtle)] flex items-center justify-center mx-auto mb-4">
-                                        <Gift className="w-7 h-7 text-[var(--color-accent)]" />
+                                        <Percent className="w-7 h-7 text-[var(--color-accent)]" />
                                     </div>
                                     <p className="label mb-2">Wait — Before You Go</p>
                                     <h3 className="heading-sm mb-2">
-                                        {siteConfig.leadMagnet.title}
+                                        Get {EXIT_INTENT_DISCOUNT_PERCENT}% off your first order
                                     </h3>
-                                    <p className="body-sm mb-6">{siteConfig.leadMagnet.subtitle}</p>
+                                    <p className="body-sm mb-6">
+                                        Share your name and email and we&apos;ll show your exclusive
+                                        first-order discount code instantly.
+                                    </p>
 
                                     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+                                        <input
+                                            type="text"
+                                            value={name}
+                                            onChange={(e) => setName(e.target.value)}
+                                            placeholder="Your name"
+                                            className="input text-center"
+                                            name="name"
+                                            autoComplete="name"
+                                            required
+                                        />
                                         <input
                                             type="email"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
-                                            placeholder="Enter your email"
+                                            placeholder="Your email"
                                             className="input text-center"
+                                            name="email"
+                                            autoComplete="email"
                                             required
                                         />
                                         <button type="submit" className="btn btn-primary w-full">
-                                            {siteConfig.leadMagnet.cta}
+                                            Reveal my code
                                         </button>
                                         <button
                                             type="button"
