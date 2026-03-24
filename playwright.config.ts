@@ -31,6 +31,7 @@ function webServerEnv(): Record<string, string> {
     env.PLAYWRIGHT_ADMIN_EMAIL = playwrightAdminEmail();
     // Playwright-launched server only; allows E2E credentials under `next start` if we switch webServer mode.
     env.ALLOW_E2E_CREDENTIALS_ADMIN = "true";
+    env.PLAYWRIGHT_PROJECT_ROOT = projectRoot;
     return env;
 }
 

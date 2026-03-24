@@ -1,4 +1,5 @@
 import { parseAdminEmailAllowlist } from "@/lib/admin-allowlist";
+import { isStripeMockMode } from "@/lib/stripe/mock-mode";
 
 /**
  * Fail fast when a production deployment is misconfigured.
@@ -35,6 +36,10 @@ export function assertProductionEnv(): void {
     const allow = parseAdminEmailAllowlist();
     if (allow.size === 0) {
         missing.push("ADMIN_EMAILS (comma-separated admin emails)");
+    }
+
+    if (process.env.STRIPE_MOCK_MODE?.trim() && !isStripeMockMode()) {
+        missing.push("STRIPE_MOCK_MODE must be disabled in production");
     }
 
     if (missing.length > 0) {

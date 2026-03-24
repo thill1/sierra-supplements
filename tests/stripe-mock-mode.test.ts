@@ -5,8 +5,12 @@ describe("Stripe mock mode (STRIPE_MOCK_MODE)", () => {
     const prevMock = process.env.STRIPE_MOCK_MODE;
     const prevSecret = process.env.STRIPE_WEBHOOK_SECRET;
     const prevKey = process.env.STRIPE_SECRET_KEY;
+    const prevNodeEnv = process.env.NODE_ENV;
+    const prevVercel = process.env.VERCEL;
 
     beforeEach(() => {
+        process.env.NODE_ENV = "test";
+        delete process.env.VERCEL;
         process.env.STRIPE_MOCK_MODE = "true";
         delete process.env.STRIPE_WEBHOOK_SECRET;
         delete process.env.STRIPE_SECRET_KEY;
@@ -16,6 +20,16 @@ describe("Stripe mock mode (STRIPE_MOCK_MODE)", () => {
         process.env.STRIPE_MOCK_MODE = prevMock;
         process.env.STRIPE_WEBHOOK_SECRET = prevSecret;
         process.env.STRIPE_SECRET_KEY = prevKey;
+        process.env.NODE_ENV = prevNodeEnv;
+        process.env.VERCEL = prevVercel;
+    });
+
+    it("is disabled on production deployments even if the env flag is set", async () => {
+        process.env.NODE_ENV = "production";
+        process.env.VERCEL = "1";
+
+        const { isStripeMockMode } = await import("@/lib/stripe/mock-mode");
+        expect(isStripeMockMode()).toBe(false);
     });
 
     it("returns 400 for non-JSON body", async () => {

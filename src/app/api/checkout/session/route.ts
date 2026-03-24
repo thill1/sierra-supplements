@@ -60,14 +60,9 @@ export async function POST(request: Request) {
         return NextResponse.json({ url: session.url });
     } catch (error) {
         if (error instanceof z.ZodError) {
-            return NextResponse.json(
-                { error: "Invalid cart", details: error.issues },
-                { status: 400 },
-            );
+            return NextResponse.json({ error: "Invalid cart" }, { status: 400 });
         }
         logServerError("checkout_session", error);
-        const message =
-            error instanceof Error ? error.message : "Checkout failed";
-        return NextResponse.json({ error: message }, { status: 400 });
+        return NextResponse.json({ error: "Checkout failed" }, { status: 400 });
     }
 }

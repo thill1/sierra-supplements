@@ -8,7 +8,6 @@ import path from "node:path";
 export default async function globalTeardown() {
     const root = path.resolve(__dirname, "..");
     const marker = path.join(root, ".playwright", "e2e-docker-started");
-    const runtimeEnv = path.join(root, ".playwright", "e2e-runtime.env");
 
     if (existsSync(marker)) {
         try {
@@ -18,11 +17,5 @@ export default async function globalTeardown() {
         }
     }
 
-    if (existsSync(runtimeEnv)) {
-        try {
-            unlinkSync(runtimeEnv);
-        } catch {
-            /* best-effort */
-        }
-    }
+    // Keep `.playwright/e2e-runtime.env` until the next globalSetup overwrites it (avoids races with `next start`).
 }
