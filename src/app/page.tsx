@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   description: siteConfig.description,
 };
 
+/** Fresh HTML after deploys; purge CDN if you still see stale home layout. */
+export const revalidate = 60;
+
 export default async function HomePage() {
   const [testimonials, homepage] = await Promise.all([
     getTestimonials(),

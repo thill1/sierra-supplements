@@ -1,4 +1,5 @@
 import { signIn } from "@/lib/auth";
+import { isE2eCredentialsAdminAuthEnabled } from "@/lib/e2e-admin-auth";
 import { siteConfig } from "@/lib/site-config";
 import { Mountain } from "lucide-react";
 
@@ -70,6 +71,66 @@ export default function SignInPage() {
                             No sign-in providers configured. Set RESEND_API_KEY or GOOGLE_CLIENT_ID.
                         </p>
                     )}
+
+                    {isE2eCredentialsAdminAuthEnabled() ? (
+                        <div
+                            className="pt-4 border-t border-[var(--color-border-subtle)] space-y-3"
+                            data-testid="e2e-admin-signin-section"
+                        >
+                            <p className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wide">
+                                Local E2E (not on Vercel)
+                            </p>
+                            <form
+                                className="space-y-3"
+                                action={async (formData) => {
+                                    "use server";
+                                    await signIn("e2e-admin-credentials", {
+                                        email: formData.get("email") as string,
+                                        secret: formData.get("secret") as string,
+                                        redirectTo: "/admin",
+                                    });
+                                }}
+                            >
+                                <label
+                                    htmlFor="e2e-admin-email"
+                                    className="block text-sm font-medium"
+                                >
+                                    Admin email
+                                </label>
+                                <input
+                                    id="e2e-admin-email"
+                                    name="email"
+                                    type="email"
+                                    required
+                                    autoComplete="username"
+                                    data-testid="e2e-admin-email"
+                                    className="input w-full"
+                                />
+                                <label
+                                    htmlFor="e2e-admin-secret"
+                                    className="block text-sm font-medium"
+                                >
+                                    E2E secret
+                                </label>
+                                <input
+                                    id="e2e-admin-secret"
+                                    name="secret"
+                                    type="password"
+                                    required
+                                    autoComplete="current-password"
+                                    data-testid="e2e-admin-secret"
+                                    className="input w-full"
+                                />
+                                <button
+                                    type="submit"
+                                    data-testid="e2e-admin-submit"
+                                    className="btn btn-secondary w-full text-sm"
+                                >
+                                    Sign in (E2E credentials)
+                                </button>
+                            </form>
+                        </div>
+                    ) : null}
 
                     <p className="text-xs text-center text-[var(--color-text-muted)]">
                         We&apos;ll send a magic link to your email, or use Google to sign in.

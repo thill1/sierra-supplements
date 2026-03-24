@@ -1,10 +1,8 @@
-"use client";
-
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { FadeIn } from "@/components/ui/motion";
 import { siteConfig } from "@/lib/site-config";
 
+/** Server-rendered so the pyramid is always in the initial HTML (no client-only motion). */
 export function ServicesGrid() {
     const peak = siteConfig.services.find((s) => s.slug === "sierra-stack-systems");
     const coaching = siteConfig.services.find((s) => s.slug === "high-elevation-coaching");
@@ -15,9 +13,9 @@ export function ServicesGrid() {
     }
 
     return (
-        <section className="section-padding" id="services">
+        <section className="section-padding" id="services" data-home-services="pyramid">
             <div className="section-container">
-                <FadeIn className="text-center mb-10 md:mb-14">
+                <div className="text-center mb-10 md:mb-14 motion-safe:animate-[fade-in-up_0.6s_ease-out_both]">
                     <span className="label">What We Offer</span>
                     <h2 className="heading-lg mt-2 mb-4">
                         Peak Performance <span className="gradient-text">Services</span>
@@ -27,17 +25,18 @@ export function ServicesGrid() {
                         as you climb, and precision protocols at the peak. Each tier builds on the
                         one below—select a level to learn more.
                     </p>
-                </FadeIn>
+                </div>
 
-                <FadeIn delay={0.12} className="max-w-lg md:max-w-xl mx-auto">
-                    <div className="relative w-full aspect-[400/400] md:aspect-[400/380]">
+                <div className="max-w-lg md:max-w-xl mx-auto motion-safe:animate-[fade-in-up_0.6s_ease-out_0.08s_both]">
+                    <div className="relative w-full min-h-[280px] sm:min-h-[320px] aspect-[400/400] md:aspect-[400/380]">
                         <svg
                             className="absolute inset-0 h-full w-full drop-shadow-[0_20px_50px_rgba(0,0,0,0.45)]"
                             viewBox="0 0 400 400"
                             fill="none"
                             xmlns="http://www.w3.org/2000/svg"
-                            aria-hidden
+                            aria-labelledby="pyramid-svg-title"
                         >
+                            <title id="pyramid-svg-title">Service pyramid</title>
                             <defs>
                                 <linearGradient
                                     id="pyramid-base-fill"
@@ -75,7 +74,6 @@ export function ServicesGrid() {
                                 </linearGradient>
                             </defs>
 
-                            {/* Base tier */}
                             <a
                                 href={`/services/${base.slug}`}
                                 className="group outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)] rounded-sm"
@@ -89,7 +87,6 @@ export function ServicesGrid() {
                                     className="transition-[filter] duration-300 group-hover:brightness-110 group-focus-visible:brightness-110"
                                 />
                             </a>
-                            {/* Middle tier */}
                             <a
                                 href={`/services/${coaching.slug}`}
                                 className="group outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)] rounded-sm"
@@ -103,7 +100,6 @@ export function ServicesGrid() {
                                     className="transition-[filter] duration-300 group-hover:brightness-110 group-focus-visible:brightness-110"
                                 />
                             </a>
-                            {/* Peak tier */}
                             <a
                                 href={`/services/${peak.slug}`}
                                 className="group outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)] rounded-sm"
@@ -119,7 +115,6 @@ export function ServicesGrid() {
                             </a>
                         </svg>
 
-                        {/* Labels (pointer-events none so SVG links receive clicks) */}
                         <div className="absolute inset-0 flex flex-col pointer-events-none text-center">
                             <div className="flex-[0.28] flex flex-col items-center justify-center px-10 md:px-14 pt-2">
                                 <span className="font-[family-name:var(--font-outfit)] text-sm md:text-base font-semibold text-[var(--color-snow)] drop-shadow-[0_1px_8px_rgba(0,0,0,0.85)]">
@@ -158,7 +153,7 @@ export function ServicesGrid() {
                             <ArrowRight className="w-3.5 h-3.5" aria-hidden />
                         </Link>
                     </p>
-                </FadeIn>
+                </div>
             </div>
         </section>
     );

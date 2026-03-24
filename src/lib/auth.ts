@@ -1,7 +1,9 @@
 import NextAuth from "next-auth";
+import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import Resend from "next-auth/providers/resend";
 import type { AdminRole } from "@/db/schema.pg";
+import { isE2eCredentialsAdminAuthEnabled } from "@/lib/e2e-admin-auth";
 import { logAuthDebug } from "@/lib/observability";
 
 /**
@@ -23,6 +25,44 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                   Google({
                       clientId: process.env.GOOGLE_CLIENT_ID,
                       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+                  }),
+              ]
+            : []),
+        ...(isE2eCredentialsAdminAuthEnabled()
+            ? [
+                  Credentials({
+                      id: "e2e-admin-credentials",
+                      name: "E2E Admin",
+                      credentials: {
+                          email: { label: "Admin email", type: "email" },
+                          secret: { label: "E2E secret", type: "password" },
+                      },
+                      authorize: async (credentials) => {
+                          const expected =
+                              process.env.E2E_ADMIN_CREDENTIALS_SECRET?.trim();
+                          if (!expected || credentials?.secret !== expected) {
+                              return null;
+                          }
+                          const email = (
+                              credentials?.email as string | undefined
+                          )
+                              ?.trim()
+                              .toLowerCase();
+                          if (!email?.includes("@")) return null;
+                          const { resolveAdmin } = await import(
+                              "@/lib/admin-auth"
+                          );
+                          const admin = await resolveAdmin(email);
+                          if (!admin) return null;
+                          return {
+                              id:
+                                  admin.id != null
+                                      ? String(admin.id)
+                                      : `e2e-bootstrap-${email}`,
+                              email,
+                              name: "E2E Admin",
+                          };
+                      },
                   }),
               ]
             : []),

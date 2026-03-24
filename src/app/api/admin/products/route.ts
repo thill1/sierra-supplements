@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { products, productCategories } from "@/db/schema";
-import { insertDefaultVariantForProduct } from "@/lib/products/variant-helpers";
 import { and, desc, eq, ilike, lte, or, sql, type SQL } from "drizzle-orm";
 import { z } from "zod/v4";
 import { requireAdmin } from "@/lib/require-admin";
@@ -12,11 +11,8 @@ import {
     adminProductCreateSchema,
     productStatusSchema,
 } from "@/lib/admin/schemas/product";
-import {
-    applyEditorProductRestrictions,
-    dollarsToCents,
-} from "@/lib/admin/product-mutations";
-import { writeAuditLog } from "@/lib/audit/write-audit";
+import { applyEditorProductRestrictions } from "@/lib/admin/product-mutations";
+import { createAdminProductInTransaction } from "@/lib/admin/product-persistence";
 
 export async function GET(request: Request) {
     const { response } = await requireAdmin();
@@ -102,61 +98,8 @@ export async function POST(request: Request) {
             ),
         );
 
-        const priceCents = dollarsToCents(data.price);
-        const compareCents =
-            data.compareAtPrice != null
-                ? dollarsToCents(data.compareAtPrice)
-                : null;
-
-        const stockQty = data.stockQuantity ?? (data.inStock !== false ? 1 : 0);
-        const inStock = stockQty > 0;
-
-        const [product] = await db.transaction(async (tx) => {
-            const [p] = await tx
-                .insert(products)
-                .values({
-                    slug: data.slug,
-                    name: data.name,
-                    shortDescription: data.shortDescription ?? null,
-                    description: data.description,
-                    price: priceCents,
-                    compareAtPrice: compareCents,
-                    category: data.category,
-                    image: data.image ?? null,
-                    inStock,
-                    published: data.published ?? false,
-                    featured: data.featured ?? false,
-                    sku: data.sku ?? null,
-                    stockQuantity: stockQty,
-                    lowStockThreshold: data.lowStockThreshold ?? 2,
-                    status: data.status ?? "active",
-                    primaryImageUrl: data.primaryImageUrl ?? data.image ?? null,
-                    seoTitle: data.seoTitle ?? null,
-                    seoDescription: data.seoDescription ?? null,
-                    stripePriceId: data.stripePriceId ?? null,
-                })
-                .returning();
-
-            if (p) {
-                await insertDefaultVariantForProduct(tx, {
-                    id: p.id,
-                    name: p.name,
-                    price: p.price,
-                    compareAtPrice: p.compareAtPrice ?? null,
-                    sku: p.sku ?? null,
-                    stockQuantity: p.stockQuantity,
-                    lowStockThreshold: p.lowStockThreshold,
-                    stripePriceId: p.stripePriceId ?? null,
-                });
-                await writeAuditLog(tx, {
-                    actorUserId: admin.id,
-                    entityType: "product",
-                    entityId: String(p.id),
-                    action: "create",
-                    after: p,
-                });
-            }
-            return [p];
+        const product = await db.transaction(async (tx) => {
+            return createAdminProductInTransaction(tx, admin, data);
         });
 
         return NextResponse.json(product, { status: 201 });

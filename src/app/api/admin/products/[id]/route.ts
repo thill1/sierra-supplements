@@ -1,19 +1,15 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { products, productCategories, productVariants } from "@/db/schema";
+import { products, productVariants } from "@/db/schema";
 import { asc, eq } from "drizzle-orm";
-import { insertDefaultVariantForProduct } from "@/lib/products/variant-helpers";
-import { syncParentProductStockFromVariants } from "@/lib/inventory/sync-parent-product-stock";
 import { z } from "zod/v4";
 import { requireAdmin } from "@/lib/require-admin";
 import { requireMinRole } from "@/lib/admin-auth";
 import { logAdminFailure } from "@/lib/observability";
 import { rateLimitAdminWrite } from "@/lib/admin-rate-limit";
 import { adminProductUpdateSchema } from "@/lib/admin/schemas/product";
-import {
-    applyEditorProductRestrictions,
-    dollarsToCents,
-} from "@/lib/admin/product-mutations";
+import { applyEditorProductRestrictions } from "@/lib/admin/product-mutations";
+import { updateAdminProductInTransaction } from "@/lib/admin/product-persistence";
 import { writeAuditLog } from "@/lib/audit/write-audit";
 
 type Params = { params: Promise<{ id: string }> };
@@ -96,158 +92,23 @@ export async function PUT(request: Request, { params }: Params) {
         const filtered = applyEditorProductRestrictions(coerced, admin);
         const data = adminProductUpdateSchema.parse(filtered);
 
-        const patch: Record<string, unknown> = { updatedAt: new Date() };
-
-        if (data.slug != null) patch.slug = data.slug;
-        if (data.name != null) patch.name = data.name;
-        if (data.shortDescription !== undefined) {
-            patch.shortDescription = data.shortDescription;
-        }
-        if (data.description != null) patch.description = data.description;
-        if (data.price != null) patch.price = dollarsToCents(data.price);
-        if (data.compareAtPrice !== undefined) {
-            patch.compareAtPrice =
-                data.compareAtPrice != null
-                    ? dollarsToCents(data.compareAtPrice)
-                    : null;
-        }
-        if (data.category != null) {
-            if (
-                !(productCategories as readonly string[]).includes(data.category)
-            ) {
-                return NextResponse.json(
-                    { error: "Invalid category" },
-                    { status: 400 },
-                );
-            }
-            patch.category = data.category;
-        }
-        if (data.image !== undefined) patch.image = data.image;
-        if (data.inStock != null) patch.inStock = data.inStock;
-        if (data.published != null) patch.published = data.published;
-        if (data.featured != null) patch.featured = data.featured;
-        if (data.sku !== undefined) patch.sku = data.sku;
-        if (data.stockQuantity != null) patch.stockQuantity = data.stockQuantity;
-        if (data.lowStockThreshold != null) {
-            patch.lowStockThreshold = data.lowStockThreshold;
-        }
-        if (data.status != null) patch.status = data.status;
-        if (data.primaryImageUrl !== undefined) {
-            patch.primaryImageUrl = data.primaryImageUrl;
-        }
-        if (data.seoTitle !== undefined) patch.seoTitle = data.seoTitle;
-        if (data.seoDescription !== undefined) {
-            patch.seoDescription = data.seoDescription;
-        }
-        if (data.stripePriceId !== undefined) {
-            patch.stripePriceId = data.stripePriceId;
-        }
-
-        const variantRows = await db
-            .select({ id: productVariants.id })
-            .from(productVariants)
-            .where(eq(productVariants.productId, productId));
-
-        if (variantRows.length > 1 && data.stockQuantity != null) {
-            delete patch.stockQuantity;
-        }
-
-        if (data.stockQuantity != null || data.inStock != null) {
-            const nextQty =
-                (patch.stockQuantity as number | undefined) ??
-                before.stockQuantity;
-            const explicitInStock = patch.inStock as boolean | undefined;
-            if (explicitInStock !== undefined && data.stockQuantity == null) {
-                patch.inStock = explicitInStock;
-            } else {
-                patch.inStock = nextQty > 0;
-            }
-        }
-
-        const [product] = await db.transaction(async (tx) => {
-            const [p] = await tx
-                .update(products)
-                .set(patch as typeof products.$inferInsert)
-                .where(eq(products.id, productId))
-                .returning();
-
-            if (p) {
-                const vrows = await tx
-                    .select({ id: productVariants.id })
-                    .from(productVariants)
-                    .where(eq(productVariants.productId, productId));
-
-                if (vrows.length === 0) {
-                    await insertDefaultVariantForProduct(tx, {
-                        id: p.id,
-                        name: p.name,
-                        price: p.price,
-                        compareAtPrice: p.compareAtPrice ?? null,
-                        sku: p.sku ?? null,
-                        stockQuantity: p.stockQuantity,
-                        lowStockThreshold: p.lowStockThreshold,
-                        stripePriceId: p.stripePriceId ?? null,
-                    });
-                } else if (vrows.length === 1) {
-                    const vid = vrows[0]!.id;
-                    const vpatch: Partial<typeof productVariants.$inferInsert> = {
-                        updatedAt: new Date(),
-                    };
-                    if (data.stockQuantity != null) {
-                        vpatch.stockQuantity = data.stockQuantity;
-                    }
-                    if (data.price != null) {
-                        vpatch.price = dollarsToCents(data.price);
-                    }
-                    if (data.compareAtPrice !== undefined) {
-                        vpatch.compareAtPrice =
-                            data.compareAtPrice != null
-                                ? dollarsToCents(data.compareAtPrice)
-                                : null;
-                    }
-                    if (data.sku !== undefined) {
-                        vpatch.sku = data.sku;
-                    }
-                    if (data.stripePriceId !== undefined) {
-                        vpatch.stripePriceId = data.stripePriceId;
-                    }
-                    if (data.lowStockThreshold != null) {
-                        vpatch.lowStockThreshold = data.lowStockThreshold;
-                    }
-                    if (Object.keys(vpatch).length > 1) {
-                        await tx
-                            .update(productVariants)
-                            .set(vpatch)
-                            .where(eq(productVariants.id, vid));
-                    }
-                }
-
-                await syncParentProductStockFromVariants(tx, productId);
-
-                const [afterRow] = await tx
-                    .select()
-                    .from(products)
-                    .where(eq(products.id, productId))
-                    .limit(1);
-
-                await writeAuditLog(tx, {
-                    actorUserId: admin.id,
-                    entityType: "product",
-                    entityId: String(productId),
-                    action: "update",
-                    before,
-                    after: afterRow ?? p,
-                });
-            }
-            return [p];
+        const result = await db.transaction(async (tx) => {
+            return updateAdminProductInTransaction(
+                tx,
+                admin,
+                before,
+                productId,
+                data,
+            );
         });
 
-        if (!product) {
-            return NextResponse.json({ error: "Product not found" }, {
-                status: 404,
-            });
+        if (!result.ok) {
+            return NextResponse.json(
+                { error: "Invalid category" },
+                { status: 400 },
+            );
         }
-        return NextResponse.json(product);
+        return NextResponse.json(result.product);
     } catch (error) {
         if (error instanceof z.ZodError) {
             return NextResponse.json(
