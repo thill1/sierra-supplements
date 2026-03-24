@@ -141,12 +141,13 @@ export function Footer() {
                 </div>
 
                 {/* Map */}
-                <div className="mt-10 rounded-xl overflow-hidden h-48">
+                <div className="mt-10 rounded-xl overflow-hidden h-48 min-h-[12rem]">
                     <iframe
                         title={`${siteConfig.name} location – ${siteConfig.address.city}, ${siteConfig.address.state}`}
                         src={siteConfig.mapsEmbedSrc}
                         width="100%"
                         height="100%"
+                        className="block min-h-[12rem] w-full"
                         style={{ border: 0, filter: "invert(90%) hue-rotate(180deg) brightness(0.95) contrast(0.9)" }}
                         allowFullScreen
                         loading="lazy"

@@ -1,6 +1,8 @@
 import { withSentryConfig } from "@sentry/nextjs";
 import type { NextConfig } from "next";
 
+import { siteConfig } from "./src/lib/site-config";
+
 const isDev = process.env.NODE_ENV !== "production";
 
 const productionCsp = [
@@ -10,7 +12,7 @@ const productionCsp = [
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https:",
     "connect-src 'self' https://*.supabase.co https://app.cal.com https://cal.com https://vitals.vercel-insights.com https://*.ingest.sentry.io https://*.ingest.de.sentry.io",
-    "frame-src https://cal.com https://app.cal.com",
+    "frame-src https://cal.com https://app.cal.com https://*.google.com",
     "base-uri 'self'",
     "form-action 'self'",
     "upgrade-insecure-requests",
@@ -54,6 +56,15 @@ const nextConfig: NextConfig = {
                 headers: security,
             },
         ];
+    },
+    async redirects() {
+        const base = siteConfig.url.replace(/\/$/, "");
+        return siteConfig.redirectHosts.map((host) => ({
+            source: "/:path*",
+            has: [{ type: "host" as const, value: host }],
+            destination: `${base}/:path*`,
+            permanent: true,
+        }));
     },
 };
 
