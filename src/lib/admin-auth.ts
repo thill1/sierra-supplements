@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import type { Session } from "next-auth";
 import { db } from "@/db";
@@ -29,15 +29,11 @@ export async function getAdminByEmail(
     return row ?? null;
 }
 
-async function adminUsersCount(): Promise<number> {
-    const [r] = await db
-        .select({ c: sql<number>`count(*)::int` })
-        .from(adminUsers);
-    return r?.c ?? 0;
-}
-
 /**
- * When `admin_users` is empty, allow env allowlist as temporary owner (run `pnpm db:seed-admins`).
+ * Prefer `admin_users` when an active row exists. Otherwise, if `ADMIN_EMAILS`
+ * contains this address, grant owner (same as empty-table bootstrap). That way
+ * Vercel `ADMIN_EMAILS` stays authoritative without re-running `db:seed-admins`
+ * whenever the table already has other admins. Explicitly inactive rows still deny.
  */
 export async function resolveAdmin(
     email: string | null | undefined,
@@ -48,8 +44,10 @@ export async function resolveAdmin(
     if (row?.active) {
         return { id: row.id, email: norm, role: row.role as AdminRole };
     }
-    const n = await adminUsersCount();
-    if (n === 0 && isUserAdmin(norm)) {
+    if (row && !row.active) {
+        return null;
+    }
+    if (isUserAdmin(norm)) {
         return { id: null, email: norm, role: "owner" };
     }
     return null;

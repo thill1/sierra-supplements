@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { products } from "@/db/schema";
-import { requireAdmin } from "@/lib/require-admin";
+import { requireAdmin, requireAdminOrRespond } from "@/lib/require-admin";
 import { requireMinRole } from "@/lib/admin-auth";
 import { logAdminFailure } from "@/lib/observability";
 import { rateLimitAdminUpload } from "@/lib/admin-rate-limit";
@@ -36,11 +36,12 @@ function isPgUniqueViolation(error: unknown): boolean {
 }
 
 export async function POST(request: Request) {
-    const limited = rateLimitAdminUpload(request);
+    const limited = await rateLimitAdminUpload(request);
     if (limited) return limited;
 
-    const { response, admin } = await requireAdmin();
-    if (response || !admin) return response!;
+    const auth = requireAdminOrRespond(await requireAdmin());
+    if (auth instanceof NextResponse) return auth;
+    const { admin } = auth;
 
     const forbidden = requireMinRole(admin, "manager");
     if (forbidden) return forbidden;

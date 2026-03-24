@@ -12,6 +12,8 @@ describe("assertProductionEnv", () => {
         DATABASE_URL: process.env.DATABASE_URL,
         ADMIN_EMAILS: process.env.ADMIN_EMAILS,
         STRIPE_MOCK_MODE: process.env.STRIPE_MOCK_MODE,
+        UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
+        UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
     };
 
     beforeEach(() => {
@@ -24,6 +26,8 @@ describe("assertProductionEnv", () => {
         process.env.DATABASE_URL = "postgresql://example";
         process.env.ADMIN_EMAILS = "admin@example.com";
         delete process.env.STRIPE_MOCK_MODE;
+        delete process.env.UPSTASH_REDIS_REST_URL;
+        delete process.env.UPSTASH_REDIS_REST_TOKEN;
     });
 
     afterEach(() => {
@@ -38,11 +42,18 @@ describe("assertProductionEnv", () => {
         process.env.DATABASE_URL = envSnapshot.DATABASE_URL;
         process.env.ADMIN_EMAILS = envSnapshot.ADMIN_EMAILS;
         process.env.STRIPE_MOCK_MODE = envSnapshot.STRIPE_MOCK_MODE;
+        process.env.UPSTASH_REDIS_REST_URL = envSnapshot.UPSTASH_REDIS_REST_URL;
+        process.env.UPSTASH_REDIS_REST_TOKEN =
+            envSnapshot.UPSTASH_REDIS_REST_TOKEN;
     });
 
     it("throws when Stripe mock mode is enabled on production deployments", () => {
         process.env.STRIPE_MOCK_MODE = "true";
 
         expect(() => assertProductionEnv()).toThrow(/STRIPE_MOCK_MODE/);
+    });
+
+    it("requires Upstash Redis credentials for production rate limiting", () => {
+        expect(() => assertProductionEnv()).toThrow(/UPSTASH_REDIS_REST_/);
     });
 });

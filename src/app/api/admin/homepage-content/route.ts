@@ -7,7 +7,7 @@ import { homepageContent } from "@/db/schema";
 import { rateLimitAdminWrite } from "@/lib/admin-rate-limit";
 import { requireMinRole } from "@/lib/admin-auth";
 import { logAdminFailure } from "@/lib/observability";
-import { requireAdmin } from "@/lib/require-admin";
+import { requireAdmin, requireAdminOrRespond } from "@/lib/require-admin";
 import { mergeHomepageContent } from "@/lib/homepage-defaults";
 
 const HOMEPAGE_ID = 1;
@@ -57,11 +57,12 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
-    const limited = rateLimitAdminWrite(request);
+    const limited = await rateLimitAdminWrite(request);
     if (limited) return limited;
 
-    const { response, admin } = await requireAdmin();
-    if (response || !admin) return response!;
+    const auth = requireAdminOrRespond(await requireAdmin());
+    if (auth instanceof NextResponse) return auth;
+    const { admin } = auth;
 
     const forbidden = requireMinRole(admin, "manager");
     if (forbidden) return forbidden;

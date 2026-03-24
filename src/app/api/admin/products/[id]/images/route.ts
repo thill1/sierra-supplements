@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { products, productImages, productImageKinds } from "@/db/schema";
 import { and, eq } from "drizzle-orm";
 import { z } from "zod/v4";
-import { requireAdmin } from "@/lib/require-admin";
+import { requireAdmin, requireAdminOrRespond } from "@/lib/require-admin";
 import { logAdminFailure } from "@/lib/observability";
 import { rateLimitAdminWrite } from "@/lib/admin-rate-limit";
 import { writeAuditLog } from "@/lib/audit/write-audit";
@@ -60,11 +60,12 @@ export async function GET(_request: Request, { params }: Params) {
 }
 
 export async function POST(request: Request, { params }: Params) {
-    const limited = rateLimitAdminWrite(request);
+    const limited = await rateLimitAdminWrite(request);
     if (limited) return limited;
 
-    const { response, admin } = await requireAdmin();
-    if (response || !admin) return response!;
+    const auth = requireAdminOrRespond(await requireAdmin());
+    if (auth instanceof NextResponse) return auth;
+    const { admin } = auth;
 
     try {
         const { id } = await params;
@@ -126,11 +127,12 @@ export async function POST(request: Request, { params }: Params) {
 }
 
 export async function PATCH(request: Request, { params }: Params) {
-    const limited = rateLimitAdminWrite(request);
+    const limited = await rateLimitAdminWrite(request);
     if (limited) return limited;
 
-    const { response, admin } = await requireAdmin();
-    if (response || !admin) return response!;
+    const auth = requireAdminOrRespond(await requireAdmin());
+    if (auth instanceof NextResponse) return auth;
+    const { admin } = auth;
 
     try {
         const { id } = await params;

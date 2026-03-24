@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { products, productVariants } from "@/db/schema";
 import { asc, eq } from "drizzle-orm";
 import { z } from "zod/v4";
-import { requireAdmin } from "@/lib/require-admin";
+import { requireAdmin, requireAdminOrRespond } from "@/lib/require-admin";
 import { requireMinRole } from "@/lib/admin-auth";
 import { logAdminFailure } from "@/lib/observability";
 import { rateLimitAdminWrite } from "@/lib/admin-rate-limit";
@@ -55,11 +55,12 @@ export async function GET(_request: Request, { params }: Params) {
 }
 
 export async function PUT(request: Request, { params }: Params) {
-    const limited = rateLimitAdminWrite(request);
+    const limited = await rateLimitAdminWrite(request);
     if (limited) return limited;
 
-    const { response, admin } = await requireAdmin();
-    if (response || !admin) return response!;
+    const auth = requireAdminOrRespond(await requireAdmin());
+    if (auth instanceof NextResponse) return auth;
+    const { admin } = auth;
 
     try {
         const { id } = await params;
@@ -126,11 +127,12 @@ export async function PUT(request: Request, { params }: Params) {
 
 /** Soft-archive (preferred over hard delete). */
 export async function DELETE(request: Request, { params }: Params) {
-    const limited = rateLimitAdminWrite(request);
+    const limited = await rateLimitAdminWrite(request);
     if (limited) return limited;
 
-    const { response, admin } = await requireAdmin();
-    if (response || !admin) return response!;
+    const auth = requireAdminOrRespond(await requireAdmin());
+    if (auth instanceof NextResponse) return auth;
+    const { admin } = auth;
 
     const forbidden = requireMinRole(admin, "manager");
     if (forbidden) return forbidden;

@@ -11,7 +11,7 @@ export default function CheckoutPage() {
     const router = useRouter();
     const { items, subtotal, itemCount, clearCart } = useCart();
     const [loading, setLoading] = useState(false);
-    const [stripeBusy, setStripeBusy] = useState(false);
+    const [paymentBusy, setPaymentBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [autoPay, setAutoPay] = useState(false);
     const [form, setForm] = useState({
@@ -66,8 +66,8 @@ export default function CheckoutPage() {
         }
     };
 
-    const handleStripeCheckout = async () => {
-        setStripeBusy(true);
+    const handleCardCheckout = async () => {
+        setPaymentBusy(true);
         setError(null);
         try {
             const res = await fetch("/api/checkout/session", {
@@ -100,7 +100,7 @@ export default function CheckoutPage() {
         } catch (err) {
             setError(err instanceof Error ? err.message : "Checkout failed");
         } finally {
-            setStripeBusy(false);
+            setPaymentBusy(false);
         }
     };
 
@@ -280,19 +280,19 @@ export default function CheckoutPage() {
                     <div className="flex flex-col sm:flex-row gap-4">
                         <button
                             type="submit"
-                            disabled={loading || stripeBusy}
+                            disabled={loading || paymentBusy}
                             className="btn btn-primary flex-1 sm:max-w-xs"
                         >
                             {loading ? "Submitting…" : "Place order (pay offline)"}
                         </button>
                         <button
                             type="button"
-                            disabled={loading || stripeBusy}
-                            onClick={() => void handleStripeCheckout()}
+                            disabled={loading || paymentBusy}
+                            onClick={() => void handleCardCheckout()}
                             className="btn btn-secondary flex-1 sm:max-w-xs inline-flex items-center justify-center gap-2"
                         >
                             <CreditCard className="w-4 h-4" />
-                            {stripeBusy ? "Redirecting…" : "Pay with card"}
+                            {paymentBusy ? "Redirecting…" : "Pay with card"}
                         </button>
                         <Link href="/store/cart" className="btn btn-secondary">
                             Cancel
@@ -301,9 +301,9 @@ export default function CheckoutPage() {
 
                     <p className="text-xs text-[var(--color-text-muted)] mt-4">
                         <strong>Place order</strong> sends your request to the team
-                        (no card charge). <strong>Pay with card</strong> uses Stripe
-                        Checkout when configured — inventory updates after payment
-                        succeeds.
+                        (no card charge). <strong>Pay with card</strong> uses the
+                        active checkout provider when configured, and inventory
+                        updates after payment succeeds.
                     </p>
                 </form>
             </section>

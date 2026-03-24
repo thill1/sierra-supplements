@@ -2,13 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
     checkRateLimitsMock,
-    createCheckoutSessionMock,
-    isStripeMockModeMock,
+    createPaymentSessionMock,
+    isPaymentProviderReadyMock,
     logServerErrorMock,
 } = vi.hoisted(() => ({
     checkRateLimitsMock: vi.fn(),
-    createCheckoutSessionMock: vi.fn(),
-    isStripeMockModeMock: vi.fn(),
+    createPaymentSessionMock: vi.fn(),
+    isPaymentProviderReadyMock: vi.fn(),
     logServerErrorMock: vi.fn(),
 }));
 
@@ -16,12 +16,9 @@ vi.mock("@/lib/rate-limit", () => ({
     checkRateLimits: checkRateLimitsMock,
 }));
 
-vi.mock("@/lib/stripe/checkout", () => ({
-    createCheckoutSession: createCheckoutSessionMock,
-}));
-
-vi.mock("@/lib/stripe/mock-mode", () => ({
-    isStripeMockMode: isStripeMockModeMock,
+vi.mock("@/lib/payments/service", () => ({
+    createPaymentSession: createPaymentSessionMock,
+    isPaymentProviderReady: isPaymentProviderReadyMock,
 }));
 
 vi.mock("@/lib/observability", () => ({
@@ -36,12 +33,12 @@ describe("POST /api/checkout/session", () => {
     beforeEach(() => {
         process.env.STRIPE_SECRET_KEY = "sk_test_placeholder";
         checkRateLimitsMock.mockReset();
-        createCheckoutSessionMock.mockReset();
-        isStripeMockModeMock.mockReset();
+        createPaymentSessionMock.mockReset();
+        isPaymentProviderReadyMock.mockReset();
         logServerErrorMock.mockReset();
 
         checkRateLimitsMock.mockReturnValue(null);
-        isStripeMockModeMock.mockReturnValue(false);
+        isPaymentProviderReadyMock.mockReturnValue(true);
     });
 
     afterEach(() => {
@@ -65,7 +62,7 @@ describe("POST /api/checkout/session", () => {
     });
 
     it("does not expose raw provider errors to the client", async () => {
-        createCheckoutSessionMock.mockRejectedValue(
+        createPaymentSessionMock.mockRejectedValue(
             new Error("Gateway timeout from upstream secret details"),
         );
 

@@ -109,10 +109,16 @@ export const orders = pgTable(
         autoPay: boolean("auto_pay").default(false),
         notes: text("notes"),
         status: text("status").default("pending"),
+        paymentProvider: text("payment_provider"),
+        paymentSessionId: text("payment_session_id"),
         stripeCheckoutSessionId: text("stripe_checkout_session_id"),
         createdAt: timestamp("created_at").defaultNow(),
     },
     (t) => [
+        uniqueIndex("orders_payment_provider_session_id_unique").on(
+            t.paymentProvider,
+            t.paymentSessionId,
+        ),
         uniqueIndex("orders_stripe_checkout_session_id_unique").on(
             t.stripeCheckoutSessionId,
         ),

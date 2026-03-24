@@ -31,7 +31,7 @@ const orderSchema = z.object({
 });
 
 export async function POST(request: Request) {
-    const limited = checkRateLimits(request, [
+    const limited = await checkRateLimits(request, [
         { namespace: "orders-15m", limit: 3, windowMs: 15 * 60 * 1000 },
         { namespace: "orders-1h", limit: 8, windowMs: 60 * 60 * 1000 },
     ]);

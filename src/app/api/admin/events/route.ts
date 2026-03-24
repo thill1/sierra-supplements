@@ -3,7 +3,7 @@ import { desc, eq, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 import { db } from "@/db";
 import { events } from "@/db/schema";
-import { requireAdmin } from "@/lib/require-admin";
+import { requireAdmin, requireAdminOrRespond } from "@/lib/require-admin";
 import { requireMinRole } from "@/lib/admin-auth";
 import { logAdminFailure } from "@/lib/observability";
 
@@ -17,8 +17,9 @@ const querySchema = z.object({
  * Metadata may include session IDs; treat exports as sensitive.
  */
 export async function GET(request: Request) {
-    const { response, admin } = await requireAdmin();
-    if (response || !admin) return response!;
+    const auth = requireAdminOrRespond(await requireAdmin());
+    if (auth instanceof NextResponse) return auth;
+    const { admin } = auth;
 
     const forbidden = requireMinRole(admin, "manager");
     if (forbidden) return forbidden;

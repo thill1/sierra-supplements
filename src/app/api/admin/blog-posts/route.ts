@@ -4,7 +4,7 @@ import { desc } from "drizzle-orm";
 import { z } from "zod/v4";
 import { db } from "@/db";
 import { blogPosts } from "@/db/schema";
-import { requireAdmin } from "@/lib/require-admin";
+import { requireAdmin, requireAdminOrRespond } from "@/lib/require-admin";
 import { requireMinRole } from "@/lib/admin-auth";
 import { rateLimitAdminWrite } from "@/lib/admin-rate-limit";
 import { logAdminFailure } from "@/lib/observability";
@@ -43,11 +43,12 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-    const limited = rateLimitAdminWrite(request);
+    const limited = await rateLimitAdminWrite(request);
     if (limited) return limited;
 
-    const { response, admin } = await requireAdmin();
-    if (response || !admin) return response!;
+    const auth = requireAdminOrRespond(await requireAdmin());
+    if (auth instanceof NextResponse) return auth;
+    const { admin } = auth;
 
     const forbidden = requireMinRole(admin, "manager");
     if (forbidden) return forbidden;

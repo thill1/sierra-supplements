@@ -3,6 +3,7 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import Resend from "next-auth/providers/resend";
 import type { AdminRole } from "@/db/schema.pg";
+import { resolveSafeAuthRedirect } from "@/lib/auth-redirect";
 import { isE2eCredentialsAdminAuthEnabled } from "@/lib/e2e-admin-auth";
 import { logAuthDebug } from "@/lib/observability";
 
@@ -128,6 +129,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 adminDbId: admin.id,
             });
             return token;
+        },
+        async redirect({ url, baseUrl }) {
+            return resolveSafeAuthRedirect(url, baseUrl);
         },
     },
     secret: process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET,

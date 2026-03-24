@@ -10,6 +10,13 @@ const path = require("node:path");
 const root = path.resolve(__dirname, "..");
 process.chdir(root);
 
+// Playwright starts webServer before globalSetup; DATABASE_URL must exist before `next start`.
+execSync("pnpm exec tsx tests/playwright-e2e-db-bootstrap-cli.ts", {
+    cwd: root,
+    stdio: "inherit",
+    env: process.env,
+});
+
 const envPath = path.join(root, ".playwright", "e2e-runtime.env");
 
 if (fs.existsSync(envPath)) {

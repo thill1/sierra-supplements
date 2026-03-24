@@ -14,7 +14,7 @@ const eventSchema = z.object({
 const isProd = process.env.NODE_ENV === "production";
 
 export async function POST(request: Request) {
-    const limited = checkRateLimits(request, [
+    const limited = await checkRateLimits(request, [
         { namespace: "events-5m", limit: 40, windowMs: 5 * 60 * 1000 },
         { namespace: "events-1h", limit: 150, windowMs: 60 * 60 * 1000 },
     ]);

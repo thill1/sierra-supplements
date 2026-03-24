@@ -37,6 +37,7 @@ pnpm setup:check
 | `ADMIN_EMAILS` | **Comma-separated** emails — used to **bootstrap** `admin_users` (`pnpm db:seed-admins`) and as a temporary allowlist only while `admin_users` is empty. Required on Vercel. |
 | `BLOB_READ_WRITE_TOKEN` | **Vercel Blob** read-write token (server only) for admin image uploads. |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Optional — **Stripe Checkout** and `/api/webhooks/stripe` for paid orders + inventory decrement. |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Shared rate limiting backend for public/admin APIs. Required by production env checks. |
 | `RESEND_API_KEY` | Contact + order notification email |
 | `ADMIN_EMAIL` | Inbound address for lead/order notifications |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Optional Google sign-in |
@@ -45,6 +46,7 @@ pnpm setup:check
 | `DISABLE_HARDCODED_CATALOG` | Local: `true` to test DB-only catalog behavior. |
 | `SENTRY_DSN` | Server/edge error reporting (optional). |
 | `NEXT_PUBLIC_SENTRY_DSN` | Same DSN for browser + `/monitoring` tunnel (optional). |
+| `AUTH_DEBUG_LOGS` | Optional. Set `true` only when you intentionally need verbose auth callback logs in production. |
 
 Full template: `.env.example`. AuthZ details: **`docs/ADMIN-AUTH.md`**. Operator tips: **`docs/ADMIN-OPERATIONS.md`**.
 
@@ -89,9 +91,11 @@ See **`docs/DEPLOYMENT.md`** for Supabase connection strings, Vercel env vars, a
 **Production hardening (summary):**
 
 - Admin uses **`admin_users`** (seeded from `ADMIN_EMAILS`); APIs re-check on every mutation.
-- Public POST endpoints use stricter in-memory rate limits (approximate on serverless).
+- Public and admin APIs use shared Redis-backed rate limits in production, with an in-memory fallback for local development.
+- Production rate limiting uses Upstash Redis for shared limits across instances.
 - Production catalog uses the database unless `ALLOW_HARDCODED_CATALOG=true`.
 - Content-Security-Policy and security headers apply in production builds.
+- Stripe mock mode is disabled by runtime checks on production deployments.
 - `GET /api/health` for uptime / DB connectivity checks.
 
 ## Customization

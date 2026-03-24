@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { products, productImages } from "@/db/schema";
 import { duplicateVariantsForProduct } from "@/lib/products/variant-helpers";
 import { eq } from "drizzle-orm";
-import { requireAdmin } from "@/lib/require-admin";
+import { requireAdmin, requireAdminOrRespond } from "@/lib/require-admin";
 import { requireMinRole } from "@/lib/admin-auth";
 import { logAdminFailure } from "@/lib/observability";
 import { rateLimitAdminWrite } from "@/lib/admin-rate-limit";
@@ -17,11 +17,12 @@ function slugifyCopy(slug: string): string {
 }
 
 export async function POST(_request: Request, { params }: Params) {
-    const limited = rateLimitAdminWrite(_request);
+    const limited = await rateLimitAdminWrite(_request);
     if (limited) return limited;
 
-    const { response, admin } = await requireAdmin();
-    if (response || !admin) return response!;
+    const auth = requireAdminOrRespond(await requireAdmin());
+    if (auth instanceof NextResponse) return auth;
+    const { admin } = auth;
 
     const forbidden = requireMinRole(admin, "manager");
     if (forbidden) return forbidden;

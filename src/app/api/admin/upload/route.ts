@@ -18,7 +18,7 @@ const ALLOWED_MIME = new Set([
 ]);
 
 export async function POST(request: Request) {
-    const limited = rateLimitAdminUpload(request);
+    const limited = await rateLimitAdminUpload(request);
     if (limited) return limited;
 
     const { response } = await requireAdmin();

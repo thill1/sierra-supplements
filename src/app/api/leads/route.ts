@@ -26,7 +26,7 @@ const leadSchema = z.object({
 const isProd = process.env.NODE_ENV === "production";
 
 export async function POST(request: Request) {
-    const limited = checkRateLimits(request, [
+    const limited = await checkRateLimits(request, [
         { namespace: "leads-15m", limit: 5, windowMs: 15 * 60 * 1000 },
         { namespace: "leads-1h", limit: 12, windowMs: 60 * 60 * 1000 },
     ]);

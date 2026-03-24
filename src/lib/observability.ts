@@ -34,6 +34,12 @@ export function logAdminAuthzFailure(context: string, email: string) {
 }
 
 export function logAuthDebug(context: string, extra?: LogPayload) {
+    if (
+        process.env.NODE_ENV === "production" &&
+        process.env.AUTH_DEBUG_LOGS !== "true"
+    ) {
+        return;
+    }
     emit("info", {
         context,
         area: "auth",

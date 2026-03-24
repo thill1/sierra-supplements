@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod/v4";
+import { createPaymentSession, isPaymentProviderReady } from "@/lib/payments/service";
 import { checkRateLimits } from "@/lib/rate-limit";
-import { createCheckoutSession } from "@/lib/stripe/checkout";
-import { isStripeMockMode } from "@/lib/stripe/mock-mode";
 import { logServerError } from "@/lib/observability";
 
 const bodySchema = z.object({
@@ -21,14 +20,12 @@ const bodySchema = z.object({
 });
 
 export async function POST(request: Request) {
-    const limited = checkRateLimits(request, [
+    const limited = await checkRateLimits(request, [
         { namespace: "checkout-15m", limit: 10, windowMs: 15 * 60 * 1000 },
     ]);
     if (limited) return limited;
 
-    const stripeReady =
-        isStripeMockMode() || process.env.STRIPE_SECRET_KEY?.trim();
-    if (!stripeReady) {
+    if (!isPaymentProviderReady()) {
         return NextResponse.json(
             { error: "Online card checkout is not enabled yet." },
             { status: 503 },
@@ -43,7 +40,7 @@ export async function POST(request: Request) {
             process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
             new URL(request.url).origin;
 
-        const session = await createCheckoutSession({
+        const session = await createPaymentSession({
             items: data.items,
             successUrl: `${base}/store/thank-you?session_id={CHECKOUT_SESSION_ID}`,
             cancelUrl: `${base}/store/cart`,

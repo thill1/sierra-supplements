@@ -43,19 +43,21 @@ DATABASE_URL="postgresql://..." pnpm db:seed
 | `NEXTAUTH_URL` | `https://your-domain.vercel.app` (production) or preview URL |
 | `NEXT_PUBLIC_APP_URL` | Same canonical URL as the site |
 | `ADMIN_EMAILS` | **Required.** Used to bootstrap `admin_users` (`db:seed-admins`) and as temporary allowlist if the table is empty |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | **Required.** Shared rate limiting backend for public/admin APIs across serverless instances |
 | `BLOB_READ_WRITE_TOKEN` | **Vercel Blob** (server) for admin product photos |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Optional — Stripe Checkout + webhook (`/api/webhooks/stripe`) |
-| `STRIPE_MOCK_MODE` | Optional — `true` / `1` / `yes` skips Stripe API for checkout and accepts unsigned JSON webhook events (local/staging only; see `src/lib/stripe/mock-mode.ts`) |
+| `STRIPE_MOCK_MODE` | Optional — `true` / `1` / `yes` skips Stripe API for checkout and accepts unsigned JSON webhook events (local/staging only; production env checks reject it) |
 | `RESEND_API_KEY` | Transactional email |
 | `ADMIN_EMAIL` | Where lead/order notifications are sent |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Optional OAuth |
 | `NEXT_PUBLIC_SUPABASE_URL` | Legacy optional — Supabase Storage uploads |
 | `SUPABASE_SERVICE_ROLE_KEY` | **Server only** — never expose to the browser |
 | `SUPABASE_STORAGE_BUCKET` | Optional; default `store-images` |
+| `AUTH_DEBUG_LOGS` | Optional. Set `true` only for temporary production auth troubleshooting |
 
 Prefer **Vercel Blob** for new deployments. See **`docs/SUPABASE-STORAGE.md`** only if you still use Supabase Storage.
 
-On deploy, Next.js runs **`src/instrumentation.ts`**: if `VERCEL=1` and `NODE_ENV=production`, missing `ADMIN_EMAILS`, auth secrets, or database URL **fails startup** so misconfiguration is obvious.
+On deploy, Next.js runs **`src/instrumentation.ts`**: if `VERCEL=1` and `NODE_ENV=production`, missing `ADMIN_EMAILS`, auth secrets, database URL, or Upstash Redis credentials **fails startup** so misconfiguration is obvious. Production startup also rejects `STRIPE_MOCK_MODE`.
 
 **Local parity:** `FORCE_PRODUCTION_ENV_CHECK=true pnpm start` runs the same assertions.
 
