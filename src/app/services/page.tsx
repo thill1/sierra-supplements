@@ -66,22 +66,26 @@ export default function ServicesPage() {
                             </Link>
                         );
                     })}
-                    <div className="card flex flex-col md:flex-row gap-6 opacity-75 border-dashed border-[var(--color-border-subtle)]">
-                        <div className="w-16 h-16 rounded-xl bg-[var(--color-bg-muted)] flex items-center justify-center flex-shrink-0">
-                            <Sparkles className="w-8 h-8 text-[var(--color-text-muted)]" />
+                    <Link
+                        href="/contact"
+                        className="card group flex flex-col md:flex-row gap-6 border-[var(--color-accent)]/25 hover:border-[var(--color-accent)]/50 transition-colors"
+                    >
+                        <div className="w-16 h-16 rounded-xl bg-[var(--color-accent-subtle)] flex items-center justify-center flex-shrink-0 group-hover:bg-[var(--color-accent)] transition-colors">
+                            <Sparkles className="w-8 h-8 text-[var(--color-accent)] group-hover:text-[var(--color-bg)] transition-colors" />
                         </div>
                         <div>
-                            <h2 className="heading-sm mb-2 text-[var(--color-text-secondary)]">
-                                Membership Plans
+                            <h2 className="heading-sm mb-2 group-hover:text-[var(--color-accent)] transition-colors">
+                                Level Up With Custom Supplement Protocol Stacks
                             </h2>
-                            <p className="body-sm mb-3 text-[var(--color-text-muted)]">
-                                Custom plans and ongoing support. Coming soon.
+                            <p className="body-sm mb-3 text-[var(--color-text-secondary)]">
+                                Personalized stacks built around your goals—with room to adjust as
+                                you level up.
                             </p>
-                            <span className="text-xs font-medium text-[var(--color-text-muted)] uppercase tracking-wider">
-                                Coming Soon
+                            <span className="inline-flex items-center gap-1 text-sm font-medium text-[var(--color-accent)] group-hover:gap-2 transition-all">
+                                Contact Us Today <ArrowRight className="w-4 h-4" />
                             </span>
                         </div>
-                    </div>
+                    </Link>
                 </div>
             </section>
 
