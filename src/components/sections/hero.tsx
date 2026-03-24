@@ -63,14 +63,13 @@ export type HeroSectionContent = {
 };
 
 const HERO_FALLBACK: HeroSectionContent = {
-    footerTagline: "Auburn, CA · Third-Party Tested · Science-Backed",
+    footerTagline: "Auburn, CA · Science-Backed · Nutrition Coaching",
     primaryCtaLabel: "Shop Supplements",
     secondaryCtaLabel: "Free Consultation",
     servicesLinkLabel: "Services",
     stats: [
         { value: "50+", label: "Premium Products" },
-        { value: "-", label: "Nutrition Coaching" },
-        { value: "100%", label: "Third-Party Tested" },
+        { value: "Expert", label: "Nutrition Coaching" },
         { value: "500+", label: "Clients Served" },
     ],
 };

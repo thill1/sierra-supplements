@@ -152,9 +152,9 @@ export const siteConfig = {
         "We start with a free consultation to understand your goals and lifestyle. For our Summit and Peak Elite members, we also review lab panels to make data-driven recommendations.",
     },
     {
-      question: "Are your supplements third-party tested?",
+      question: "How do you choose which supplements to carry?",
       answer:
-        "Absolutely. Every product in our store is third-party tested for purity, potency, and safety. We only carry brands that meet our rigorous quality standards.",
+        "We focus on formulas and brands that align with evidence-based practice and our coaching standards. Every recommendation is tailored to your goals—we do not chase trends or hype.",
     },
     {
       question: "Can I cancel my membership anytime?",
@@ -216,12 +216,9 @@ export const siteConfig = {
 
   // ── Trust Badges ───────────────────────────────
   trustBadges: [
-    "Third-Party Tested",
-    "GMP Certified Facility",
     "Science-Backed Formulas",
     "30-Day Money-Back Guarantee",
-    "Licensed Nutritionists",
-    "4.9★ on Google (200+ reviews)",
+    "Nutrition Coaching",
   ],
 } as const;
 

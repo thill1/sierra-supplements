@@ -145,7 +145,7 @@ export default async function ProductDetailPage({ params }: Props) {
                         <div className="mt-8 p-4 rounded-xl bg-[var(--color-bg-muted)] border border-[var(--color-border-subtle)]">
                             <ul className="space-y-2 text-sm text-[var(--color-text-secondary)]">
                                 {[
-                                    "Third-party tested for purity",
+                                    "Curated, quality-focused brands",
                                     "30-day money-back guarantee",
                                     "Free shipping on orders over $80",
                                 ].map((item) => (

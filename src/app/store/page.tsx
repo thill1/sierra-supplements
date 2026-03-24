@@ -9,7 +9,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
     title: "Supplement Store",
-    description: `Shop ${siteConfig.name}'s curated selection of pre-workout, creatine, protein, and more. Third-party tested for purity.`,
+    description: `Shop ${siteConfig.name}'s curated selection of pre-workout, creatine, protein, and more.`,
 };
 
 export const dynamic = "force-dynamic";
@@ -27,8 +27,8 @@ export default async function StorePage({ searchParams }: Props) {
                     The <span className="gradient-text">Store</span>
                 </h1>
                 <p className="body-lg max-w-2xl mx-auto">
-                    Curated, third-party-tested supplements shipped to your door.
-                    Pre-workout, creatine, protein, vitamins, and more.
+                    Curated supplements shipped to your door. Pre-workout, creatine,
+                    protein, vitamins, and more.
                 </p>
             </section>
 

@@ -31,7 +31,7 @@ const values = [
         icon: Target,
         title: "Science First",
         description:
-            "No hype, no fads. We rely on peer-reviewed research and third-party testing to guide every recommendation.",
+            "No hype, no fads. We rely on peer-reviewed research and real-world coaching experience to guide every recommendation.",
     },
     {
         icon: Award,
