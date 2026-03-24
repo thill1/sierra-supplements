@@ -19,8 +19,8 @@ export const siteConfig = {
   // ── Contact ────────────────────────────────────
   phone: "(916) 824-5497",
   smsNumber: "+19168245497",
-  email: "hello@sierrastrengthsupplements.com",
-  adminEmail: "admin@sierrastrengthsupplements.com",
+  email: "sierrastrengthsupplements@gmail.com",
+  adminEmail: "sierrastrengthsupplements@gmail.com",
   address: {
     street: "258 Elm Ave",
     city: "Auburn",

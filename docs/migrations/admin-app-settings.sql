@@ -23,6 +23,6 @@ VALUES (
     1,
     'Sierra Strength',
     'https://sierrastrengthsupplements.com',
-    'admin@sierrastrengthsupplements.com'
+    'sierrastrengthsupplements@gmail.com'
 )
 ON CONFLICT (id) DO NOTHING;
