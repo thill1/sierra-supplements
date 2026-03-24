@@ -97,6 +97,22 @@ Use this when you want **Sign in with Google** on `/auth/signin` (no Resend requ
 
 ---
 
+## 3b. Alternate domain (`sierrastrongsupplements.com` → canonical)
+
+The app **301 redirects** `sierrastrongsupplements.com` and `www.sierrastrongsupplements.com` to `https://sierrastrengthsupplements.com` (same path). Hostnames are listed in **`src/lib/site-config.ts`** as `redirectHosts`.
+
+**Vercel (required for HTTPS):** Project → **Settings → Domains** → add **`sierrastrongsupplements.com`** and **`www.sierrastrongsupplements.com`** to the same project as the main site.
+
+**DNS:** Point the alias domain at Vercel (same **A** records as the primary domain — typically **`76.76.21.21`** for apex and www, or follow Vercel’s domain wizard). If the alias uses **Cloudflare**, run DNS sync with:
+
+```bash
+CLOUDFLARE_EXTRA_ZONES=sierrastrongsupplements.com pnpm dns:cloudflare-vercel
+```
+
+(Unset **`CLOUDFLARE_ZONE_ID`** when syncing **multiple** zones, or the script resolves each zone by name.)
+
+---
+
 ## 4. Post-deploy checks
 
 - Store: `https://your-domain.vercel.app/store`  

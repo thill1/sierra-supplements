@@ -5,41 +5,49 @@ import { siteConfig } from "@/lib/site-config";
 
 declare global {
     interface Window {
-        Cal?: any;
+        // Cal.com bootstrap assigns a callable with queue hooks; typed loosely below.
+        Cal?: CalBootstrap;
     }
 }
 
+type CalBootstrap = ((...args: unknown[]) => void) & {
+    q?: unknown[][];
+    loaded?: boolean;
+    ns?: Record<string, { (...args: unknown[]): void; q?: unknown[][] }>;
+};
+
 export function CalEmbed() {
     useEffect(() => {
-        (function (C: any, A: any, L: any) {
-            const p = function (a: any, ar: any) {
+        /* eslint-disable @typescript-eslint/no-explicit-any -- Cal.com third-party embed snippet */
+        (function (C: any, A: string, L: string) {
+            const p = function (a: any, ar: unknown[]) {
+                a.q = a.q || [];
                 a.q.push(ar);
             };
             const d = C.document;
             C.Cal =
                 C.Cal ||
-                function () {
+                function (...callArgs: unknown[]) {
                     const cal = C.Cal;
-                    const ar = arguments;
                     if (!cal.loaded) {
                         cal.q = cal.q || [];
                         cal.loaded = true;
                     }
-                    if (ar[0] === L) {
-                        const api: any = function () {
-                            p(api, arguments);
+                    if (callArgs[0] === L) {
+                        const api: any = function (...inner: unknown[]) {
+                            p(api, inner);
                         };
-                        const namespace = ar[1];
+                        const namespace = callArgs[1];
                         api.q = api.q || [];
                         if (typeof namespace === "string") {
                             cal.ns = cal.ns || {};
                             cal.ns[namespace] = cal.ns[namespace] || api;
-                            p(cal.ns[namespace], ar);
+                            p(cal.ns[namespace], callArgs);
                             p(cal, ["initNamespace", namespace]);
-                        } else p(cal, ar);
+                        } else p(cal, callArgs);
                         return;
                     }
-                    p(cal, ar);
+                    p(cal, callArgs);
                 };
             const j = d.createElement("script");
             j.src = A;
@@ -51,6 +59,7 @@ export function CalEmbed() {
                 d.head.appendChild(j);
             }
         })(window, "https://app.cal.com/embed/embed.js", "init");
+        /* eslint-enable @typescript-eslint/no-explicit-any */
 
         const Cal = window.Cal;
         if (Cal) {

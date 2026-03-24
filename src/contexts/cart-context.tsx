@@ -54,6 +54,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+        // Hydrate after mount so server HTML (empty cart) matches first client paint.
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional SSR/client cart sync
         setItems(loadCart());
         setMounted(true);
     }, []);

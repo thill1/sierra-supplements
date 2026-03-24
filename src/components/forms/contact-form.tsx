@@ -23,18 +23,14 @@ export function ContactForm({
         phone: "",
         message: defaultMessage,
     });
+    const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
     useEffect(() => {
-        if (defaultMessage) {
-            setForm((prev) =>
-                prev.message ? prev : { ...prev, message: defaultMessage },
-            );
-            document
-                .getElementById("contact-form-panel")
-                ?.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
+        if (!defaultMessage) return;
+        document
+            .getElementById("contact-form-panel")
+            ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, [defaultMessage]);
-    const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

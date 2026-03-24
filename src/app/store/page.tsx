@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 import { STORE_SIDEBAR_CATEGORIES } from "@/lib/store-categories";
-import { ProductCard } from "@/components/store/product-card";
 import { StoreGrid } from "@/components/store/store-grid";
 import type { Metadata } from "next";
 

@@ -8,6 +8,11 @@ export const siteConfig = {
   description:
     "Premium supplements & wellness services inspired by the strength of the Sierra Nevada mountains. Fuel your body with nature's best.",
   url: "https://sierrastrengthsupplements.com",
+  /** Typo / parked hostnames → permanent redirect to `url` (see `next.config.ts`). */
+  redirectHosts: [
+    "sierrastrongsupplements.com",
+    "www.sierrastrongsupplements.com",
+  ],
   logoPath: "/logo.svg",
   ogImage: "/og-image.jpg",
 

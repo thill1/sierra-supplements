@@ -1,16 +1,3 @@
-import Link from "next/link";
-import {
-  ArrowRight,
-  Star,
-  Shield,
-  CheckCircle,
-  Dumbbell,
-  Apple,
-  TestTube,
-  Droplets,
-  Users,
-  ShoppingBag,
-} from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 import { getHomepageContent } from "@/lib/homepage-content";
 import { getTestimonials } from "@/lib/testimonials";

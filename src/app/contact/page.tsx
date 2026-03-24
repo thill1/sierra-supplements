@@ -129,6 +129,7 @@ export default async function ContactPage({ searchParams }: Props) {
                                 {quoteIntent ? "Request a quote" : "Send Us a Message"}
                             </h3>
                             <ContactForm
+                                key={quoteIntent ? "quote" : "default"}
                                 defaultMessage={quoteIntent ? QUOTE_PROMPT : ""}
                                 leadSource={
                                     quoteIntent ? "contact_form_quote" : "contact_form"

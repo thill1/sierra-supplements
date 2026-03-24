@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ArrowRight, Calendar, CheckCircle } from "lucide-react";
-import { siteConfig } from "@/lib/site-config";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {

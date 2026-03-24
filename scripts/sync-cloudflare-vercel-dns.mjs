@@ -17,12 +17,18 @@
  *   VERCEL_A_RECORD_IP — default 76.76.21.21 (must match Vercel → Domains for your project)
  *   DNS_PROXIED — "true" | "false" (default true = orange cloud)
  *   CLOUDFLARE_SET_SSL_STRICT — "false" to skip PATCH ssl=strict (default: attempt)
+ *   CLOUDFLARE_EXTRA_ZONES — comma-separated extra zones on Cloudflare (e.g. typo domain)
  */
 
 import fs from "node:fs";
 import path from "node:path";
 
-const ZONE_NAME = "sierrastrengthsupplements.com";
+const PRIMARY_ZONE = "sierrastrengthsupplements.com";
+const EXTRA_ZONES = (process.env.CLOUDFLARE_EXTRA_ZONES || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+const ZONES_TO_SYNC = [PRIMARY_ZONE, ...new Set(EXTRA_ZONES)];
 const VERCEL_IPV4 = process.env.VERCEL_A_RECORD_IP || "76.76.21.21";
 const PROXIED = process.env.DNS_PROXIED !== "false";
 const TRY_SSL_STRICT = process.env.CLOUDFLARE_SET_SSL_STRICT !== "false";
@@ -61,7 +67,7 @@ if (!token) {
 Missing CLOUDFLARE_API_TOKEN.
 
 Create a token at https://dash.cloudflare.com/profile/api-tokens
-with: Zone → DNS → Edit (and Zone → Zone → Read), scoped to ${ZONE_NAME}.
+with: Zone → DNS → Edit (and Zone → Zone → Read), scoped to every zone you sync (include all domains).
 
 Then run:
   CLOUDFLARE_API_TOKEN=your_token pnpm dns:cloudflare-vercel
@@ -86,12 +92,19 @@ async function cf(path, init = {}) {
   return body;
 }
 
-async function resolveZoneId() {
-  if (zoneIdEnv) return zoneIdEnv;
-  const body = await cf(`/zones?name=${encodeURIComponent(ZONE_NAME)}`);
+async function resolveZoneId(zoneName) {
+  if (zoneIdEnv && ZONES_TO_SYNC.length === 1) return zoneIdEnv;
+  if (zoneIdEnv && ZONES_TO_SYNC.length > 1) {
+    console.warn(
+      "CLOUDFLARE_ZONE_ID is ignored when syncing multiple zones; resolving each zone by name.\n",
+    );
+  }
+  const body = await cf(`/zones?name=${encodeURIComponent(zoneName)}`);
   const z = body.result?.[0];
   if (!z?.id) {
-    throw new Error(`No Cloudflare zone found for ${ZONE_NAME}. Set CLOUDFLARE_ZONE_ID if the zone name differs.`);
+    throw new Error(
+      `No Cloudflare zone found for ${zoneName}. Add the domain to Cloudflare or remove it from CLOUDFLARE_EXTRA_ZONES.`,
+    );
   }
   return z.id;
 }
@@ -156,14 +169,20 @@ async function upsertA(zoneId, recordName, content) {
 }
 
 async function main() {
-  const zoneId = await resolveZoneId();
-  console.log(`Zone ${ZONE_NAME} (${zoneId})\n`);
+  for (const zoneName of ZONES_TO_SYNC) {
+    const zoneId = await resolveZoneId(zoneName);
+    console.log(`Zone ${zoneName} (${zoneId})\n`);
 
-  await setSslStrict(zoneId);
-  await upsertA(zoneId, ZONE_NAME, VERCEL_IPV4);
-  await upsertA(zoneId, `www.${ZONE_NAME}`, VERCEL_IPV4);
+    await setSslStrict(zoneId);
+    await upsertA(zoneId, zoneName, VERCEL_IPV4);
+    await upsertA(zoneId, `www.${zoneName}`, VERCEL_IPV4);
+    console.log("");
+  }
 
-  console.log(`
+  console.log(`Synced ${ZONES_TO_SYNC.length} zone(s): ${ZONES_TO_SYNC.join(", ")}
+
+Add every hostname in Vercel → Project → Settings → Domains (required for TLS).
+
 Done. If proxied=false, DNS points straight at Vercel (avoids Cloudflare 525 while certs settle).
 
 Vercel will verify the domain within a few minutes. Redeploy if you changed env vars:
