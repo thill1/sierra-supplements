@@ -23,6 +23,9 @@ export const siteConfig = {
     zip: "95603",
     full: "258 Elm Ave, Auburn, CA 95603",
   },
+  /** Google Maps embed iframe src (Share → Embed a map). */
+  mapsEmbedSrc:
+    "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3104.893459563646!2d-121.06831950000002!3d38.9035516!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x809b052ab94b180b%3A0xf8c5df48a6cf4a9d!2sSierra%20Strength%20Supplements!5e0!3m2!1sen!2sus!4v1774116136264!5m2!1sen!2sus",
   hours: [
     { day: "Monday – Friday", time: "7:00 AM – 7:00 PM" },
     { day: "Saturday", time: "8:00 AM – 5:00 PM" },

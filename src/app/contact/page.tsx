@@ -10,9 +10,6 @@ export const metadata: Metadata = {
 
 type Props = { searchParams: Promise<{ form?: string }> };
 
-const mapsEmbedSrc =
-    "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3104.893459563646!2d-121.06831950000002!3d38.9035516!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x809b052ab94b180b%3A0xf8c5df48a6cf4a9d!2sSierra%20Strength%20Supplements!5e0!3m2!1sen!2sus!4v1774116136264!5m2!1sen!2sus";
-
 const QUOTE_PROMPT =
     "I'm interested in a custom supplement or coaching quote. Please reach out with next steps.";
 
@@ -113,7 +110,7 @@ export default async function ContactPage({ searchParams }: Props) {
                         <div className="card !p-0 overflow-hidden h-48 rounded-xl bg-[var(--color-bg-muted)]">
                             <iframe
                                 title={`${siteConfig.name} location`}
-                                src={mapsEmbedSrc}
+                                src={siteConfig.mapsEmbedSrc}
                                 width="100%"
                                 height="100%"
                                 className="block min-h-[12rem]"
