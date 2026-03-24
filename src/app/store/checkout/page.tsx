@@ -76,6 +76,8 @@ export default function CheckoutPage() {
                 body: JSON.stringify({
                     items: items.map((i) => ({
                         productId: i.productId,
+                        variantId: i.variantId,
+                        slug: i.slug,
                         quantity: i.quantity,
                     })),
                     email: form.email?.trim() || undefined,
@@ -236,7 +238,10 @@ export default function CheckoutPage() {
                         <h2 className="font-semibold mb-4">Order summary</h2>
                         <ul className="space-y-2 text-sm text-[var(--color-text-secondary)] mb-4">
                             {items.map((item) => (
-                                <li key={item.productId} className="flex justify-between">
+                                <li
+                                    key={`${item.productId}-${item.variantId}`}
+                                    className="flex justify-between"
+                                >
                                     <span>{item.name} × {item.quantity}</span>
                                     <span>${((item.price * item.quantity) / 100).toFixed(2)}</span>
                                 </li>

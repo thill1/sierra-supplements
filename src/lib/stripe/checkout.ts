@@ -1,11 +1,20 @@
 import { randomBytes } from "node:crypto";
 import Stripe from "stripe";
-import { inArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { products } from "@/db/schema";
+import { products, productVariants } from "@/db/schema";
 import { isStripeMockMode } from "@/lib/stripe/mock-mode";
+import {
+    resolveLineToVariantIds,
+    type CheckoutLineInput,
+} from "@/lib/checkout/resolve-line-variant";
 
-export type CheckoutLineInput = { productId: number; quantity: number };
+/** After server resolution; stored in Stripe metadata and used by webhooks. */
+export type ResolvedCheckoutLine = {
+    productId: number;
+    variantId: number;
+    quantity: number;
+};
 
 export type CreateCheckoutSessionParams = {
     items: CheckoutLineInput[];
@@ -15,38 +24,46 @@ export type CreateCheckoutSessionParams = {
 };
 
 async function buildStripeLineItems(
-    items: CheckoutLineInput[],
+    resolved: ResolvedCheckoutLine[],
 ): Promise<Stripe.Checkout.SessionCreateParams.LineItem[]> {
-    const ids = [...new Set(items.map((i) => i.productId))];
-    if (ids.length === 0) {
+    if (resolved.length === 0) {
         throw new Error("Cart is empty");
     }
 
-    const rows = await db
-        .select()
-        .from(products)
-        .where(inArray(products.id, ids));
+    const variantIds = [...new Set(resolved.map((i) => i.variantId))];
 
-    const byId = new Map(rows.map((p) => [p.id, p]));
+    const rows = await db
+        .select({
+            variant: productVariants,
+            product: products,
+        })
+        .from(productVariants)
+        .innerJoin(products, eq(productVariants.productId, products.id))
+        .where(inArray(productVariants.id, variantIds));
+
+    const byVariantId = new Map(rows.map((r) => [r.variant.id, r]));
 
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
 
-    for (const line of items) {
-        const p = byId.get(line.productId);
-        if (!p) {
-            throw new Error(`Unknown product id ${line.productId}`);
+    for (const line of resolved) {
+        const row = byVariantId.get(line.variantId);
+        if (!row) {
+            throw new Error(`Unknown variant id ${line.variantId}`);
         }
+        const { variant: v, product: p } = row;
         if (
             !p.published ||
             p.status !== "active" ||
-            p.stockQuantity < line.quantity
+            v.stockQuantity < line.quantity
         ) {
-            throw new Error(`Product unavailable: ${p.name}`);
+            throw new Error(`Product unavailable: ${p.name} — ${v.label}`);
         }
 
-        if (p.stripePriceId) {
+        const displayName = `${p.name} — ${v.label}`;
+
+        if (v.stripePriceId) {
             lineItems.push({
-                price: p.stripePriceId,
+                price: v.stripePriceId,
                 quantity: line.quantity,
             });
         } else {
@@ -54,10 +71,13 @@ async function buildStripeLineItems(
                 quantity: line.quantity,
                 price_data: {
                     currency: "usd",
-                    unit_amount: p.price,
+                    unit_amount: v.price,
                     product_data: {
-                        name: p.name,
-                        metadata: { product_id: String(p.id) },
+                        name: displayName,
+                        metadata: {
+                            product_id: String(p.id),
+                            variant_id: String(v.id),
+                        },
                     },
                 },
             });
@@ -74,7 +94,17 @@ async function buildStripeLineItems(
 export async function createCheckoutSession(
     params: CreateCheckoutSessionParams,
 ): Promise<Stripe.Checkout.Session> {
-    const lineItems = await buildStripeLineItems(params.items);
+    const resolved: ResolvedCheckoutLine[] = [];
+    for (const line of params.items) {
+        const { productId, variantId } = await resolveLineToVariantIds(line);
+        resolved.push({
+            productId,
+            variantId,
+            quantity: line.quantity,
+        });
+    }
+
+    const lineItems = await buildStripeLineItems(resolved);
 
     if (isStripeMockMode()) {
         const sessionId = `cs_mock_${randomBytes(12).toString("hex")}`;
@@ -87,7 +117,7 @@ export async function createCheckoutSession(
             object: "checkout.session",
             url,
             metadata: {
-                items_json: JSON.stringify(params.items),
+                items_json: JSON.stringify(resolved),
             },
             customer_email: params.customerEmail ?? null,
             customer_details: params.customerEmail
@@ -109,7 +139,7 @@ export async function createCheckoutSession(
         cancel_url: params.cancelUrl,
         line_items: lineItems,
         metadata: {
-            items_json: JSON.stringify(params.items),
+            items_json: JSON.stringify(resolved),
         },
         ...(params.customerEmail
             ? { customer_email: params.customerEmail }

@@ -5,8 +5,21 @@ import { useParams, useRouter } from "next/navigation";
 import {
     ProductEditorForm,
     type ProductEditorValues,
+    type VariantEditorRow,
 } from "@/components/admin/product-editor-form";
 import { STORE_CATEGORIES } from "@/lib/store-categories";
+
+type VariantApiRow = {
+    id: number;
+    label: string;
+    price: number;
+    compareAtPrice: number | null;
+    sku: string | null;
+    stockQuantity: number;
+    lowStockThreshold: number;
+    stripePriceId: string | null;
+    sortOrder: number;
+};
 
 type Row = {
     slug: string;
@@ -28,7 +41,25 @@ type Row = {
     inStock: boolean | null;
     published: boolean | null;
     featured: boolean | null;
+    variants?: VariantApiRow[];
 };
+
+function mapVariantsFromApi(rows: VariantApiRow[]): VariantEditorRow[] {
+    return rows.map((row, i) => ({
+        id: row.id,
+        label: row.label,
+        price: (row.price / 100).toFixed(2),
+        compareAtPrice:
+            row.compareAtPrice != null
+                ? (row.compareAtPrice / 100).toFixed(2)
+                : "",
+        sku: row.sku ?? "",
+        stockQuantity: String(row.stockQuantity),
+        lowStockThreshold: String(row.lowStockThreshold),
+        stripePriceId: row.stripePriceId ?? "",
+        sortOrder: String(row.sortOrder ?? i),
+    }));
+}
 
 function mapRow(p: Row): ProductEditorValues {
     const cat = STORE_CATEGORIES.some((c) => c.slug === p.category)
@@ -63,6 +94,9 @@ export default function AdminEditProductPage() {
     const router = useRouter();
     const id = Number.parseInt(String(params.id), 10);
     const [initial, setInitial] = useState<ProductEditorValues | null>(null);
+    const [initialVariants, setInitialVariants] = useState<
+        VariantEditorRow[] | null
+    >(null);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -74,6 +108,11 @@ export default function AdminEditProductPage() {
                 const p = (await res.json()) as Row;
                 if (!cancelled) {
                     setInitial(mapRow(p));
+                    setInitialVariants(
+                        p.variants?.length
+                            ? mapVariantsFromApi(p.variants)
+                            : [],
+                    );
                     setError(null);
                 }
             } catch {
@@ -116,5 +155,11 @@ export default function AdminEditProductPage() {
         );
     }
 
-    return <ProductEditorForm productId={id} initial={initial} />;
+    return (
+        <ProductEditorForm
+            productId={id}
+            initial={initial}
+            initialVariants={initialVariants ?? []}
+        />
+    );
 }

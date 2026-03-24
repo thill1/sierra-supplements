@@ -141,6 +141,7 @@ export const products = pgTable("products", {
     published: boolean("published").default(false),
     featured: boolean("featured").default(false),
     sku: text("sku"),
+    /** Denormalized sum of variant stock quantities (kept in sync when variants change). */
     stockQuantity: integer("stock_quantity").notNull().default(0),
     lowStockThreshold: integer("low_stock_threshold").notNull().default(2),
     status: text("status").notNull().default("active").$type<ProductStatus>(),
@@ -151,6 +152,28 @@ export const products = pgTable("products", {
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+/** Sellable SKU under a parent product (flavor/size); inventory lives here. */
+export const productVariants = pgTable(
+    "product_variants",
+    {
+        id: serial("id").primaryKey(),
+        productId: integer("product_id")
+            .notNull()
+            .references(() => products.id, { onDelete: "cascade" }),
+        label: text("label").notNull(),
+        price: integer("price").notNull(),
+        compareAtPrice: integer("compare_at_price"),
+        sku: text("sku"),
+        stockQuantity: integer("stock_quantity").notNull().default(0),
+        lowStockThreshold: integer("low_stock_threshold").notNull().default(2),
+        stripePriceId: text("stripe_price_id"),
+        sortOrder: integer("sort_order").notNull().default(0),
+        createdAt: timestamp("created_at").defaultNow(),
+        updatedAt: timestamp("updated_at").defaultNow(),
+    },
+    (t) => [index("product_variants_product_id_idx").on(t.productId)],
+);
 
 export const productImages = pgTable(
     "product_images",
@@ -175,6 +198,9 @@ export const inventoryMovements = pgTable(
         productId: integer("product_id")
             .notNull()
             .references(() => products.id, { onDelete: "cascade" }),
+        variantId: integer("variant_id").references(() => productVariants.id, {
+            onDelete: "set null",
+        }),
         delta: integer("delta").notNull(),
         reason: text("reason").notNull(),
         source: text("source").notNull(),
@@ -184,7 +210,10 @@ export const inventoryMovements = pgTable(
         }),
         createdAt: timestamp("created_at").defaultNow(),
     },
-    (t) => [index("inventory_movements_product_id_idx").on(t.productId)],
+    (t) => [
+        index("inventory_movements_product_id_idx").on(t.productId),
+        index("inventory_movements_variant_id_idx").on(t.variantId),
+    ],
 );
 
 export const orderItems = pgTable(
@@ -195,6 +224,9 @@ export const orderItems = pgTable(
             .notNull()
             .references(() => orders.id, { onDelete: "cascade" }),
         productId: integer("product_id").references(() => products.id, {
+            onDelete: "set null",
+        }),
+        variantId: integer("variant_id").references(() => productVariants.id, {
             onDelete: "set null",
         }),
         productName: text("product_name").notNull(),

@@ -5,10 +5,13 @@
  * Retail prices sourced from sierra Strength Inventory.numbers
  */
 
+import { and, eq } from "drizzle-orm";
 import "./load-local-env";
 import { db } from "./index";
-import { products, testimonials } from "./schema.pg";
+import { products, productVariants, testimonials } from "./schema.pg";
 import { siteConfig } from "@/lib/site-config";
+import { syncParentProductStockFromVariants } from "@/lib/inventory/sync-parent-product-stock";
+import { insertDefaultVariantForProduct } from "@/lib/products/variant-helpers";
 
 // Products from inventory spreadsheet – price in cents (retail)
 // Images: /images/store/{slug}.jpg (files named by slug in public/images/store)
@@ -306,6 +309,54 @@ async function seed() {
                         updatedAt: new Date(),
                     },
                 });
+
+            await db.transaction(async (tx) => {
+                const [prod] = await tx
+                    .select()
+                    .from(products)
+                    .where(eq(products.slug, p.slug))
+                    .limit(1);
+                if (!prod) return;
+
+                const [def] = await tx
+                    .select()
+                    .from(productVariants)
+                    .where(
+                        and(
+                            eq(productVariants.productId, prod.id),
+                            eq(productVariants.label, "Default"),
+                        ),
+                    )
+                    .limit(1);
+
+                if (def) {
+                    await tx
+                        .update(productVariants)
+                        .set({
+                            price: prod.price,
+                            compareAtPrice: prod.compareAtPrice,
+                            stockQuantity: 10,
+                            lowStockThreshold: 2,
+                            sku: prod.sku,
+                            stripePriceId: prod.stripePriceId,
+                            updatedAt: new Date(),
+                        })
+                        .where(eq(productVariants.id, def.id));
+                } else {
+                    await insertDefaultVariantForProduct(tx, {
+                        id: prod.id,
+                        name: prod.name,
+                        price: prod.price,
+                        compareAtPrice: prod.compareAtPrice,
+                        sku: prod.sku,
+                        stockQuantity: 10,
+                        lowStockThreshold: 2,
+                        stripePriceId: prod.stripePriceId,
+                    });
+                }
+
+                await syncParentProductStockFromVariants(tx, prod.id);
+            });
         } catch (e) {
             console.error(`Failed to seed ${p.slug}:`, e);
         }

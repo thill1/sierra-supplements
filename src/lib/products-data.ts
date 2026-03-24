@@ -4,7 +4,7 @@
  * production uses DB only unless `ALLOW_HARDCODED_CATALOG=true`).
  */
 
-import type { Product } from "@/types/store";
+import type { Product, ProductVariantPublic } from "@/types/store";
 
 /** @deprecated Use Product from @/types/store */
 export type HardcodedProduct = Product;
@@ -39,6 +39,20 @@ const RAW_PRODUCTS = [
     { slug: "l-carnitine-patriot-pop", name: "L-Carnitine - Patriot Pop", shortDescription: "L-Carnitine performance support", description: "L-Carnitine. Patriot pop flavor.", price: 2900, compareAtPrice: null, category: "fat-burners", published: true, featured: false },
 ];
 
+function syntheticVariant(
+    p: (typeof RAW_PRODUCTS)[number],
+): ProductVariantPublic[] {
+    return [
+        {
+            id: 0,
+            label: "Default",
+            price: p.price,
+            compareAtPrice: p.compareAtPrice,
+            stockQuantity: 999,
+        },
+    ];
+}
+
 // Images: /images/store/{slug}.jpg (files named by slug in public/images/store)
 export const HARDCODED_PRODUCTS: Product[] = RAW_PRODUCTS.map(
     (p, i) => ({
@@ -52,6 +66,7 @@ export const HARDCODED_PRODUCTS: Product[] = RAW_PRODUCTS.map(
         category: p.category,
         image: `/images/store/${p.slug}.jpg`,
         featured: p.featured,
+        variants: syntheticVariant(p),
     }),
 );
 

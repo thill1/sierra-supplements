@@ -10,6 +10,8 @@ const bodySchema = z.object({
         .array(
             z.object({
                 productId: z.number().int().positive(),
+                variantId: z.number().int().nonnegative(),
+                slug: z.string().min(1).max(200).optional(),
                 quantity: z.number().int().positive().max(99),
             }),
         )

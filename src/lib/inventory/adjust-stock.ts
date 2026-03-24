@@ -1,11 +1,12 @@
 import { eq } from "drizzle-orm";
 import { db, type DbTransaction } from "@/db";
-import { products, inventoryMovements } from "@/db/schema.pg";
+import { inventoryMovements, productVariants } from "@/db/schema.pg";
 import { writeAuditLog } from "@/lib/audit/write-audit";
 import type { InventorySource } from "@/lib/inventory/constants";
+import { syncParentProductStockFromVariants } from "@/lib/inventory/sync-parent-product-stock";
 
 export type StockChangeParams = {
-    productId: number;
+    variantId: number;
     delta: number;
     reason: string;
     source: InventorySource;
@@ -23,7 +24,8 @@ export class InsufficientStockError extends Error {
 }
 
 /**
- * Single transaction: lock row, apply delta, sync in_stock, insert movement + audit.
+ * Single transaction: lock variant row, apply delta, sync parent product stock,
+ * insert movement + audit.
  */
 export async function applyStockChange(
     params: StockChangeParams,
@@ -38,7 +40,7 @@ export async function applyStockChangeInTx(
     params: StockChangeParams,
 ): Promise<{ newQuantity: number }> {
     const {
-        productId,
+        variantId,
         delta,
         reason,
         source,
@@ -49,34 +51,35 @@ export async function applyStockChangeInTx(
 
     const [row] = await tx
         .select()
-        .from(products)
-        .where(eq(products.id, productId))
+        .from(productVariants)
+        .where(eq(productVariants.id, variantId))
         .for("update")
         .limit(1);
 
     if (!row) {
-        throw new Error("Product not found");
+        throw new Error("Variant not found");
     }
 
+    const productId = row.productId;
     const current = row.stockQuantity ?? 0;
     const next = current + delta;
     if (next < 0) {
         throw new InsufficientStockError();
     }
 
-    const inStock = next > 0;
-
     await tx
-        .update(products)
+        .update(productVariants)
         .set({
             stockQuantity: next,
-            inStock,
             updatedAt: new Date(),
         })
-        .where(eq(products.id, productId));
+        .where(eq(productVariants.id, variantId));
+
+    await syncParentProductStockFromVariants(tx, productId);
 
     await tx.insert(inventoryMovements).values({
         productId,
+        variantId,
         delta,
         reason,
         source,
@@ -90,8 +93,17 @@ export async function applyStockChangeInTx(
             entityType: "inventory",
             entityId: String(productId),
             action: "stock_change",
-            before: { stockQuantity: current, inStock: row.inStock },
-            after: { stockQuantity: next, inStock, delta, source, reason },
+            before: {
+                variantId,
+                stockQuantity: current,
+            },
+            after: {
+                variantId,
+                stockQuantity: next,
+                delta,
+                source,
+                reason,
+            },
         });
     }
 

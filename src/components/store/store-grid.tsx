@@ -2,31 +2,45 @@ import { ProductCard } from "./product-card";
 import { getHardcodedProducts } from "@/lib/products-data";
 import { allowHardcodedCatalogFallback } from "@/lib/catalog-policy";
 import { CatalogUnavailableError } from "@/lib/catalog-errors";
-import type { Product } from "@/types/store";
+import type { Product, ProductVariantPublic } from "@/types/store";
 
-function dbRowToProduct(row: {
-    id: number;
-    slug: string;
-    name: string;
-    shortDescription: string | null;
-    description: string;
-    price: number;
-    compareAtPrice: number | null;
-    category: string;
-    image: string | null;
-    featured: boolean | null;
-}): Product {
+function attachVariantsToProduct(
+    row: {
+        id: number;
+        slug: string;
+        name: string;
+        shortDescription: string | null;
+        description: string;
+        price: number;
+        compareAtPrice: number | null;
+        category: string;
+        image: string | null;
+        featured: boolean | null;
+    },
+    variants: ProductVariantPublic[],
+): Product {
+    const purchasable = variants.filter((v) => v.stockQuantity > 0);
+    const minPrice =
+        purchasable.length > 0
+            ? Math.min(...purchasable.map((v) => v.price))
+            : (variants[0]?.price ?? row.price);
+    const compares = purchasable
+        .map((v) => v.compareAtPrice)
+        .filter((c): c is number => c != null && c > minPrice);
+    const minCompare = compares.length > 0 ? Math.min(...compares) : null;
+
     return {
         id: row.id,
         slug: row.slug,
         name: row.name,
         shortDescription: row.shortDescription,
         description: row.description,
-        price: row.price,
-        compareAtPrice: row.compareAtPrice,
+        price: minPrice,
+        compareAtPrice: minCompare ?? row.compareAtPrice,
         category: row.category,
         image: row.image,
         featured: row.featured ?? false,
+        variants,
     };
 }
 
@@ -36,7 +50,8 @@ async function getProductsFromDb(
     try {
         const { db } = await import("@/db");
         const { products } = await import("@/db/schema");
-        const { eq, desc, and, gt } = await import("drizzle-orm");
+        const { eq, desc, and, gt, inArray, asc } = await import("drizzle-orm");
+        const { productVariants } = await import("@/db/schema");
         const conditions = [
             eq(products.published, true),
             eq(products.status, "active"),
@@ -48,7 +63,39 @@ async function getProductsFromDb(
             .from(products)
             .where(and(...conditions))
             .orderBy(desc(products.featured), desc(products.createdAt));
-        return { ok: true, products: rows.map(dbRowToProduct) };
+
+        if (rows.length === 0) {
+            return { ok: true, products: [] };
+        }
+
+        const pids = rows.map((r) => r.id);
+        const varRows = await db
+            .select()
+            .from(productVariants)
+            .where(inArray(productVariants.productId, pids))
+            .orderBy(
+                asc(productVariants.sortOrder),
+                asc(productVariants.id),
+            );
+
+        const byPid = new Map<number, ProductVariantPublic[]>();
+        for (const v of varRows) {
+            const list = byPid.get(v.productId) ?? [];
+            list.push({
+                id: v.id,
+                label: v.label,
+                price: v.price,
+                compareAtPrice: v.compareAtPrice,
+                stockQuantity: v.stockQuantity,
+            });
+            byPid.set(v.productId, list);
+        }
+
+        const productsOut = rows.map((r) =>
+            attachVariantsToProduct(r, byPid.get(r.id) ?? []),
+        );
+
+        return { ok: true, products: productsOut };
     } catch {
         return { ok: false };
     }

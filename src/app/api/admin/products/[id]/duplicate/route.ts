@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { products, productImages } from "@/db/schema";
+import { duplicateVariantsForProduct } from "@/lib/products/variant-helpers";
 import { eq } from "drizzle-orm";
 import { requireAdmin } from "@/lib/require-admin";
 import { requireMinRole } from "@/lib/admin-auth";
@@ -84,6 +85,8 @@ export async function POST(_request: Request, { params }: Params) {
                         altText: im.altText,
                     });
                 }
+
+                await duplicateVariantsForProduct(tx, productId, p.id);
 
                 await writeAuditLog(tx, {
                     actorUserId: admin.id,

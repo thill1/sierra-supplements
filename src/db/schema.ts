@@ -5,6 +5,7 @@ export {
     orders,
     orderItems,
     products,
+    productVariants,
     productImages,
     inventoryMovements,
     auditLogs,

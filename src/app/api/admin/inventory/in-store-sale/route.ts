@@ -8,7 +8,7 @@ import { applyStockChange, InsufficientStockError } from "@/lib/inventory/adjust
 import { logAdminFailure } from "@/lib/observability";
 
 const bodySchema = z.object({
-    productId: z.number().int().positive(),
+    variantId: z.number().int().positive(),
     quantity: z.number().int().positive().max(999),
     paymentMethod: z.string().max(80).optional().nullable(),
     note: z.string().max(1000).optional().nullable(),
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
         const note = noteParts.length ? noteParts.join(" — ") : null;
 
         const result = await applyStockChange({
-            productId: data.productId,
+            variantId: data.variantId,
             delta: -data.quantity,
             reason: "in_store_sale",
             source: INVENTORY_SOURCE.inStore,

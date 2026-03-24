@@ -18,6 +18,7 @@ export function AddToCartButton({
     const handleClick = () => {
         addItem({
             productId: product.id,
+            variantId: product.variantId,
             slug: product.slug,
             name: product.name,
             price: product.price,

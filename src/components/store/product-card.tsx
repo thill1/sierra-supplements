@@ -5,14 +5,46 @@ import Link from "next/link";
 import Image from "next/image";
 import { AddToCartButton } from "./add-to-cart-button";
 import { formatCategory } from "@/lib/store-categories";
-import type { Product } from "@/types/store";
+import type { Product, ProductVariantPublic } from "@/types/store";
+
+function pickDefaultVariant(
+    product: Product,
+): ProductVariantPublic | undefined {
+    const vars = product.variants ?? [];
+    return vars.find((x) => x.stockQuantity > 0) ?? vars[0];
+}
 
 export function ProductCard({ product }: { product: Product }) {
     const [imgError, setImgError] = useState(false);
+    const inStockVariants =
+        product.variants?.filter((v) => v.stockQuantity > 0) ?? [];
+    const distinctPrices = new Set(inStockVariants.map((v) => v.price));
+    const showFrom = distinctPrices.size > 1;
+
     const priceFormatted = (product.price / 100).toFixed(2);
     const compareFormatted = product.compareAtPrice
         ? (product.compareAtPrice / 100).toFixed(2)
         : null;
+
+    const v = pickDefaultVariant(product);
+    const lineName =
+        (product.variants?.length ?? 0) === 1 && v?.label === "Default"
+            ? product.name
+            : v
+              ? `${product.name} — ${v.label}`
+              : product.name;
+
+    const cartPayload =
+        v != null
+            ? {
+                  id: product.id,
+                  slug: product.slug,
+                  name: lineName,
+                  price: v.price,
+                  image: product.image,
+                  variantId: v.id,
+              }
+            : null;
 
     return (
         <div className="card group block overflow-hidden">
@@ -57,6 +89,11 @@ export function ProductCard({ product }: { product: Product }) {
                 </p>
 
                 <div className="flex items-baseline gap-2">
+                    {showFrom && (
+                        <span className="text-xs text-[var(--color-text-muted)]">
+                            From
+                        </span>
+                    )}
                     <span className="text-lg font-bold text-[var(--color-accent)]">
                         ${priceFormatted}
                     </span>
@@ -69,10 +106,17 @@ export function ProductCard({ product }: { product: Product }) {
             </div>
         </Link>
         <div className="px-4 pb-4" onClick={(e) => e.preventDefault()}>
-            <AddToCartButton
-                compact
-                product={product}
-            />
+            {cartPayload ? (
+                <AddToCartButton compact product={cartPayload} />
+            ) : (
+                <button
+                    type="button"
+                    disabled
+                    className="btn btn-primary text-sm py-1.5 px-3 w-full sm:w-auto opacity-50 cursor-not-allowed"
+                >
+                    Out of stock
+                </button>
+            )}
         </div>
         </div>
     );

@@ -5,10 +5,17 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { Package, ArrowLeft } from "lucide-react";
 
-type ProductOption = { id: number; name: string; stockQuantity: number };
+type VariantOption = {
+    variantId: number;
+    productId: number;
+    productName: string;
+    label: string;
+    stockQuantity: number;
+};
 type MovementRow = {
     id: number;
     productId: number;
+    variantId: number | null;
     productName: string;
     delta: number;
     reason: string;
@@ -18,41 +25,33 @@ type MovementRow = {
 };
 
 export default function AdminInventoryPage() {
-    const [products, setProducts] = useState<ProductOption[]>([]);
+    const [variants, setVariants] = useState<VariantOption[]>([]);
     const [movements, setMovements] = useState<MovementRow[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const [saleProductId, setSaleProductId] = useState("");
+    const [saleVariantId, setSaleVariantId] = useState("");
     const [saleQty, setSaleQty] = useState("1");
     const [salePay, setSalePay] = useState("");
     const [saleNote, setSaleNote] = useState("");
 
-    const [adjProductId, setAdjProductId] = useState("");
+    const [adjVariantId, setAdjVariantId] = useState("");
     const [adjDelta, setAdjDelta] = useState("");
     const [adjNote, setAdjNote] = useState("");
 
-    const [restProductId, setRestProductId] = useState("");
+    const [restVariantId, setRestVariantId] = useState("");
     const [restQty, setRestQty] = useState("");
     const [restNote, setRestNote] = useState("");
 
     const load = useCallback(async () => {
         setLoading(true);
         try {
-            const [pr, mv] = await Promise.all([
-                fetch("/api/admin/products"),
+            const [vo, mv] = await Promise.all([
+                fetch("/api/admin/inventory/variant-options"),
                 fetch("/api/admin/inventory/movements?limit=80"),
             ]);
-            const plist = await pr.json();
+            const vlist = await vo.json();
             const mlist = await mv.json();
-            setProducts(
-                Array.isArray(plist)
-                    ? plist.map((p: { id: number; name: string; stockQuantity: number }) => ({
-                          id: p.id,
-                          name: p.name,
-                          stockQuantity: p.stockQuantity ?? 0,
-                      }))
-                    : [],
-            );
+            setVariants(Array.isArray(vlist) ? vlist : []);
             setMovements(Array.isArray(mlist) ? mlist : []);
         } catch {
             toast.error("Could not load inventory data.");
@@ -67,10 +66,10 @@ export default function AdminInventoryPage() {
 
     async function postSale(e: React.FormEvent) {
         e.preventDefault();
-        const pid = parseInt(saleProductId, 10);
+        const vid = parseInt(saleVariantId, 10);
         const q = parseInt(saleQty, 10);
-        if (!Number.isFinite(pid) || !Number.isFinite(q)) {
-            toast.error("Choose a product and quantity.");
+        if (!Number.isFinite(vid) || !Number.isFinite(q)) {
+            toast.error("Choose a variant and quantity.");
             return;
         }
         try {
@@ -78,7 +77,7 @@ export default function AdminInventoryPage() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    productId: pid,
+                    variantId: vid,
                     quantity: q,
                     paymentMethod: salePay || null,
                     note: saleNote || null,
@@ -96,10 +95,10 @@ export default function AdminInventoryPage() {
 
     async function postAdjust(e: React.FormEvent) {
         e.preventDefault();
-        const pid = parseInt(adjProductId, 10);
+        const vid = parseInt(adjVariantId, 10);
         const d = parseInt(adjDelta, 10);
-        if (!Number.isFinite(pid) || !Number.isFinite(d) || d === 0) {
-            toast.error("Product and non-zero delta required.");
+        if (!Number.isFinite(vid) || !Number.isFinite(d) || d === 0) {
+            toast.error("Variant and non-zero delta required.");
             return;
         }
         try {
@@ -107,7 +106,7 @@ export default function AdminInventoryPage() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    productId: pid,
+                    variantId: vid,
                     delta: d,
                     note: adjNote || null,
                 }),
@@ -125,10 +124,10 @@ export default function AdminInventoryPage() {
 
     async function postRestock(e: React.FormEvent) {
         e.preventDefault();
-        const pid = parseInt(restProductId, 10);
+        const vid = parseInt(restVariantId, 10);
         const q = parseInt(restQty, 10);
-        if (!Number.isFinite(pid) || !Number.isFinite(q) || q <= 0) {
-            toast.error("Product and quantity required.");
+        if (!Number.isFinite(vid) || !Number.isFinite(q) || q <= 0) {
+            toast.error("Variant and quantity required.");
             return;
         }
         try {
@@ -136,7 +135,7 @@ export default function AdminInventoryPage() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    productId: pid,
+                    variantId: vid,
                     quantity: q,
                     note: restNote || null,
                 }),
@@ -170,7 +169,7 @@ export default function AdminInventoryPage() {
                 </p>
             </div>
 
-            {loading && products.length === 0 ? (
+            {loading && variants.length === 0 ? (
                 <p className="text-[var(--color-text-muted)]">Loading…</p>
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -179,13 +178,14 @@ export default function AdminInventoryPage() {
                         <select
                             className="input"
                             required
-                            value={saleProductId}
-                            onChange={(e) => setSaleProductId(e.target.value)}
+                            value={saleVariantId}
+                            onChange={(e) => setSaleVariantId(e.target.value)}
                         >
-                            <option value="">Select product</option>
-                            {products.map((p) => (
-                                <option key={p.id} value={p.id}>
-                                    {p.name} ({p.stockQuantity} on hand)
+                            <option value="">Select variant</option>
+                            {variants.map((v) => (
+                                <option key={v.variantId} value={v.variantId}>
+                                    {v.productName} — {v.label} ({v.stockQuantity}{" "}
+                                    on hand)
                                 </option>
                             ))}
                         </select>
@@ -221,13 +221,13 @@ export default function AdminInventoryPage() {
                         <select
                             className="input"
                             required
-                            value={adjProductId}
-                            onChange={(e) => setAdjProductId(e.target.value)}
+                            value={adjVariantId}
+                            onChange={(e) => setAdjVariantId(e.target.value)}
                         >
-                            <option value="">Select product</option>
-                            {products.map((p) => (
-                                <option key={p.id} value={p.id}>
-                                    {p.name}
+                            <option value="">Select variant</option>
+                            {variants.map((v) => (
+                                <option key={v.variantId} value={v.variantId}>
+                                    {v.productName} — {v.label}
                                 </option>
                             ))}
                         </select>
@@ -255,13 +255,13 @@ export default function AdminInventoryPage() {
                         <select
                             className="input"
                             required
-                            value={restProductId}
-                            onChange={(e) => setRestProductId(e.target.value)}
+                            value={restVariantId}
+                            onChange={(e) => setRestVariantId(e.target.value)}
                         >
-                            <option value="">Select product</option>
-                            {products.map((p) => (
-                                <option key={p.id} value={p.id}>
-                                    {p.name}
+                            <option value="">Select variant</option>
+                            {variants.map((v) => (
+                                <option key={v.variantId} value={v.variantId}>
+                                    {v.productName} — {v.label}
                                 </option>
                             ))}
                         </select>

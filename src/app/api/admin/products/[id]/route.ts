@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
-import { products, productCategories } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { products, productCategories, productVariants } from "@/db/schema";
+import { asc, eq } from "drizzle-orm";
+import { insertDefaultVariantForProduct } from "@/lib/products/variant-helpers";
+import { syncParentProductStockFromVariants } from "@/lib/inventory/sync-parent-product-stock";
 import { z } from "zod/v4";
 import { requireAdmin } from "@/lib/require-admin";
 import { requireMinRole } from "@/lib/admin-auth";
@@ -36,7 +38,17 @@ export async function GET(_request: Request, { params }: Params) {
         if (!product) {
             return NextResponse.json({ error: "Product not found" }, { status: 404 });
         }
-        return NextResponse.json(product);
+
+        const variants = await db
+            .select()
+            .from(productVariants)
+            .where(eq(productVariants.productId, productId))
+            .orderBy(
+                asc(productVariants.sortOrder),
+                asc(productVariants.id),
+            );
+
+        return NextResponse.json({ ...product, variants });
     } catch (error) {
         logAdminFailure("product_get", error);
         return NextResponse.json(
@@ -131,6 +143,15 @@ export async function PUT(request: Request, { params }: Params) {
             patch.stripePriceId = data.stripePriceId;
         }
 
+        const variantRows = await db
+            .select({ id: productVariants.id })
+            .from(productVariants)
+            .where(eq(productVariants.productId, productId));
+
+        if (variantRows.length > 1 && data.stockQuantity != null) {
+            delete patch.stockQuantity;
+        }
+
         if (data.stockQuantity != null || data.inStock != null) {
             const nextQty =
                 (patch.stockQuantity as number | undefined) ??
@@ -151,13 +172,71 @@ export async function PUT(request: Request, { params }: Params) {
                 .returning();
 
             if (p) {
+                const vrows = await tx
+                    .select({ id: productVariants.id })
+                    .from(productVariants)
+                    .where(eq(productVariants.productId, productId));
+
+                if (vrows.length === 0) {
+                    await insertDefaultVariantForProduct(tx, {
+                        id: p.id,
+                        name: p.name,
+                        price: p.price,
+                        compareAtPrice: p.compareAtPrice ?? null,
+                        sku: p.sku ?? null,
+                        stockQuantity: p.stockQuantity,
+                        lowStockThreshold: p.lowStockThreshold,
+                        stripePriceId: p.stripePriceId ?? null,
+                    });
+                } else if (vrows.length === 1) {
+                    const vid = vrows[0]!.id;
+                    const vpatch: Partial<typeof productVariants.$inferInsert> = {
+                        updatedAt: new Date(),
+                    };
+                    if (data.stockQuantity != null) {
+                        vpatch.stockQuantity = data.stockQuantity;
+                    }
+                    if (data.price != null) {
+                        vpatch.price = dollarsToCents(data.price);
+                    }
+                    if (data.compareAtPrice !== undefined) {
+                        vpatch.compareAtPrice =
+                            data.compareAtPrice != null
+                                ? dollarsToCents(data.compareAtPrice)
+                                : null;
+                    }
+                    if (data.sku !== undefined) {
+                        vpatch.sku = data.sku;
+                    }
+                    if (data.stripePriceId !== undefined) {
+                        vpatch.stripePriceId = data.stripePriceId;
+                    }
+                    if (data.lowStockThreshold != null) {
+                        vpatch.lowStockThreshold = data.lowStockThreshold;
+                    }
+                    if (Object.keys(vpatch).length > 1) {
+                        await tx
+                            .update(productVariants)
+                            .set(vpatch)
+                            .where(eq(productVariants.id, vid));
+                    }
+                }
+
+                await syncParentProductStockFromVariants(tx, productId);
+
+                const [afterRow] = await tx
+                    .select()
+                    .from(products)
+                    .where(eq(products.id, productId))
+                    .limit(1);
+
                 await writeAuditLog(tx, {
                     actorUserId: admin.id,
                     entityType: "product",
                     entityId: String(productId),
                     action: "update",
                     before,
-                    after: p,
+                    after: afterRow ?? p,
                 });
             }
             return [p];

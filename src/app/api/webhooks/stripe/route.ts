@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { orders, orderItems, products } from "@/db/schema";
+import { orders, orderItems, products, productVariants } from "@/db/schema";
 import { applyStockChangeInTx } from "@/lib/inventory/adjust-stock";
 import { INVENTORY_SOURCE } from "@/lib/inventory/constants";
 import { writeAuditLog } from "@/lib/audit/write-audit";
@@ -13,6 +13,7 @@ export const runtime = "nodejs";
 
 function parseItemsJson(raw: string | null | undefined): {
     productId: number;
+    variantId: number;
     quantity: number;
 }[] {
     if (!raw) return [];
@@ -33,17 +34,29 @@ function parseItemsJson(raw: string | null | undefined): {
                     const quantity = Number(
                         (row as { quantity: unknown }).quantity,
                     );
+                    const variantIdRaw = (row as { variantId?: unknown })
+                        .variantId;
+                    const variantId =
+                        variantIdRaw !== undefined
+                            ? Number(variantIdRaw)
+                            : NaN;
                     if (
                         Number.isFinite(productId) &&
                         Number.isFinite(quantity) &&
-                        quantity > 0
+                        quantity > 0 &&
+                        Number.isFinite(variantId) &&
+                        variantId > 0
                     ) {
-                        return { productId, quantity };
+                        return { productId, variantId, quantity };
                     }
                 }
                 return null;
             })
-            .filter(Boolean) as { productId: number; quantity: number }[];
+            .filter(Boolean) as {
+            productId: number;
+            variantId: number;
+            quantity: number;
+        }[];
     } catch {
         return [];
     }
@@ -78,19 +91,30 @@ async function fulfillCheckoutSessionCompleted(
             "unknown@customer.local";
         const name = session.customer_details?.name ?? null;
 
-        const productIds = [...new Set(items.map((i) => i.productId))];
-        const catalog = await db
-            .select()
-            .from(products)
-            .where(inArray(products.id, productIds));
-        const byId = new Map(catalog.map((p) => [p.id, p]));
-        if (catalog.length !== productIds.length) {
-            throw new Error("One or more products are no longer available");
+        const variantIds = [...new Set(items.map((i) => i.variantId))];
+        const variantRows = await db
+            .select({
+                variant: productVariants,
+                product: products,
+            })
+            .from(productVariants)
+            .innerJoin(products, eq(productVariants.productId, products.id))
+            .where(inArray(productVariants.id, variantIds));
+
+        const byVariantId = new Map(
+            variantRows.map((r) => [r.variant.id, r]),
+        );
+        const slugByProductId = new Map(
+            variantRows.map((r) => [r.product.id, r.product.slug]),
+        );
+        if (variantRows.length !== variantIds.length) {
+            throw new Error("One or more variants are no longer available");
         }
 
         let subtotal = 0;
         const lines: {
             productId: number;
+            variantId: number;
             name: string;
             sku: string | null;
             unitPrice: number;
@@ -99,17 +123,23 @@ async function fulfillCheckoutSessionCompleted(
         }[] = [];
 
         for (const line of items) {
-            const p = byId.get(line.productId);
-            if (!p) {
-                throw new Error(`Missing product ${line.productId}`);
+            const row = byVariantId.get(line.variantId);
+            if (!row) {
+                throw new Error(`Missing variant ${line.variantId}`);
             }
-            const lineTotal = p.price * line.quantity;
+            const { variant: v, product: p } = row;
+            if (p.id !== line.productId) {
+                throw new Error("Line product/variant mismatch");
+            }
+            const displayName = `${p.name} — ${v.label}`;
+            const lineTotal = v.price * line.quantity;
             subtotal += lineTotal;
             lines.push({
                 productId: p.id,
-                name: p.name,
-                sku: p.sku ?? null,
-                unitPrice: p.price,
+                variantId: v.id,
+                name: displayName,
+                sku: v.sku ?? null,
+                unitPrice: v.price,
                 quantity: line.quantity,
                 lineTotal,
             });
@@ -131,7 +161,7 @@ async function fulfillCheckoutSessionCompleted(
                     zip: session.customer_details?.address?.postal_code ?? null,
                     items: JSON.stringify(
                         lines.map((l) => ({
-                            slug: byId.get(l.productId)?.slug,
+                            slug: slugByProductId.get(l.productId) ?? null,
                             name: l.name,
                             price: l.unitPrice,
                             quantity: l.quantity,
@@ -151,6 +181,7 @@ async function fulfillCheckoutSessionCompleted(
                 await tx.insert(orderItems).values({
                     orderId: order.id,
                     productId: l.productId,
+                    variantId: l.variantId,
                     productName: l.name,
                     sku: l.sku,
                     unitPrice: l.unitPrice,
@@ -159,7 +190,7 @@ async function fulfillCheckoutSessionCompleted(
                 });
 
                 await applyStockChangeInTx(tx, {
-                    productId: l.productId,
+                    variantId: l.variantId,
                     delta: -l.quantity,
                     reason: "stripe_checkout",
                     source: INVENTORY_SOURCE.webSale,

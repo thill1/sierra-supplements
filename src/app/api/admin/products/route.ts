@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { products, productCategories } from "@/db/schema";
+import { insertDefaultVariantForProduct } from "@/lib/products/variant-helpers";
 import { and, desc, eq, ilike, lte, or, sql, type SQL } from "drizzle-orm";
 import { z } from "zod/v4";
 import { requireAdmin } from "@/lib/require-admin";
@@ -137,6 +138,16 @@ export async function POST(request: Request) {
                 .returning();
 
             if (p) {
+                await insertDefaultVariantForProduct(tx, {
+                    id: p.id,
+                    name: p.name,
+                    price: p.price,
+                    compareAtPrice: p.compareAtPrice ?? null,
+                    sku: p.sku ?? null,
+                    stockQuantity: p.stockQuantity,
+                    lowStockThreshold: p.lowStockThreshold,
+                    stripePriceId: p.stripePriceId ?? null,
+                });
                 await writeAuditLog(tx, {
                     actorUserId: admin.id,
                     entityType: "product",

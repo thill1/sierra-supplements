@@ -7,21 +7,33 @@ import {
 } from "@/lib/inventory/adjust-stock";
 import { INVENTORY_SOURCE } from "@/lib/inventory/constants";
 
-function mockTx(initial: {
-    id: number;
-    stockQuantity: number;
-    inStock: boolean | null;
-}) {
+/** Minimal tx mock for variant-based stock + sum sync + inserts. */
+function mockVariantTx(initialStock: number) {
     const inserts: { table: unknown; values: unknown }[] = [];
+    let whereCall = 0;
 
     const tx = {
         select: () => ({
             from: () => ({
-                where: () => ({
-                    for: () => ({
-                        limit: () => Promise.resolve([{ ...initial }]),
-                    }),
-                }),
+                where: () => {
+                    whereCall += 1;
+                    if (whereCall === 1) {
+                        return {
+                            for: () => ({
+                                limit: () =>
+                                    Promise.resolve([
+                                        {
+                                            id: 7,
+                                            productId: 9,
+                                            stockQuantity: initialStock,
+                                            label: "Default",
+                                        },
+                                    ]),
+                            }),
+                        };
+                    }
+                    return Promise.resolve([{ sum: initialStock - 3 }]);
+                },
             }),
         }),
         update: () => ({
@@ -41,16 +53,12 @@ function mockTx(initial: {
     return tx as unknown as { _inserts: typeof inserts } & DbTransaction;
 }
 
-describe("applyStockChangeInTx", () => {
-    it("updates stock, records movement and audit", async () => {
-        const tx = mockTx({
-            id: 9,
-            stockQuantity: 10,
-            inStock: true,
-        });
+describe("applyStockChangeInTx (variants)", () => {
+    it("updates variant stock, syncs parent, records movement and audit", async () => {
+        const tx = mockVariantTx(10);
 
         const { newQuantity } = await applyStockChangeInTx(tx, {
-            productId: 9,
+            variantId: 7,
             delta: -3,
             reason: "test",
             source: INVENTORY_SOURCE.adjustment,
@@ -62,6 +70,7 @@ describe("applyStockChangeInTx", () => {
         expect(tx._inserts[0].table).toBe(inventoryMovements);
         expect(tx._inserts[0].values).toMatchObject({
             productId: 9,
+            variantId: 7,
             delta: -3,
             source: INVENTORY_SOURCE.adjustment,
             actorUserId: 2,
@@ -70,15 +79,11 @@ describe("applyStockChangeInTx", () => {
     });
 
     it("throws when stock would go negative", async () => {
-        const tx = mockTx({
-            id: 1,
-            stockQuantity: 1,
-            inStock: true,
-        });
+        const tx = mockVariantTx(1);
 
         await expect(
             applyStockChangeInTx(tx, {
-                productId: 1,
+                variantId: 7,
                 delta: -5,
                 reason: "oversell",
                 source: INVENTORY_SOURCE.admin,
@@ -87,15 +92,22 @@ describe("applyStockChangeInTx", () => {
         ).rejects.toBeInstanceOf(InsufficientStockError);
     });
 
-    it("throws when product is missing", async () => {
+    it("throws when variant is missing", async () => {
+        let whereCall = 0;
         const tx = {
             select: () => ({
                 from: () => ({
-                    where: () => ({
-                        for: () => ({
-                            limit: () => Promise.resolve([]),
-                        }),
-                    }),
+                    where: () => {
+                        whereCall += 1;
+                        if (whereCall === 1) {
+                            return {
+                                for: () => ({
+                                    limit: () => Promise.resolve([]),
+                                }),
+                            };
+                        }
+                        return Promise.resolve([{ sum: 0 }]);
+                    },
                 }),
             }),
             update: () => ({
@@ -110,13 +122,12 @@ describe("applyStockChangeInTx", () => {
 
         await expect(
             applyStockChangeInTx(tx, {
-                productId: 999,
+                variantId: 999,
                 delta: 1,
                 reason: "x",
                 source: INVENTORY_SOURCE.restock,
                 actorUserId: null,
             }),
-        ).rejects.toThrow("Product not found");
+        ).rejects.toThrow("Variant not found");
     });
-
 });

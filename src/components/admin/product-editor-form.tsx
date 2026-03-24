@@ -3,7 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ChevronDown, ChevronRight, Copy } from "lucide-react";
+import {
+    ArrowLeft,
+    ChevronDown,
+    ChevronRight,
+    Copy,
+    Plus,
+    Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { STORE_CATEGORIES } from "@/lib/store-categories";
 import { ProductImageUpload } from "@/components/admin/product-image-upload";
@@ -41,6 +48,18 @@ export type ProductEditorValues = {
     featured: boolean;
 };
 
+export type VariantEditorRow = {
+    id?: number;
+    label: string;
+    price: string;
+    compareAtPrice: string;
+    sku: string;
+    stockQuantity: string;
+    lowStockThreshold: string;
+    stripePriceId: string;
+    sortOrder: string;
+};
+
 const emptyValues = (): ProductEditorValues => ({
     slug: "",
     name: "",
@@ -66,9 +85,15 @@ const emptyValues = (): ProductEditorValues => ({
 type Props = {
     productId: number | null;
     initial?: Partial<ProductEditorValues> | null;
+    /** Edit only: loaded from GET product (including default variant). */
+    initialVariants?: VariantEditorRow[];
 };
 
-export function ProductEditorForm({ productId, initial }: Props) {
+export function ProductEditorForm({
+    productId,
+    initial,
+    initialVariants = [],
+}: Props) {
     const router = useRouter();
     const [form, setForm] = useState<ProductEditorValues>(
         () => ({ ...emptyValues(), ...initial }),
@@ -77,12 +102,35 @@ export function ProductEditorForm({ productId, initial }: Props) {
     const [advancedOpen, setAdvancedOpen] = useState(false);
     const [saving, setSaving] = useState(false);
     const [stagingUrls, setStagingUrls] = useState<string[]>([]);
+    const [variants, setVariants] = useState<VariantEditorRow[]>([]);
 
     useEffect(() => {
         if (initial) {
             setForm((f) => ({ ...f, ...initial }));
         }
     }, [initial]);
+
+    useEffect(() => {
+        if (productId != null) {
+            setVariants(
+                initialVariants.length > 0
+                    ? initialVariants
+                    : [
+                          {
+                              label: "Default",
+                              price: initial?.price ?? "0",
+                              compareAtPrice: initial?.compareAtPrice ?? "",
+                              sku: initial?.sku ?? "",
+                              stockQuantity: initial?.stockQuantity ?? "0",
+                              lowStockThreshold:
+                                  initial?.lowStockThreshold ?? "2",
+                              stripePriceId: initial?.stripePriceId ?? "",
+                              sortOrder: "0",
+                          },
+                      ],
+            );
+        }
+    }, [productId, initialVariants, initial]);
 
     useEffect(() => {
         if (productId != null) {
@@ -98,6 +146,7 @@ export function ProductEditorForm({ productId, initial }: Props) {
     }, [form.name, slugManual, productId]);
 
     const isEdit = productId != null;
+    const multiVariant = isEdit && variants.length > 1;
 
     const payload = useMemo(() => {
         const stockQty = parseInt(form.stockQuantity, 10);
@@ -141,6 +190,90 @@ export function ProductEditorForm({ productId, initial }: Props) {
                     const err = await res.json().catch(() => ({}));
                     throw new Error(err.error || "Save failed");
                 }
+
+                const variantPayload = {
+                    variants: variants.map((v, idx) => ({
+                        id: v.id,
+                        label: v.label.trim() || "Variant",
+                        price: parseFloat(v.price) || 0,
+                        compareAtPrice: v.compareAtPrice.trim()
+                            ? parseFloat(v.compareAtPrice)
+                            : null,
+                        sku: v.sku.trim() || null,
+                        stockQuantity: Number.isFinite(
+                            parseInt(v.stockQuantity, 10),
+                        )
+                            ? parseInt(v.stockQuantity, 10)
+                            : 0,
+                        lowStockThreshold: Number.isFinite(
+                            parseInt(v.lowStockThreshold, 10),
+                        )
+                            ? parseInt(v.lowStockThreshold, 10)
+                            : 2,
+                        stripePriceId: v.stripePriceId.trim() || null,
+                        sortOrder: Number.isFinite(parseInt(v.sortOrder, 10))
+                            ? parseInt(v.sortOrder, 10)
+                            : idx,
+                    })),
+                };
+
+                const resVar = await fetch(
+                    `/api/admin/products/${productId}/variants`,
+                    {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(variantPayload),
+                    },
+                );
+                type VariantsRes = {
+                    variants: Array<{
+                        id: number;
+                        label: string;
+                        price: number;
+                        compareAtPrice: number | null;
+                        sku: string | null;
+                        stockQuantity: number;
+                        lowStockThreshold: number;
+                        stripePriceId: string | null;
+                        sortOrder: number;
+                    }>;
+                };
+
+                let data: VariantsRes | null = null;
+                if (!resVar.ok) {
+                    if (resVar.status === 403) {
+                        toast.warning(
+                            "Product saved. Updating variants requires a manager role.",
+                        );
+                    } else {
+                        const err = await resVar.json().catch(() => ({}));
+                        throw new Error(
+                            err.error || "Saved product but variants failed",
+                        );
+                    }
+                } else {
+                    data = (await resVar.json()) as VariantsRes;
+                }
+
+                if (data?.variants?.length) {
+                    setVariants(
+                        data.variants.map((row, i) => ({
+                            id: row.id,
+                            label: row.label,
+                            price: (row.price / 100).toFixed(2),
+                            compareAtPrice:
+                                row.compareAtPrice != null
+                                    ? (row.compareAtPrice / 100).toFixed(2)
+                                    : "",
+                            sku: row.sku ?? "",
+                            stockQuantity: String(row.stockQuantity),
+                            lowStockThreshold: String(row.lowStockThreshold),
+                            stripePriceId: row.stripePriceId ?? "",
+                            sortOrder: String(row.sortOrder ?? i),
+                        })),
+                    );
+                }
+
                 toast.success("Product saved.");
                 router.refresh();
             } else {
@@ -395,6 +528,13 @@ export function ProductEditorForm({ productId, initial }: Props) {
                     <h3 className="font-semibold text-sm uppercase tracking-wide text-[var(--color-text-muted)]">
                         Inventory
                     </h3>
+                    {multiVariant && (
+                        <p className="text-sm text-[var(--color-text-muted)]">
+                            This product has multiple variants. Stock and
+                            low-stock alerts are set per variant below; product
+                            totals stay in sync automatically.
+                        </p>
+                    )}
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium mb-1.5">
@@ -403,8 +543,9 @@ export function ProductEditorForm({ productId, initial }: Props) {
                             <input
                                 type="number"
                                 min={0}
-                                className="input"
+                                className={`input ${multiVariant ? "opacity-60 cursor-not-allowed" : ""}`}
                                 value={form.stockQuantity}
+                                readOnly={multiVariant}
                                 onChange={(e) =>
                                     setForm({
                                         ...form,
@@ -420,8 +561,9 @@ export function ProductEditorForm({ productId, initial }: Props) {
                             <input
                                 type="number"
                                 min={0}
-                                className="input"
+                                className={`input ${multiVariant ? "opacity-60 cursor-not-allowed" : ""}`}
                                 value={form.lowStockThreshold}
+                                readOnly={multiVariant}
                                 onChange={(e) =>
                                     setForm({
                                         ...form,
@@ -431,10 +573,13 @@ export function ProductEditorForm({ productId, initial }: Props) {
                             />
                         </div>
                     </div>
-                    <label className="flex items-center gap-2 cursor-pointer">
+                    <label
+                        className={`flex items-center gap-2 ${multiVariant ? "opacity-60 pointer-events-none" : "cursor-pointer"}`}
+                    >
                         <input
                             type="checkbox"
                             checked={form.inStock}
+                            disabled={multiVariant}
                             onChange={(e) =>
                                 setForm({ ...form, inStock: e.target.checked })
                             }
@@ -446,6 +591,279 @@ export function ProductEditorForm({ productId, initial }: Props) {
                         change is logged.
                     </p>
                 </section>
+
+                {isEdit && (
+                    <section className="card space-y-4 p-6">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                            <h3 className="font-semibold text-sm uppercase tracking-wide text-[var(--color-text-muted)]">
+                                Variants (flavor / size)
+                            </h3>
+                            <button
+                                type="button"
+                                className="btn btn-secondary text-sm inline-flex items-center gap-1"
+                                onClick={() =>
+                                    setVariants((prev) => [
+                                        ...prev,
+                                        {
+                                            label: "New option",
+                                            price: form.price || "0",
+                                            compareAtPrice:
+                                                form.compareAtPrice || "",
+                                            sku: "",
+                                            stockQuantity: "0",
+                                            lowStockThreshold: "2",
+                                            stripePriceId: "",
+                                            sortOrder: String(prev.length),
+                                        },
+                                    ])
+                                }
+                            >
+                                <Plus className="w-4 h-4" /> Add variant
+                            </button>
+                        </div>
+                        <p className="text-xs text-[var(--color-text-muted)]">
+                            Each variant has its own price, SKU, Stripe price ID,
+                            and stock. Customers pick one on the product page.
+                        </p>
+                        <div className="space-y-6">
+                            {variants.map((v, idx) => (
+                                <div
+                                    key={v.id ?? `new-${idx}`}
+                                    className="rounded-lg border border-[var(--color-border-subtle)] p-4 space-y-3"
+                                >
+                                    <div className="flex items-center justify-between gap-2">
+                                        <span className="text-xs font-medium uppercase text-[var(--color-text-muted)]">
+                                            Variant {idx + 1}
+                                        </span>
+                                        {variants.length > 1 && (
+                                            <button
+                                                type="button"
+                                                className="text-[var(--color-error)] p-1 rounded hover:bg-[var(--color-error)]/10"
+                                                aria-label="Remove variant"
+                                                onClick={() =>
+                                                    setVariants((prev) =>
+                                                        prev.filter(
+                                                            (_, i) => i !== idx,
+                                                        ),
+                                                    )
+                                                }
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div className="sm:col-span-2">
+                                            <label className="block text-xs font-medium mb-1">
+                                                Label (shown to customers) *
+                                            </label>
+                                            <input
+                                                type="text"
+                                                className="input text-sm"
+                                                value={v.label}
+                                                onChange={(e) =>
+                                                    setVariants((prev) =>
+                                                        prev.map((row, i) =>
+                                                            i === idx
+                                                                ? {
+                                                                      ...row,
+                                                                      label: e
+                                                                          .target
+                                                                          .value,
+                                                                  }
+                                                                : row,
+                                                        ),
+                                                    )
+                                                }
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium mb-1">
+                                                Price ($) *
+                                            </label>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                className="input text-sm"
+                                                value={v.price}
+                                                onChange={(e) =>
+                                                    setVariants((prev) =>
+                                                        prev.map((row, i) =>
+                                                            i === idx
+                                                                ? {
+                                                                      ...row,
+                                                                      price: e
+                                                                          .target
+                                                                          .value,
+                                                                  }
+                                                                : row,
+                                                        ),
+                                                    )
+                                                }
+                                                required
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium mb-1">
+                                                Compare at ($)
+                                            </label>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                className="input text-sm"
+                                                value={v.compareAtPrice}
+                                                onChange={(e) =>
+                                                    setVariants((prev) =>
+                                                        prev.map((row, i) =>
+                                                            i === idx
+                                                                ? {
+                                                                      ...row,
+                                                                      compareAtPrice:
+                                                                          e
+                                                                              .target
+                                                                              .value,
+                                                                  }
+                                                                : row,
+                                                        ),
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium mb-1">
+                                                SKU
+                                            </label>
+                                            <input
+                                                type="text"
+                                                className="input text-sm"
+                                                value={v.sku}
+                                                onChange={(e) =>
+                                                    setVariants((prev) =>
+                                                        prev.map((row, i) =>
+                                                            i === idx
+                                                                ? {
+                                                                      ...row,
+                                                                      sku: e
+                                                                          .target
+                                                                          .value,
+                                                                  }
+                                                                : row,
+                                                        ),
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium mb-1">
+                                                Sort order
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                className="input text-sm"
+                                                value={v.sortOrder}
+                                                onChange={(e) =>
+                                                    setVariants((prev) =>
+                                                        prev.map((row, i) =>
+                                                            i === idx
+                                                                ? {
+                                                                      ...row,
+                                                                      sortOrder:
+                                                                          e
+                                                                              .target
+                                                                              .value,
+                                                                  }
+                                                                : row,
+                                                        ),
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium mb-1">
+                                                Stock quantity
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                className="input text-sm"
+                                                value={v.stockQuantity}
+                                                onChange={(e) =>
+                                                    setVariants((prev) =>
+                                                        prev.map((row, i) =>
+                                                            i === idx
+                                                                ? {
+                                                                      ...row,
+                                                                      stockQuantity:
+                                                                          e
+                                                                              .target
+                                                                              .value,
+                                                                  }
+                                                                : row,
+                                                        ),
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium mb-1">
+                                                Low stock alert at
+                                            </label>
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                className="input text-sm"
+                                                value={v.lowStockThreshold}
+                                                onChange={(e) =>
+                                                    setVariants((prev) =>
+                                                        prev.map((row, i) =>
+                                                            i === idx
+                                                                ? {
+                                                                      ...row,
+                                                                      lowStockThreshold:
+                                                                          e
+                                                                              .target
+                                                                              .value,
+                                                                  }
+                                                                : row,
+                                                        ),
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                        <div className="sm:col-span-2">
+                                            <label className="block text-xs font-medium mb-1">
+                                                Stripe Price ID
+                                            </label>
+                                            <input
+                                                type="text"
+                                                className="input text-sm font-mono"
+                                                placeholder="price_..."
+                                                value={v.stripePriceId}
+                                                onChange={(e) =>
+                                                    setVariants((prev) =>
+                                                        prev.map((row, i) =>
+                                                            i === idx
+                                                                ? {
+                                                                      ...row,
+                                                                      stripePriceId:
+                                                                          e
+                                                                              .target
+                                                                              .value,
+                                                                  }
+                                                                : row,
+                                                        ),
+                                                    )
+                                                }
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
 
                 <section className="card space-y-4 p-6">
                     <h3 className="font-semibold text-sm uppercase tracking-wide text-[var(--color-text-muted)]">

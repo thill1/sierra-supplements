@@ -8,7 +8,7 @@ import { applyStockChange } from "@/lib/inventory/adjust-stock";
 import { logAdminFailure } from "@/lib/observability";
 
 const bodySchema = z.object({
-    productId: z.number().int().positive(),
+    variantId: z.number().int().positive(),
     quantity: z.number().int().positive().max(9999),
     note: z.string().max(1000).optional().nullable(),
 });
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
         const data = bodySchema.parse(json);
 
         const result = await applyStockChange({
-            productId: data.productId,
+            variantId: data.variantId,
             delta: data.quantity,
             reason: "restock",
             source: INVENTORY_SOURCE.restock,

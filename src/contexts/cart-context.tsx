@@ -11,6 +11,7 @@ import {
 
 export type CartItem = {
     productId: number;
+    variantId: number;
     slug: string;
     name: string;
     price: number;
@@ -18,11 +19,19 @@ export type CartItem = {
     quantity: number;
 };
 
+function lineKey(productId: number, variantId: number) {
+    return `${productId}:${variantId}`;
+}
+
 type CartContextValue = {
     items: CartItem[];
     addItem: (item: Omit<CartItem, "quantity">, quantity?: number) => void;
-    removeItem: (productId: number) => void;
-    updateQuantity: (productId: number, quantity: number) => void;
+    removeItem: (productId: number, variantId: number) => void;
+    updateQuantity: (
+        productId: number,
+        variantId: number,
+        quantity: number,
+    ) => void;
     clearCart: () => void;
     itemCount: number;
     subtotal: number;
@@ -32,13 +41,46 @@ const CART_STORAGE_KEY = "sierra_cart";
 
 const CartContext = createContext<CartContextValue | null>(null);
 
+function normalizeCartItem(raw: unknown): CartItem | null {
+    if (!raw || typeof raw !== "object") return null;
+    const o = raw as Record<string, unknown>;
+    const productId = Number(o.productId);
+    const quantity = Number(o.quantity);
+    const variantId = Number(o.variantId);
+    if (
+        !Number.isFinite(productId) ||
+        !Number.isFinite(quantity) ||
+        quantity < 1
+    ) {
+        return null;
+    }
+    if (!Number.isFinite(variantId)) return null;
+    const slug = typeof o.slug === "string" ? o.slug : "";
+    const name = typeof o.name === "string" ? o.name : "";
+    const price = Number(o.price);
+    const image = o.image === null || typeof o.image === "string" ? o.image : null;
+    if (!Number.isFinite(price)) return null;
+    return {
+        productId,
+        variantId,
+        slug,
+        name,
+        price,
+        image,
+        quantity,
+    };
+}
+
 function loadCart(): CartItem[] {
     if (typeof window === "undefined") return [];
     try {
         const raw = localStorage.getItem(CART_STORAGE_KEY);
         if (!raw) return [];
         const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed : [];
+        if (!Array.isArray(parsed)) return [];
+        return parsed
+            .map(normalizeCartItem)
+            .filter(Boolean) as CartItem[];
     } catch {
         return [];
     }
@@ -67,31 +109,46 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const addItem = useCallback(
         (item: Omit<CartItem, "quantity">, quantity = 1) => {
             setItems((prev) => {
-                const existing = prev.find((i) => i.productId === item.productId);
+                const k = lineKey(item.productId, item.variantId);
+                const existing = prev.find(
+                    (i) => lineKey(i.productId, i.variantId) === k,
+                );
                 if (existing) {
                     return prev.map((i) =>
-                        i.productId === item.productId
+                        lineKey(i.productId, i.variantId) === k
                             ? { ...i, quantity: i.quantity + quantity }
-                            : i
+                            : i,
                     );
                 }
                 return [...prev, { ...item, quantity }];
             });
         },
-        []
+        [],
     );
 
-    const removeItem = useCallback((productId: number) => {
-        setItems((prev) => prev.filter((i) => i.productId !== productId));
-    }, []);
-
-    const updateQuantity = useCallback((productId: number, quantity: number) => {
+    const removeItem = useCallback((productId: number, variantId: number) => {
         setItems((prev) =>
-            prev
-                .map((i) => (i.productId === productId ? { ...i, quantity } : i))
-                .filter((i) => i.quantity > 0)
+            prev.filter(
+                (i) => lineKey(i.productId, i.variantId) !== lineKey(productId, variantId),
+            ),
         );
     }, []);
+
+    const updateQuantity = useCallback(
+        (productId: number, variantId: number, quantity: number) => {
+            setItems((prev) =>
+                prev
+                    .map((i) =>
+                        lineKey(i.productId, i.variantId) ===
+                        lineKey(productId, variantId)
+                            ? { ...i, quantity }
+                            : i,
+                    )
+                    .filter((i) => i.quantity > 0),
+            );
+        },
+        [],
+    );
 
     const clearCart = useCallback(() => setItems([]), []);
 

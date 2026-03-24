@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { inventoryMovements, products } from "@/db/schema";
+import {
+    inventoryMovements,
+    products,
+    productVariants,
+} from "@/db/schema";
 import { requireAdmin } from "@/lib/require-admin";
 import { logAdminFailure } from "@/lib/observability";
 
@@ -24,7 +28,8 @@ export async function GET(request: Request) {
             .select({
                 id: inventoryMovements.id,
                 productId: inventoryMovements.productId,
-                productName: products.name,
+                variantId: inventoryMovements.variantId,
+                productName: sql<string>`CASE WHEN ${productVariants.id} IS NOT NULL THEN ${products.name} || ' — ' || ${productVariants.label} ELSE ${products.name} END`,
                 delta: inventoryMovements.delta,
                 reason: inventoryMovements.reason,
                 source: inventoryMovements.source,
@@ -33,9 +38,13 @@ export async function GET(request: Request) {
             })
             .from(inventoryMovements)
             .innerJoin(products, eq(inventoryMovements.productId, products.id))
+            .leftJoin(
+                productVariants,
+                eq(inventoryMovements.variantId, productVariants.id),
+            )
             .where(
                 filterProduct
-                    ? eq(inventoryMovements.productId, pid)
+                    ? and(eq(inventoryMovements.productId, pid))
                     : undefined,
             )
             .orderBy(desc(inventoryMovements.createdAt))

@@ -49,7 +49,7 @@ export default function CartPage() {
                     <div className="lg:col-span-2 space-y-4">
                         {items.map((item) => (
                             <div
-                                key={item.productId}
+                                key={`${item.productId}-${item.variantId}`}
                                 className="card flex flex-wrap gap-4 p-4"
                             >
                                 <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg bg-[var(--color-surface)] flex-shrink-0 overflow-hidden relative">
@@ -84,7 +84,8 @@ export default function CartPage() {
                                         onChange={(e) =>
                                             updateQuantity(
                                                 item.productId,
-                                                parseInt(e.target.value, 10)
+                                                item.variantId,
+                                                parseInt(e.target.value, 10),
                                             )
                                         }
                                         className="input w-20 py-2.5 text-center min-h-[44px]"
@@ -96,7 +97,12 @@ export default function CartPage() {
                                         ))}
                                     </select>
                                     <button
-                                        onClick={() => removeItem(item.productId)}
+                                        onClick={() =>
+                                            removeItem(
+                                                item.productId,
+                                                item.variantId,
+                                            )
+                                        }
                                         className="p-3 rounded-lg hover:bg-[var(--color-error)]/20 text-[var(--color-text-muted)] hover:text-[var(--color-error)] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                                         aria-label="Remove from cart"
                                     >
