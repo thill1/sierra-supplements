@@ -1,0 +1,15 @@
+# Ephemeral Postgres for Playwright e2e when DATABASE_URL is not set (see tests/playwright-global-setup.ts).
+services:
+    postgres:
+        image: postgres:16-alpine
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: sierra_e2e
+            POSTGRES_DB: sierra_e2e
+        ports:
+            - "54329:5432"
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U postgres -d sierra_e2e"]
+            interval: 2s
+            timeout: 5s
+            retries: 15

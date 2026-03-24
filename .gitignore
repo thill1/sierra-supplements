@@ -48,3 +48,4 @@ next-env.d.ts
 /playwright-report/
 /test-results/
 cal-embed-screenshot.png
+.playwright/

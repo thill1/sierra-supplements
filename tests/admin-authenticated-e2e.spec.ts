@@ -10,11 +10,6 @@ import {
 
 test.describe("Admin authenticated E2E", () => {
     test("credentials sign-in opens admin dashboard", async ({ page }) => {
-        test.skip(
-            !process.env.DATABASE_URL?.trim(),
-            "DATABASE_URL must be set; globalSetup runs pnpm db:seed-admins for the Playwright admin email.",
-        );
-
         await page.goto("/auth/signin");
         await expect(page.getByTestId("e2e-admin-signin-section")).toBeVisible();
         await page.getByTestId("e2e-admin-email").fill(playwrightAdminEmail());

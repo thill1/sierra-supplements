@@ -33,6 +33,7 @@ function webServerEnv(): Record<string, string> {
 
 export default defineConfig({
     globalSetup: require.resolve("./tests/playwright-global-setup.ts"),
+    globalTeardown: require.resolve("./tests/playwright-global-teardown.ts"),
     testDir: "./tests",
     testMatch: "**/*.spec.ts",
     fullyParallel: true,
@@ -58,8 +59,8 @@ export default defineConfig({
         ? undefined
         : {
               // `next start` avoids `.next/dev/lock` when another `next dev` (Turbopack) is already running.
-              command:
-                  "sh -c 'test -f .next/BUILD_ID || pnpm exec next build; PORT=3001 pnpm exec next start'",
+              // Sources `.playwright/e2e-runtime.env` written by globalSetup (DATABASE_URL).
+              command: "bash scripts/playwright-e2e-serve.sh",
               url: "http://localhost:3001",
               reuseExistingServer: !process.env.CI,
               timeout: 180_000,

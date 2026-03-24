@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    type ChangeEvent,
+} from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -10,6 +17,8 @@ import {
     Copy,
     Archive,
     Search,
+    Upload,
+    FileDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useCanManageCatalog } from "@/components/admin/admin-session-context";
@@ -17,6 +26,7 @@ import {
     adminFetchInit,
     getAdminApiErrorMessage,
 } from "@/lib/admin-api-client";
+import { INVENTORY_CSV_TEMPLATE } from "@/lib/admin/inventory-csv-template";
 
 type AdminProduct = {
     id: number;
@@ -57,6 +67,8 @@ export default function AdminProductsPage() {
     const [status, setStatus] = useState("");
     const [stock, setStock] = useState("");
     const [category, setCategory] = useState("");
+    const [importingCsv, setImportingCsv] = useState(false);
+    const csvFileInputRef = useRef<HTMLInputElement>(null);
 
     const queryString = useMemo(() => {
         const p = new URLSearchParams();
@@ -117,6 +129,72 @@ export default function AdminProductsPage() {
         }
     };
 
+    const downloadInventoryTemplate = () => {
+        const blob = new Blob([INVENTORY_CSV_TEMPLATE], {
+            type: "text/csv;charset=utf-8",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "inventory-import-template.csv";
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const handleInventoryCsvSelected = async (
+        e: ChangeEvent<HTMLInputElement>,
+    ) => {
+        const file = e.target.files?.[0];
+        e.target.value = "";
+        if (!file) return;
+        setImportingCsv(true);
+        try {
+            const fd = new FormData();
+            fd.append("file", file);
+            const res = await fetch("/api/admin/products/import", {
+                ...adminFetchInit,
+                method: "POST",
+                body: fd,
+            });
+            const json = (await res.json()) as {
+                error?: string;
+                created?: number;
+                updated?: number;
+                failed?: { line: number; message: string }[];
+            };
+            if (!res.ok) {
+                const msg =
+                    typeof json.error === "string" && json.error.trim()
+                        ? json.error.trim()
+                        : `Request failed (${res.status})`;
+                throw new Error(msg);
+            }
+            const created = json.created ?? 0;
+            const updated = json.updated ?? 0;
+            const failed = json.failed ?? [];
+            toast.success(
+                `Import finished: ${created} created, ${updated} updated.`,
+            );
+            if (failed.length > 0) {
+                const preview = failed
+                    .slice(0, 5)
+                    .map((f) => `Row ${f.line}: ${f.message}`)
+                    .join("\n");
+                toast.error(
+                    `${failed.length} row(s) failed.\n${preview}${failed.length > 5 ? "\n…" : ""}`,
+                    { duration: 12_000 },
+                );
+            }
+            await fetchProducts();
+        } catch (err) {
+            toast.error(
+                err instanceof Error ? err.message : "CSV import failed.",
+            );
+        } finally {
+            setImportingCsv(false);
+        }
+    };
+
     const handleDuplicate = async (id: number) => {
         try {
             const res = await fetch(`/api/admin/products/${id}/duplicate`, {
@@ -154,12 +232,50 @@ export default function AdminProductsPage() {
                     </p>
                 </div>
                 {canManage ? (
-                    <Link
-                        href="/admin/products/new"
-                        className="btn btn-primary flex items-center gap-2 shrink-0"
-                    >
-                        <Plus className="w-4 h-4" /> Add product
-                    </Link>
+                    <div className="flex flex-col items-stretch sm:items-end gap-3 shrink-0">
+                        <div className="flex flex-wrap gap-2 justify-end">
+                            <Link
+                                href="/admin/products/new"
+                                className="btn btn-primary flex items-center justify-center gap-2"
+                            >
+                                <Plus className="w-4 h-4" /> Add product
+                            </Link>
+                            <input
+                                ref={csvFileInputRef}
+                                type="file"
+                                accept=".csv,text/csv"
+                                className="sr-only"
+                                aria-label="Choose CSV file to import"
+                                onChange={(ev) => {
+                                    void handleInventoryCsvSelected(ev);
+                                }}
+                            />
+                            <button
+                                type="button"
+                                className="btn btn-secondary flex items-center justify-center gap-2"
+                                disabled={importingCsv}
+                                onClick={() => csvFileInputRef.current?.click()}
+                            >
+                                <Upload className="w-4 h-4" />
+                                {importingCsv ? "Importing…" : "Import CSV"}
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-secondary flex items-center justify-center gap-2"
+                                onClick={downloadInventoryTemplate}
+                            >
+                                <FileDown className="w-4 h-4" />
+                                CSV template
+                            </button>
+                        </div>
+                        <p className="text-xs text-[var(--color-text-muted)] max-w-md text-right">
+                            Upsert by <code className="text-[var(--color-accent)]">slug</code>{" "}
+                            (or derive from <code className="text-[var(--color-accent)]">name</code>
+                            ). Price is in dollars. Products with multiple variants only get
+                            automatic stock/price sync on the variant when there is exactly one
+                            variant.
+                        </p>
+                    </div>
                 ) : (
                     <p className="text-xs text-[var(--color-text-muted)] max-w-xs text-right">
                         Only managers can add products.
