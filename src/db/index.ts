@@ -1,7 +1,10 @@
+import { loadPlaywrightRuntimeEnvFile } from "@/lib/load-playwright-runtime-env";
 import { drizzle } from "drizzle-orm/node-postgres";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "./schema.pg";
+
+loadPlaywrightRuntimeEnvFile();
 
 let pool: Pool | undefined;
 let dbInstance: NodePgDatabase<typeof schema> | undefined;
@@ -12,10 +15,11 @@ let dbInstance: NodePgDatabase<typeof schema> | undefined;
  * stick around in some serverless bundles.
  */
 function resolveCleanUrl(): string {
+    const env = process.env;
     let dbUrl =
-        process.env.DATABASE_URL ||
-        process.env.POSTGRES_URL_NON_POOLING ||
-        process.env.POSTGRES_URL;
+        env.DATABASE_URL ||
+        env.POSTGRES_URL_NON_POOLING ||
+        env.POSTGRES_URL;
 
     const isBuild =
         process.env.npm_lifecycle_event === "build" || process.env.NEXT_PHASE;
