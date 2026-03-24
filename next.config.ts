@@ -12,7 +12,8 @@ const productionCsp = [
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https:",
     "connect-src 'self' https://*.supabase.co https://app.cal.com https://cal.com https://vitals.vercel-insights.com https://*.ingest.sentry.io https://*.ingest.de.sentry.io",
-    "frame-src https://cal.com https://app.cal.com https://*.google.com",
+    // Maps embed uses www.google.com; explicit hosts avoid wildcard parsing gaps in some UAs.
+    "frame-src https://cal.com https://app.cal.com https://www.google.com https://maps.google.com",
     "base-uri 'self'",
     "form-action 'self'",
     "upgrade-insecure-requests",
