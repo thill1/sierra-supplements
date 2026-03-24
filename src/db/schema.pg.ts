@@ -54,6 +54,12 @@ export const adminAppSettings = pgTable("admin_app_settings", {
     baseUrl: text("base_url").notNull(),
     adminNotificationEmail: text("admin_notification_email").notNull(),
     notifyEmailLeads: boolean("notify_email_leads").notNull().default(true),
+    notifyEmailCalBookings: boolean("notify_email_cal_bookings")
+        .notNull()
+        .default(true),
+    notifyEmailLowStock: boolean("notify_email_low_stock")
+        .notNull()
+        .default(true),
     notifySmsLeads: boolean("notify_sms_leads").notNull().default(false),
     nurtureAuto: boolean("nurture_auto").notNull().default(true),
     updatedAt: timestamp("updated_at").defaultNow(),

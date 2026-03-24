@@ -26,6 +26,7 @@ function mockVariantTx(initialStock: number) {
                                             id: 7,
                                             productId: 9,
                                             stockQuantity: initialStock,
+                                            lowStockThreshold: 2,
                                             label: "Default",
                                         },
                                     ]),

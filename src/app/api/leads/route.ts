@@ -8,6 +8,11 @@ import {
     EXIT_INTENT_DISCOUNT_PERCENT,
     isFirstOrderDiscountLeadSource,
 } from "@/lib/promo";
+import {
+    getAdminAppSettings,
+    resolveAdminNotificationEmail,
+    sendAdminNotificationEmail,
+} from "@/lib/email/admin-notifications";
 
 const leadSchema = z.object({
     name: z.string().max(200).optional(),
@@ -71,11 +76,14 @@ export async function POST(request: Request) {
                 const { Resend } = await import("resend");
                 const resend = new Resend(process.env.RESEND_API_KEY);
 
-                await resend.emails.send({
-                    from: "Sierra Strength <noreply@sierrastrengthsupplements.com>",
-                    to: process.env.ADMIN_EMAIL || "admin@sierrastrengthsupplements.com",
-                    subject: `New Lead: ${escapeHtml(data.name || data.email)} (${escapeHtml(data.source || "website")})`,
-                    html: `
+                const adminSettings = await getAdminAppSettings();
+                const notifyAdminLead =
+                    adminSettings?.notifyEmailLeads !== false;
+                if (notifyAdminLead) {
+                    await sendAdminNotificationEmail({
+                        to: resolveAdminNotificationEmail(adminSettings),
+                        subject: `New Lead: ${escapeHtml(data.name || data.email)} (${escapeHtml(data.source || "website")})`,
+                        html: `
             <h2>New Lead Received</h2>
             <p><strong>Name:</strong> ${escapeHtml(data.name || "Not provided")}</p>
             <p><strong>Email:</strong> ${escapeHtml(data.email)}</p>
@@ -84,7 +92,8 @@ export async function POST(request: Request) {
             <p><strong>Page:</strong> ${escapeHtml(data.page || "/")}</p>
             <p><strong>Message:</strong> ${escapeHtml(data.message || "No message")}</p>
           `,
-                });
+                    });
+                }
 
                 const isDiscountSignup = isFirstOrderDiscountLeadSource(data.source);
                 await resend.emails.send({

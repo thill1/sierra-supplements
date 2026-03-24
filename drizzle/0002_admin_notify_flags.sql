@@ -1,0 +1,2 @@
+ALTER TABLE "admin_app_settings" ADD COLUMN "notify_email_cal_bookings" boolean DEFAULT true NOT NULL;--> statement-breakpoint
+ALTER TABLE "admin_app_settings" ADD COLUMN "notify_email_low_stock" boolean DEFAULT true NOT NULL;

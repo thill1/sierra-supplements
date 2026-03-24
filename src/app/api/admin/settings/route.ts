@@ -16,6 +16,8 @@ const updateSchema = z.object({
     baseUrl: z.string().min(1).max(500).url(),
     adminNotificationEmail: z.string().min(1).max(320).email(),
     notifyEmailLeads: z.boolean(),
+    notifyEmailCalBookings: z.boolean(),
+    notifyEmailLowStock: z.boolean(),
     notifySmsLeads: z.boolean(),
     nurtureAuto: z.boolean(),
 });
@@ -27,6 +29,8 @@ function defaultSettings() {
         baseUrl: siteConfig.url,
         adminNotificationEmail: siteConfig.adminEmail,
         notifyEmailLeads: true,
+        notifyEmailCalBookings: true,
+        notifyEmailLowStock: true,
         notifySmsLeads: false,
         nurtureAuto: true,
         updatedAt: null as Date | null,
@@ -48,7 +52,11 @@ export async function GET() {
             return NextResponse.json(defaultSettings());
         }
 
-        return NextResponse.json(row);
+        return NextResponse.json({
+            ...row,
+            notifyEmailCalBookings: row.notifyEmailCalBookings ?? true,
+            notifyEmailLowStock: row.notifyEmailLowStock ?? true,
+        });
     } catch (error) {
         logAdminFailure("admin_settings_get", error);
         return NextResponse.json(
@@ -81,6 +89,8 @@ export async function PUT(request: Request) {
                 baseUrl: data.baseUrl,
                 adminNotificationEmail: data.adminNotificationEmail,
                 notifyEmailLeads: data.notifyEmailLeads,
+                notifyEmailCalBookings: data.notifyEmailCalBookings,
+                notifyEmailLowStock: data.notifyEmailLowStock,
                 notifySmsLeads: data.notifySmsLeads,
                 nurtureAuto: data.nurtureAuto,
                 updatedAt: now,
@@ -92,6 +102,8 @@ export async function PUT(request: Request) {
                     baseUrl: data.baseUrl,
                     adminNotificationEmail: data.adminNotificationEmail,
                     notifyEmailLeads: data.notifyEmailLeads,
+                    notifyEmailCalBookings: data.notifyEmailCalBookings,
+                    notifyEmailLowStock: data.notifyEmailLowStock,
                     notifySmsLeads: data.notifySmsLeads,
                     nurtureAuto: data.nurtureAuto,
                     updatedAt: now,

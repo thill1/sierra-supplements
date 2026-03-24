@@ -16,6 +16,8 @@ const recommended = {
 };
 
 const optional = {
+    ADMIN_EMAIL: "Fallback admin notification address if DB settings row missing",
+    CALCOM_WEBHOOK_SECRET: "Cal.com webhook HMAC secret for /api/webhooks/calcom",
     BLOB_READ_WRITE_TOKEN: "Vercel Blob — admin product image uploads",
     STRIPE_SECRET_KEY: "Stripe Checkout (server)",
     STRIPE_WEBHOOK_SECRET: "Stripe webhook signing secret",

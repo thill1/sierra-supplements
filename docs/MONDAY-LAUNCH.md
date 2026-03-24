@@ -41,7 +41,8 @@ Add to Vercel → Project → Settings → Environment Variables:
 | `NEXTAUTH_URL` | Yes | `https://your-domain.vercel.app` (or prod domain) |
 | `NEXT_PUBLIC_APP_URL` | Recommended | Same as NEXTAUTH_URL |
 | `RESEND_API_KEY` | For emails | Order confirmations + contact form |
-| `ADMIN_EMAIL` | For emails | Where order/admin notifications go |
+| `ADMIN_EMAIL` | Optional fallback | Used if `admin_app_settings` has no row; otherwise set **Admin → Settings → Admin notification email** |
+| `CALCOM_WEBHOOK_SECRET` | For booking emails | Same secret as Cal.com webhook; endpoint `https://<domain>/api/webhooks/calcom`, trigger **Booking Created** |
 
 ### 3. Domain (if you have one)
 
@@ -59,7 +60,8 @@ Add to Vercel → Project → Settings → Environment Variables:
 | OG image | Missing | Add `public/og-image.jpg` (1200×630) for social sharing. Can reuse a product or hero image. |
 | Logo | Optional | `public/logo.svg` used in schema; header uses Mountain icon. Add if you have a logo. |
 | Contact info | Check | Verify `siteConfig` phone, email, address in `src/lib/site-config.ts` |
-| ADMIN_EMAIL | Check | `.env.example` has `admin@sierrasupplements.com`; orders API uses this for notifications |
+| Admin notification email | Check | **Admin → Settings** (leads, Cal.com, low stock). `ADMIN_EMAIL` env is fallback only |
+| Cal.com webhook | Optional | `/api/webhooks/calcom` + `CALCOM_WEBHOOK_SECRET` for new-booking emails |
 
 ---
 
@@ -70,7 +72,9 @@ Add to Vercel → Project → Settings → Environment Variables:
 - [ ] `pnpm db:push` and `pnpm db:seed` run (with prod URL if different)
 - [ ] `NEXTAUTH_SECRET` generated and in Vercel
 - [ ] `NEXTAUTH_URL` and `NEXT_PUBLIC_APP_URL` set to production URL
-- [ ] `RESEND_API_KEY` and `ADMIN_EMAIL` added (for order emails)
+- [ ] `RESEND_API_KEY` added; ops inbox set in **Admin → Settings** (or `ADMIN_EMAIL` fallback)
+- [ ] `CALCOM_WEBHOOK_SECRET` + Cal.com webhook URL (if using booking emails)
+- [ ] DB migration for `notify_email_*` columns (`pnpm db:migrate` or `pnpm db:push`)
 - [ ] Redeploy after env vars
 - [ ] Domain connected (if applicable)
 - [ ] Smoke test: browse store, add to cart, checkout, contact form

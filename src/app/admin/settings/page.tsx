@@ -9,6 +9,8 @@ type SettingsPayload = {
     baseUrl: string;
     adminNotificationEmail: string;
     notifyEmailLeads: boolean;
+    notifyEmailCalBookings: boolean;
+    notifyEmailLowStock: boolean;
     notifySmsLeads: boolean;
     nurtureAuto: boolean;
 };
@@ -18,9 +20,20 @@ const emptyForm: SettingsPayload = {
     baseUrl: "",
     adminNotificationEmail: "",
     notifyEmailLeads: true,
+    notifyEmailCalBookings: true,
+    notifyEmailLowStock: true,
     notifySmsLeads: false,
     nurtureAuto: true,
 };
+
+function normalizeSettingsPayload(raw: Partial<SettingsPayload>): SettingsPayload {
+    return {
+        ...emptyForm,
+        ...raw,
+        notifyEmailCalBookings: raw.notifyEmailCalBookings ?? true,
+        notifyEmailLowStock: raw.notifyEmailLowStock ?? true,
+    };
+}
 
 export default function AdminSettingsPage() {
     const [form, setForm] = useState<SettingsPayload>(emptyForm);
@@ -42,7 +55,9 @@ export default function AdminSettingsPage() {
                         : "Could not load settings",
                 );
             }
-            const data = (await res.json()) as SettingsPayload;
+            const data = normalizeSettingsPayload(
+                (await res.json()) as Partial<SettingsPayload>,
+            );
             setForm(data);
             setBaseline(data);
         } catch (e) {
@@ -75,7 +90,9 @@ export default function AdminSettingsPage() {
                         : "Save failed";
                 throw new Error(msg);
             }
-            const saved = data as SettingsPayload;
+            const saved = normalizeSettingsPayload(
+                data as Partial<SettingsPayload>,
+            );
             setForm(saved);
             setBaseline(saved);
             toast.success("Settings saved");
@@ -158,7 +175,9 @@ export default function AdminSettingsPage() {
                             autoComplete="email"
                         />
                         <p className="text-xs text-[var(--color-text-muted)] mt-1.5">
-                            Form submissions and system alerts will be sent here.
+                            Leads, Cal.com bookings, low-stock alerts, and other
+                            operational emails use this address. You can change it
+                            anytime without redeploying.
                         </p>
                     </div>
                 </div>
@@ -186,6 +205,49 @@ export default function AdminSettingsPage() {
                             {
                                 key: "nurtureAuto" as const,
                                 label: "Auto-enroll leads in email nurture sequence",
+                            },
+                        ] as const
+                    ).map((option) => (
+                        <div
+                            key={option.key}
+                            className="flex items-center justify-between py-2 border-b border-[var(--color-border-subtle)] last:border-0"
+                        >
+                            <span className="text-sm">{option.label}</span>
+                            <input
+                                type="checkbox"
+                                className="w-4 h-4 accent-[var(--color-accent)]"
+                                checked={form[option.key]}
+                                onChange={(e) =>
+                                    setForm((f) => ({
+                                        ...f,
+                                        [option.key]: e.target.checked,
+                                    }))
+                                }
+                            />
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            <section className="card">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-lg bg-[var(--color-accent-subtle)] flex items-center justify-center">
+                        <Bell className="w-5 h-5 text-[var(--color-accent)]" />
+                    </div>
+                    <h2 className="text-xl font-bold">Operations alerts</h2>
+                </div>
+
+                <div className="space-y-4">
+                    {(
+                        [
+                            {
+                                key: "notifyEmailCalBookings" as const,
+                                label: "Email when a Cal.com booking is created",
+                            },
+                            {
+                                key: "notifyEmailLowStock" as const,
+                                label:
+                                    "Email when variant stock crosses into the low band (per product threshold)",
                             },
                         ] as const
                     ).map((option) => (

@@ -3,7 +3,11 @@ import Stripe from "stripe";
 import { eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { orders, orderItems, products, productVariants } from "@/db/schema";
-import { applyStockChangeInTx } from "@/lib/inventory/adjust-stock";
+import {
+    applyStockChangeInTx,
+    type StockChangeResult,
+} from "@/lib/inventory/adjust-stock";
+import { notifyLowStockIfNeeded } from "@/lib/email/admin-notifications";
 import { INVENTORY_SOURCE } from "@/lib/inventory/constants";
 import { writeAuditLog } from "@/lib/audit/write-audit";
 import { logServerError } from "@/lib/observability";
@@ -145,6 +149,8 @@ async function fulfillCheckoutSessionCompleted(
             });
         }
 
+        const stockResults: StockChangeResult[] = [];
+
         await db.transaction(async (tx) => {
             const [order] = await tx
                 .insert(orders)
@@ -189,7 +195,7 @@ async function fulfillCheckoutSessionCompleted(
                     lineTotal: l.lineTotal,
                 });
 
-                await applyStockChangeInTx(tx, {
+                const stock = await applyStockChangeInTx(tx, {
                     variantId: l.variantId,
                     delta: -l.quantity,
                     reason: "stripe_checkout",
@@ -197,6 +203,7 @@ async function fulfillCheckoutSessionCompleted(
                     note: `session ${sessionId}`,
                     actorUserId: null,
                 });
+                stockResults.push(stock);
             }
 
             await writeAuditLog(tx, {
@@ -207,6 +214,17 @@ async function fulfillCheckoutSessionCompleted(
                 after: { sessionId, subtotal },
             });
         });
+
+        for (const r of stockResults) {
+            await notifyLowStockIfNeeded({
+                previousQty: r.previousQuantity,
+                newQty: r.newQuantity,
+                lowStockThreshold: r.lowStockThreshold,
+                productId: r.productId,
+                variantId: r.variantId,
+                variantLabel: r.variantLabel,
+            });
+        }
 
         return NextResponse.json({ received: true });
     } catch (e) {

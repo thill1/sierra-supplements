@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { db, type DbTransaction } from "@/db";
 import { inventoryMovements, productVariants } from "@/db/schema.pg";
 import { writeAuditLog } from "@/lib/audit/write-audit";
+import { notifyLowStockIfNeeded } from "@/lib/email/admin-notifications";
 import type { InventorySource } from "@/lib/inventory/constants";
 import { syncParentProductStockFromVariants } from "@/lib/inventory/sync-parent-product-stock";
 
@@ -23,22 +24,42 @@ export class InsufficientStockError extends Error {
     }
 }
 
+export type StockChangeResult = {
+    newQuantity: number;
+    previousQuantity: number;
+    lowStockThreshold: number;
+    variantId: number;
+    productId: number;
+    variantLabel: string;
+};
+
 /**
  * Single transaction: lock variant row, apply delta, sync parent product stock,
- * insert movement + audit.
+ * insert movement + audit. After commit, sends low-stock admin email when applicable.
  */
 export async function applyStockChange(
     params: StockChangeParams,
 ): Promise<{ newQuantity: number }> {
-    return db.transaction(async (tx) => {
+    const full = await db.transaction(async (tx) => {
         return applyStockChangeInTx(tx, params);
     });
+    if (params.delta < 0) {
+        await notifyLowStockIfNeeded({
+            previousQty: full.previousQuantity,
+            newQty: full.newQuantity,
+            lowStockThreshold: full.lowStockThreshold,
+            productId: full.productId,
+            variantId: full.variantId,
+            variantLabel: full.variantLabel,
+        });
+    }
+    return { newQuantity: full.newQuantity };
 }
 
 export async function applyStockChangeInTx(
     tx: DbTransaction,
     params: StockChangeParams,
-): Promise<{ newQuantity: number }> {
+): Promise<StockChangeResult> {
     const {
         variantId,
         delta,
@@ -62,6 +83,8 @@ export async function applyStockChangeInTx(
 
     const productId = row.productId;
     const current = row.stockQuantity ?? 0;
+    const lowStockThreshold = row.lowStockThreshold ?? 2;
+    const variantLabel = row.label ?? "Default";
     const next = current + delta;
     if (next < 0) {
         throw new InsufficientStockError();
@@ -107,5 +130,12 @@ export async function applyStockChangeInTx(
         });
     }
 
-    return { newQuantity: next };
+    return {
+        newQuantity: next,
+        previousQuantity: current,
+        lowStockThreshold,
+        variantId: row.id,
+        productId,
+        variantLabel,
+    };
 }
