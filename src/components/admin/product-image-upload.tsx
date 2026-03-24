@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import { Upload, Loader2 } from "lucide-react";
+import {
+    adminFetchInit,
+    getAdminApiErrorMessage,
+} from "@/lib/admin-api-client";
 
 type Props = {
     value: string;
@@ -23,15 +27,19 @@ export function ProductImageUpload({ value, onChange }: Props) {
             const fd = new FormData();
             fd.append("file", file);
             const res = await fetch("/api/admin/upload", {
+                ...adminFetchInit,
                 method: "POST",
                 body: fd,
             });
-            const data = (await res.json().catch(() => ({}))) as { error?: string; url?: string };
             if (!res.ok) {
-                throw new Error(data.error || "Upload failed");
+                throw new Error(await getAdminApiErrorMessage(res));
             }
+            const data = (await res.json()) as {
+                error?: string;
+                url?: string;
+            };
             if (!data.url) {
-                throw new Error("No URL returned");
+                throw new Error(data.error || "No URL returned");
             }
             onChange(data.url);
         } catch (err) {

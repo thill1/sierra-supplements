@@ -8,6 +8,10 @@ import {
     type VariantEditorRow,
 } from "@/components/admin/product-editor-form";
 import { STORE_CATEGORIES } from "@/lib/store-categories";
+import {
+    adminFetchInit,
+    getAdminApiErrorMessage,
+} from "@/lib/admin-api-client";
 
 type VariantApiRow = {
     id: number;
@@ -103,8 +107,13 @@ export default function AdminEditProductPage() {
         let cancelled = false;
         (async () => {
             try {
-                const res = await fetch(`/api/admin/products/${id}`);
-                if (!res.ok) throw new Error("Not found");
+                const res = await fetch(
+                    `/api/admin/products/${id}`,
+                    adminFetchInit,
+                );
+                if (!res.ok) {
+                    throw new Error(await getAdminApiErrorMessage(res));
+                }
                 const p = (await res.json()) as Row;
                 if (!cancelled) {
                     setInitial(mapRow(p));
@@ -115,9 +124,13 @@ export default function AdminEditProductPage() {
                     );
                     setError(null);
                 }
-            } catch {
+            } catch (e) {
                 if (!cancelled) {
-                    setError("Could not load product");
+                    setError(
+                        e instanceof Error
+                            ? e.message
+                            : "Could not load product",
+                    );
                 }
             }
         })();

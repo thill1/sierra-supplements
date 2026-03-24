@@ -3,6 +3,12 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Plus, Star, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { useCanManageCatalog } from "@/components/admin/admin-session-context";
+import {
+    adminFetchInit,
+    getAdminApiErrorMessage,
+} from "@/lib/admin-api-client";
 
 type Testimonial = {
     id: number;
@@ -16,14 +22,17 @@ type Testimonial = {
 };
 
 export default function AdminTestimonialsPage() {
+    const canManage = useCanManageCatalog();
     const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch("/api/admin/testimonials")
-            .then((res) => {
-                if (!res.ok) throw new Error("Failed to fetch");
+        fetch("/api/admin/testimonials", adminFetchInit)
+            .then(async (res) => {
+                if (!res.ok) {
+                    throw new Error(await getAdminApiErrorMessage(res));
+                }
                 return res.json();
             })
             .then(setTestimonials)
@@ -35,12 +44,15 @@ export default function AdminTestimonialsPage() {
         if (!confirm("Delete this testimonial?")) return;
         try {
             const res = await fetch(`/api/admin/testimonials/${id}`, {
+                ...adminFetchInit,
                 method: "DELETE",
             });
-            if (!res.ok) throw new Error("Delete failed");
+            if (!res.ok) {
+                throw new Error(await getAdminApiErrorMessage(res));
+            }
             setTestimonials((prev) => prev.filter((t) => t.id !== id));
         } catch (e) {
-            alert(e instanceof Error ? e.message : "Delete failed");
+            toast.error(e instanceof Error ? e.message : "Delete failed");
         }
     };
 
@@ -69,9 +81,18 @@ export default function AdminTestimonialsPage() {
                         Manage customer testimonials shown on the homepage.
                     </p>
                 </div>
-                <Link href="/admin/testimonials/new" className="btn btn-primary text-sm">
-                    <Plus className="w-4 h-4" /> Add Testimonial
-                </Link>
+                {canManage ? (
+                    <Link
+                        href="/admin/testimonials/new"
+                        className="btn btn-primary text-sm"
+                    >
+                        <Plus className="w-4 h-4" /> Add Testimonial
+                    </Link>
+                ) : (
+                    <p className="text-xs text-[var(--color-text-muted)] max-w-xs text-right">
+                        Managers can add or delete testimonials.
+                    </p>
+                )}
             </div>
 
             <div className="card !p-0 overflow-hidden">
@@ -128,12 +149,17 @@ export default function AdminTestimonialsPage() {
                                             >
                                                 <Pencil className="w-4 h-4 text-[var(--color-text-muted)]" />
                                             </Link>
-                                            <button
-                                                onClick={() => handleDelete(t.id)}
-                                                className="p-2 rounded-lg hover:bg-red-500/10 text-[var(--color-error)]"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
+                                            {canManage && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                        handleDelete(t.id)
+                                                    }
+                                                    className="p-2 rounded-lg hover:bg-red-500/10 text-[var(--color-error)]"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            )}
                                         </td>
                                     </tr>
                                 ))

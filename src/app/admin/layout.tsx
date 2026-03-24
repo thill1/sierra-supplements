@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { resolveAdmin } from "@/lib/admin-auth";
+import { AdminSessionProvider } from "@/components/admin/admin-session-context";
 import { AdminAppShell } from "@/components/admin/admin-app-shell";
 
 /**
@@ -22,5 +23,9 @@ export default async function AdminLayout({
         redirect("/auth/error?error=AccessDenied");
     }
 
-    return <AdminAppShell>{children}</AdminAppShell>;
+    return (
+        <AdminSessionProvider role={admin.role}>
+            <AdminAppShell>{children}</AdminAppShell>
+        </AdminSessionProvider>
+    );
 }

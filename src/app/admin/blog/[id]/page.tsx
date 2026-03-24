@@ -5,6 +5,11 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { useCanManageCatalog } from "@/components/admin/admin-session-context";
+import {
+    adminFetchInit,
+    getAdminApiErrorMessage,
+} from "@/lib/admin-api-client";
 
 type Row = {
     id: number;
@@ -18,6 +23,7 @@ type Row = {
 };
 
 export default function AdminBlogEditPage() {
+    const canManage = useCanManageCatalog();
     const params = useParams();
     const router = useRouter();
     const id = Number.parseInt(String(params.id), 10);
@@ -30,12 +36,19 @@ export default function AdminBlogEditPage() {
         let cancelled = false;
         (async () => {
             try {
-                const res = await fetch(`/api/admin/blog-posts/${id}`);
-                if (!res.ok) throw new Error("Not found");
+                const res = await fetch(
+                    `/api/admin/blog-posts/${id}`,
+                    adminFetchInit,
+                );
+                if (!res.ok) {
+                    throw new Error(await getAdminApiErrorMessage(res));
+                }
                 const data = (await res.json()) as Row;
                 if (!cancelled) setRow(data);
-            } catch {
-                toast.error("Post not found");
+            } catch (e) {
+                toast.error(
+                    e instanceof Error ? e.message : "Post not found",
+                );
                 router.push("/admin/blog");
             } finally {
                 if (!cancelled) setLoading(false);
@@ -51,6 +64,7 @@ export default function AdminBlogEditPage() {
         setSaving(true);
         try {
             const res = await fetch(`/api/admin/blog-posts/${id}`, {
+                ...adminFetchInit,
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -64,8 +78,7 @@ export default function AdminBlogEditPage() {
                 }),
             });
             if (!res.ok) {
-                const j = (await res.json()) as { error?: string };
-                throw new Error(j.error || "Save failed");
+                throw new Error(await getAdminApiErrorMessage(res));
             }
             const updated = (await res.json()) as Row;
             setRow(updated);
@@ -97,7 +110,16 @@ export default function AdminBlogEditPage() {
             </Link>
             <h2 className="text-xl font-bold">Edit post</h2>
 
-            <div className="card p-6 space-y-4">
+            {!canManage && (
+                <p className="text-xs rounded-md bg-amber-500/10 border border-amber-500/30 px-3 py-2 text-amber-950 dark:text-amber-100">
+                    View only. Saving changes requires a manager or owner.
+                </p>
+            )}
+
+            <fieldset
+                disabled={!canManage}
+                className="card p-6 space-y-4 border-0 min-w-0 m-0 disabled:opacity-65"
+            >
                 <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                         <label className="block text-xs font-medium mb-1">
@@ -199,12 +221,12 @@ export default function AdminBlogEditPage() {
                 <button
                     type="button"
                     className="btn btn-primary"
-                    disabled={saving}
+                    disabled={saving || !canManage}
                     onClick={() => void save()}
                 >
                     {saving ? "Saving…" : "Save changes"}
                 </button>
-            </div>
+            </fieldset>
         </div>
     );
 }

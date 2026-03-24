@@ -3,6 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { GripVertical, Loader2, Star, Upload } from "lucide-react";
 import { toast } from "sonner";
+import {
+    adminFetchInit,
+    getAdminApiErrorMessage,
+} from "@/lib/admin-api-client";
 
 type ProductImageKind = "hero" | "facts" | "label" | "gallery";
 
@@ -41,8 +45,13 @@ export function ProductImagesEditor({
     const load = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/admin/products/${productId}/images`);
-            if (!res.ok) throw new Error("Failed to load images");
+            const res = await fetch(
+                `/api/admin/products/${productId}/images`,
+                adminFetchInit,
+            );
+            if (!res.ok) {
+                throw new Error(await getAdminApiErrorMessage(res));
+            }
             const data = (await res.json()) as Row[];
             setRows(data.sort((a, b) => a.sortOrder - b.sortOrder));
         } catch {
@@ -63,14 +72,18 @@ export function ProductImagesEditor({
             const fd = new FormData();
             fd.append("file", file);
             const up = await fetch("/api/admin/upload", {
+                ...adminFetchInit,
                 method: "POST",
                 body: fd,
             });
+            if (!up.ok) {
+                throw new Error(await getAdminApiErrorMessage(up));
+            }
             const data = (await up.json()) as { error?: string; url?: string };
-            if (!up.ok) throw new Error(data.error || "Upload failed");
             if (!data.url) throw new Error("No URL");
 
             const cr = await fetch(`/api/admin/products/${productId}/images`, {
+                ...adminFetchInit,
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -79,7 +92,9 @@ export function ProductImagesEditor({
                     sortOrder: rows.filter((r) => r.kind === kind).length,
                 }),
             });
-            if (!cr.ok) throw new Error("Could not attach image");
+            if (!cr.ok) {
+                throw new Error(await getAdminApiErrorMessage(cr));
+            }
             toast.success("Photo uploaded.");
             await load();
         } catch (e) {
@@ -92,11 +107,14 @@ export function ProductImagesEditor({
     async function setPrimary(url: string) {
         try {
             const res = await fetch(`/api/admin/products/${productId}/images`, {
+                ...adminFetchInit,
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ primaryImageUrl: url }),
             });
-            if (!res.ok) throw new Error("Update failed");
+            if (!res.ok) {
+                throw new Error(await getAdminApiErrorMessage(res));
+            }
             onPrimaryChange(url);
             toast.success("Primary image updated.");
         } catch {
@@ -108,6 +126,7 @@ export function ProductImagesEditor({
         setRows(next);
         try {
             const res = await fetch(`/api/admin/products/${productId}/images`, {
+                ...adminFetchInit,
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -118,7 +137,9 @@ export function ProductImagesEditor({
                     })),
                 }),
             });
-            if (!res.ok) throw new Error("Reorder failed");
+            if (!res.ok) {
+                throw new Error(await getAdminApiErrorMessage(res));
+            }
             toast.success("Order saved.");
         } catch {
             toast.error("Could not save order.");

@@ -4,6 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Plus, Pencil, ExternalLink, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useCanManageCatalog } from "@/components/admin/admin-session-context";
+import {
+    adminFetchInit,
+    getAdminApiErrorMessage,
+} from "@/lib/admin-api-client";
 import { legacyBlogSummaries } from "@/lib/blog-legacy";
 
 type BlogPostRow = {
@@ -18,6 +23,7 @@ type BlogPostRow = {
 };
 
 export default function AdminBlogPage() {
+    const canManage = useCanManageCatalog();
     const [posts, setPosts] = useState<BlogPostRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -26,8 +32,10 @@ export default function AdminBlogPage() {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch("/api/admin/blog-posts");
-            if (!res.ok) throw new Error("Failed to load");
+            const res = await fetch("/api/admin/blog-posts", adminFetchInit);
+            if (!res.ok) {
+                throw new Error(await getAdminApiErrorMessage(res));
+            }
             setPosts(await res.json());
         } catch (e) {
             setError(e instanceof Error ? e.message : "Error");
@@ -44,13 +52,18 @@ export default function AdminBlogPage() {
         if (!confirm("Delete this post?")) return;
         try {
             const res = await fetch(`/api/admin/blog-posts/${id}`, {
+                ...adminFetchInit,
                 method: "DELETE",
             });
-            if (!res.ok) throw new Error("Delete failed");
+            if (!res.ok) {
+                throw new Error(await getAdminApiErrorMessage(res));
+            }
             toast.success("Deleted.");
             await load();
-        } catch {
-            toast.error("Could not delete.");
+        } catch (e) {
+            toast.error(
+                e instanceof Error ? e.message : "Could not delete.",
+            );
         }
     }
 
@@ -78,9 +91,18 @@ export default function AdminBlogPage() {
                         remain until you add a post with the same slug.
                     </p>
                 </div>
-                <Link href="/admin/blog/new" className="btn btn-primary text-sm">
-                    <Plus className="w-4 h-4" /> New post
-                </Link>
+                {canManage ? (
+                    <Link
+                        href="/admin/blog/new"
+                        className="btn btn-primary text-sm"
+                    >
+                        <Plus className="w-4 h-4" /> New post
+                    </Link>
+                ) : (
+                    <p className="text-xs text-[var(--color-text-muted)] max-w-xs text-right">
+                        Managers can create and delete posts.
+                    </p>
+                )}
             </div>
 
             <div className="card p-4">
@@ -152,13 +174,15 @@ export default function AdminBlogPage() {
                                         >
                                             <ExternalLink className="w-4 h-4" />
                                         </Link>
-                                        <button
-                                            type="button"
-                                            className="inline-flex p-2 rounded-lg hover:bg-[var(--color-bg-muted)] text-[var(--color-error)]"
-                                            onClick={() => void remove(p.id)}
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
+                                        {canManage && (
+                                            <button
+                                                type="button"
+                                                className="inline-flex p-2 rounded-lg hover:bg-[var(--color-bg-muted)] text-[var(--color-error)]"
+                                                onClick={() => void remove(p.id)}
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        )}
                                     </td>
                                 </tr>
                             ))

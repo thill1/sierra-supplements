@@ -1,6 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import {
+    adminFetchInit,
+    getAdminApiErrorMessage,
+} from "@/lib/admin-api-client";
 
 type AuditRow = {
     id: number;
@@ -40,12 +44,9 @@ export default function AdminAuditPage() {
             if (entityType.trim()) q.set("entityType", entityType.trim());
             if (from) q.set("from", new Date(from).toISOString());
             if (to) q.set("to", new Date(to).toISOString());
-            const res = await fetch(`/api/admin/audit-logs?${q}`);
+            const res = await fetch(`/api/admin/audit-logs?${q}`, adminFetchInit);
             if (!res.ok) {
-                if (res.status === 403) {
-                    throw new Error("You need manager access to view audit logs.");
-                }
-                throw new Error("Failed to load audit logs");
+                throw new Error(await getAdminApiErrorMessage(res));
             }
             setData((await res.json()) as ResponsePayload);
         } catch (e) {

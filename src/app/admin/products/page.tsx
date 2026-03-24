@@ -12,6 +12,11 @@ import {
     Search,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useCanManageCatalog } from "@/components/admin/admin-session-context";
+import {
+    adminFetchInit,
+    getAdminApiErrorMessage,
+} from "@/lib/admin-api-client";
 
 type AdminProduct = {
     id: number;
@@ -43,6 +48,7 @@ const STOCK = [
 ];
 
 export default function AdminProductsPage() {
+    const canManage = useCanManageCatalog();
     const router = useRouter();
     const [products, setProducts] = useState<AdminProduct[]>([]);
     const [loading, setLoading] = useState(true);
@@ -65,8 +71,13 @@ export default function AdminProductsPage() {
     const fetchProducts = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await fetch(`/api/admin/products${queryString}`);
-            if (!res.ok) throw new Error("Failed to fetch");
+            const res = await fetch(
+                `/api/admin/products${queryString}`,
+                adminFetchInit,
+            );
+            if (!res.ok) {
+                throw new Error(await getAdminApiErrorMessage(res));
+            }
             const data = await res.json();
             setProducts(data);
             setError(null);
@@ -91,27 +102,37 @@ export default function AdminProductsPage() {
         }
         try {
             const res = await fetch(`/api/admin/products/${id}`, {
+                ...adminFetchInit,
                 method: "DELETE",
             });
-            if (!res.ok) throw new Error("Failed");
+            if (!res.ok) {
+                throw new Error(await getAdminApiErrorMessage(res));
+            }
             toast.success("Archived.");
             setProducts((prev) => prev.filter((p) => p.id !== id));
-        } catch {
-            toast.error("Could not archive.");
+        } catch (e) {
+            toast.error(
+                e instanceof Error ? e.message : "Could not archive.",
+            );
         }
     };
 
     const handleDuplicate = async (id: number) => {
         try {
             const res = await fetch(`/api/admin/products/${id}/duplicate`, {
+                ...adminFetchInit,
                 method: "POST",
             });
-            if (!res.ok) throw new Error("Failed");
+            if (!res.ok) {
+                throw new Error(await getAdminApiErrorMessage(res));
+            }
             const p = (await res.json()) as { id: number };
             toast.success("Duplicate created.");
             router.push(`/admin/products/${p.id}`);
-        } catch {
-            toast.error("Could not duplicate.");
+        } catch (e) {
+            toast.error(
+                e instanceof Error ? e.message : "Could not duplicate.",
+            );
         }
     };
 
@@ -132,12 +153,18 @@ export default function AdminProductsPage() {
                         Search, filter, and manage catalog & inventory fields.
                     </p>
                 </div>
-                <Link
-                    href="/admin/products/new"
-                    className="btn btn-primary flex items-center gap-2 shrink-0"
-                >
-                    <Plus className="w-4 h-4" /> Add product
-                </Link>
+                {canManage ? (
+                    <Link
+                        href="/admin/products/new"
+                        className="btn btn-primary flex items-center gap-2 shrink-0"
+                    >
+                        <Plus className="w-4 h-4" /> Add product
+                    </Link>
+                ) : (
+                    <p className="text-xs text-[var(--color-text-muted)] max-w-xs text-right">
+                        Only managers can add products.
+                    </p>
+                )}
             </div>
 
             <div className="flex flex-wrap gap-3 items-end">
@@ -332,33 +359,36 @@ export default function AdminProductsPage() {
                                                     >
                                                         <Pencil className="w-4 h-4" />
                                                     </Link>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            handleDuplicate(
-                                                                product.id,
-                                                            )
-                                                        }
-                                                        className="p-2 rounded-lg hover:bg-[var(--color-bg-muted)] text-[var(--color-text-muted)] hover:text-[var(--color-accent)]"
-                                                        aria-label="Duplicate"
-                                                    >
-                                                        <Copy className="w-4 h-4" />
-                                                    </button>
-                                                    {product.status !==
-                                                        "archived" && (
+                                                    {canManage && (
                                                         <button
                                                             type="button"
                                                             onClick={() =>
-                                                                handleArchive(
+                                                                handleDuplicate(
                                                                     product.id,
                                                                 )
                                                             }
-                                                            className="p-2 rounded-lg hover:bg-red-500/10 text-[var(--color-text-muted)] hover:text-[var(--color-error)]"
-                                                            aria-label="Archive"
+                                                            className="p-2 rounded-lg hover:bg-[var(--color-bg-muted)] text-[var(--color-text-muted)] hover:text-[var(--color-accent)]"
+                                                            aria-label="Duplicate"
                                                         >
-                                                            <Archive className="w-4 h-4" />
+                                                            <Copy className="w-4 h-4" />
                                                         </button>
                                                     )}
+                                                    {canManage &&
+                                                        product.status !==
+                                                            "archived" && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    handleArchive(
+                                                                        product.id,
+                                                                    )
+                                                                }
+                                                                className="p-2 rounded-lg hover:bg-red-500/10 text-[var(--color-text-muted)] hover:text-[var(--color-error)]"
+                                                                aria-label="Archive"
+                                                            >
+                                                                <Archive className="w-4 h-4" />
+                                                            </button>
+                                                        )}
                                                 </div>
                                             </td>
                                         </tr>

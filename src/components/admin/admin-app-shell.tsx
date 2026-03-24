@@ -19,25 +19,37 @@ import {
 } from "lucide-react";
 import { Toaster } from "sonner";
 import { SignOutButton } from "@/components/admin/sign-out-button";
+import { useAdminSession } from "@/components/admin/admin-session-context";
+import type { AdminRole } from "@/db/schema";
+import { roleMeetsMinimum } from "@/lib/admin-role";
 import { cn } from "@/lib/utils";
 
-const sidebarLinks = [
-    { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-    { label: "Products", href: "/admin/products", icon: Package },
-    { label: "Inventory", href: "/admin/inventory", icon: Boxes },
-    { label: "Orders", href: "/admin/orders", icon: ShoppingBag },
-    { label: "Leads", href: "/admin/leads", icon: Users },
-    { label: "Audit log", href: "/admin/audit", icon: Activity },
-    { label: "Analytics", href: "/admin/events", icon: BarChart3 },
-    { label: "Content", href: "/admin/content", icon: FileText },
-    { label: "Testimonials", href: "/admin/testimonials", icon: Star },
-    { label: "Blog", href: "/admin/blog", icon: MessageSquare },
-    { label: "Team", href: "/admin/users", icon: UserCog },
-    { label: "Settings", href: "/admin/settings", icon: Settings },
+const sidebarLinks: Array<{
+    label: string;
+    href: string;
+    icon: typeof LayoutDashboard;
+    minRole: AdminRole;
+}> = [
+    { label: "Dashboard", href: "/admin", icon: LayoutDashboard, minRole: "editor" },
+    { label: "Products", href: "/admin/products", icon: Package, minRole: "editor" },
+    { label: "Inventory", href: "/admin/inventory", icon: Boxes, minRole: "manager" },
+    { label: "Orders", href: "/admin/orders", icon: ShoppingBag, minRole: "editor" },
+    { label: "Leads", href: "/admin/leads", icon: Users, minRole: "editor" },
+    { label: "Audit log", href: "/admin/audit", icon: Activity, minRole: "manager" },
+    { label: "Analytics", href: "/admin/events", icon: BarChart3, minRole: "manager" },
+    { label: "Content", href: "/admin/content", icon: FileText, minRole: "editor" },
+    { label: "Testimonials", href: "/admin/testimonials", icon: Star, minRole: "editor" },
+    { label: "Blog", href: "/admin/blog", icon: MessageSquare, minRole: "editor" },
+    { label: "Team", href: "/admin/users", icon: UserCog, minRole: "owner" },
+    { label: "Settings", href: "/admin/settings", icon: Settings, minRole: "editor" },
 ];
 
 export function AdminAppShell({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const { role } = useAdminSession();
+    const visibleLinks = sidebarLinks.filter((l) =>
+        roleMeetsMinimum(role, l.minRole),
+    );
 
     return (
         <div className="flex min-h-screen bg-[var(--color-bg)]">
@@ -56,7 +68,7 @@ export function AdminAppShell({ children }: { children: React.ReactNode }) {
                 </div>
 
                 <nav className="flex-grow p-4 space-y-1">
-                    {sidebarLinks.map((link) => (
+                    {visibleLinks.map((link) => (
                         <Link
                             key={link.href}
                             href={link.href}

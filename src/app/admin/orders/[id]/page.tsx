@@ -5,6 +5,11 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { useCanManageCatalog } from "@/components/admin/admin-session-context";
+import {
+    adminFetchInit,
+    getAdminApiErrorMessage,
+} from "@/lib/admin-api-client";
 
 type Order = {
     id: number;
@@ -44,6 +49,7 @@ const STATUSES = [
 ] as const;
 
 export default function AdminOrderDetailPage() {
+    const canManage = useCanManageCatalog();
     const params = useParams();
     const router = useRouter();
     const id = Number.parseInt(String(params.id), 10);
@@ -66,8 +72,10 @@ export default function AdminOrderDetailPage() {
         let cancelled = false;
         (async () => {
             try {
-                const res = await fetch(`/api/admin/orders/${id}`);
-                if (!res.ok) throw new Error("Not found");
+                const res = await fetch(`/api/admin/orders/${id}`, adminFetchInit);
+                if (!res.ok) {
+                    throw new Error(await getAdminApiErrorMessage(res));
+                }
                 const data = (await res.json()) as {
                     order: Order;
                     lineItems: LineItem[];
@@ -85,8 +93,10 @@ export default function AdminOrderDetailPage() {
                 setCity(o.city ?? "");
                 setStateVal(o.state ?? "");
                 setZip(o.zip ?? "");
-            } catch {
-                toast.error("Order not found");
+            } catch (e) {
+                toast.error(
+                    e instanceof Error ? e.message : "Order not found",
+                );
                 router.push("/admin/orders");
             } finally {
                 if (!cancelled) setLoading(false);
@@ -101,6 +111,7 @@ export default function AdminOrderDetailPage() {
         setSaving(true);
         try {
             const res = await fetch(`/api/admin/orders/${id}`, {
+                ...adminFetchInit,
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -117,12 +128,16 @@ export default function AdminOrderDetailPage() {
                     zip: zip.trim() === "" ? null : zip.trim(),
                 }),
             });
-            if (!res.ok) throw new Error("Update failed");
+            if (!res.ok) {
+                throw new Error(await getAdminApiErrorMessage(res));
+            }
             toast.success("Order updated.");
             const data = await res.json();
             setOrder(data.order);
-        } catch {
-            toast.error("Could not save order.");
+        } catch (e) {
+            toast.error(
+                e instanceof Error ? e.message : "Could not save order.",
+            );
         } finally {
             setSaving(false);
         }
@@ -188,6 +203,7 @@ export default function AdminOrderDetailPage() {
                     <select
                         className="input text-sm"
                         value={status}
+                        disabled={!canManage}
                         onChange={(e) => setStatus(e.target.value)}
                     >
                         {STATUSES.map((s) => (
@@ -200,6 +216,11 @@ export default function AdminOrderDetailPage() {
             </div>
 
             <div className="card p-6 space-y-4 text-sm">
+                {!canManage && (
+                    <p className="text-xs rounded-md bg-amber-500/10 border border-amber-500/30 px-3 py-2 text-amber-950 dark:text-amber-100">
+                        View only. Updating orders requires a manager or owner.
+                    </p>
+                )}
                 <p className="text-[var(--color-text-muted)]">
                     Email (checkout) is fixed:{" "}
                     <span className="text-[var(--color-text)] font-medium">
@@ -214,6 +235,7 @@ export default function AdminOrderDetailPage() {
                         <input
                             className="input"
                             value={custName}
+                            disabled={!canManage}
                             onChange={(e) => setCustName(e.target.value)}
                         />
                     </div>
@@ -224,6 +246,7 @@ export default function AdminOrderDetailPage() {
                         <input
                             className="input"
                             value={custPhone}
+                            disabled={!canManage}
                             onChange={(e) => setCustPhone(e.target.value)}
                         />
                     </div>
@@ -235,6 +258,7 @@ export default function AdminOrderDetailPage() {
                     <input
                         className="input"
                         value={addr1}
+                        disabled={!canManage}
                         onChange={(e) => setAddr1(e.target.value)}
                     />
                 </div>
@@ -245,6 +269,7 @@ export default function AdminOrderDetailPage() {
                     <input
                         className="input"
                         value={addr2}
+                        disabled={!canManage}
                         onChange={(e) => setAddr2(e.target.value)}
                     />
                 </div>
@@ -256,6 +281,7 @@ export default function AdminOrderDetailPage() {
                         <input
                             className="input"
                             value={city}
+                            disabled={!canManage}
                             onChange={(e) => setCity(e.target.value)}
                         />
                     </div>
@@ -266,6 +292,7 @@ export default function AdminOrderDetailPage() {
                         <input
                             className="input"
                             value={stateVal}
+                            disabled={!canManage}
                             onChange={(e) => setStateVal(e.target.value)}
                         />
                     </div>
@@ -276,6 +303,7 @@ export default function AdminOrderDetailPage() {
                         <input
                             className="input"
                             value={zip}
+                            disabled={!canManage}
                             onChange={(e) => setZip(e.target.value)}
                         />
                     </div>
@@ -287,6 +315,7 @@ export default function AdminOrderDetailPage() {
                     <textarea
                         className="input min-h-[100px]"
                         value={notes}
+                        disabled={!canManage}
                         onChange={(e) => setNotes(e.target.value)}
                         placeholder="Fulfillment notes, gift messages, etc."
                     />
@@ -294,7 +323,7 @@ export default function AdminOrderDetailPage() {
                 <button
                     type="button"
                     className="btn btn-primary text-sm"
-                    disabled={saving}
+                    disabled={saving || !canManage}
                     onClick={() => saveOrder()}
                 >
                     {saving ? "Saving…" : "Save changes"}

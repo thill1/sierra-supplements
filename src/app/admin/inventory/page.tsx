@@ -4,6 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Package, ArrowLeft } from "lucide-react";
+import { useCanManageCatalog } from "@/components/admin/admin-session-context";
+import {
+    adminFetchInit,
+    getAdminApiErrorMessage,
+} from "@/lib/admin-api-client";
 
 type VariantOption = {
     variantId: number;
@@ -25,9 +30,11 @@ type MovementRow = {
 };
 
 export default function AdminInventoryPage() {
+    const canManage = useCanManageCatalog();
     const [variants, setVariants] = useState<VariantOption[]>([]);
     const [movements, setMovements] = useState<MovementRow[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadError, setLoadError] = useState<string | null>(null);
 
     const [saleVariantId, setSaleVariantId] = useState("");
     const [saleQty, setSaleQty] = useState("1");
@@ -44,17 +51,44 @@ export default function AdminInventoryPage() {
 
     const load = useCallback(async () => {
         setLoading(true);
+        setLoadError(null);
         try {
             const [vo, mv] = await Promise.all([
-                fetch("/api/admin/inventory/variant-options"),
-                fetch("/api/admin/inventory/movements?limit=80"),
+                fetch("/api/admin/inventory/variant-options", adminFetchInit),
+                fetch("/api/admin/inventory/movements?limit=80", adminFetchInit),
             ]);
+            if (!vo.ok) {
+                const msg = await getAdminApiErrorMessage(vo);
+                setLoadError(msg);
+                setVariants([]);
+                toast.error(msg);
+                if (mv.ok) {
+                    const mlist = await mv.json();
+                    setMovements(Array.isArray(mlist) ? mlist : []);
+                } else {
+                    setMovements([]);
+                }
+                return;
+            }
+            if (!mv.ok) {
+                const msg = await getAdminApiErrorMessage(mv);
+                setLoadError(msg);
+                setMovements([]);
+                toast.error(msg);
+                const vlist = await vo.json();
+                setVariants(Array.isArray(vlist) ? vlist : []);
+                return;
+            }
             const vlist = await vo.json();
             const mlist = await mv.json();
             setVariants(Array.isArray(vlist) ? vlist : []);
             setMovements(Array.isArray(mlist) ? mlist : []);
         } catch {
-            toast.error("Could not load inventory data.");
+            const msg = "Could not load inventory data.";
+            setLoadError(msg);
+            toast.error(msg);
+            setVariants([]);
+            setMovements([]);
         } finally {
             setLoading(false);
         }
@@ -74,6 +108,7 @@ export default function AdminInventoryPage() {
         }
         try {
             const res = await fetch("/api/admin/inventory/in-store-sale", {
+                ...adminFetchInit,
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -83,8 +118,10 @@ export default function AdminInventoryPage() {
                     note: saleNote || null,
                 }),
             });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) throw new Error(data.error || "Failed");
+            if (!res.ok) {
+                throw new Error(await getAdminApiErrorMessage(res));
+            }
+            const data = await res.json();
             toast.success(`Recorded sale. New stock: ${data.newQuantity}`);
             setSaleNote("");
             await load();
@@ -103,6 +140,7 @@ export default function AdminInventoryPage() {
         }
         try {
             const res = await fetch("/api/admin/inventory/adjust", {
+                ...adminFetchInit,
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -111,8 +149,10 @@ export default function AdminInventoryPage() {
                     note: adjNote || null,
                 }),
             });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) throw new Error(data.error || "Failed");
+            if (!res.ok) {
+                throw new Error(await getAdminApiErrorMessage(res));
+            }
+            const data = await res.json();
             toast.success(`Adjusted. New stock: ${data.newQuantity}`);
             setAdjDelta("");
             setAdjNote("");
@@ -132,6 +172,7 @@ export default function AdminInventoryPage() {
         }
         try {
             const res = await fetch("/api/admin/inventory/restock", {
+                ...adminFetchInit,
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -140,8 +181,10 @@ export default function AdminInventoryPage() {
                     note: restNote || null,
                 }),
             });
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) throw new Error(data.error || "Failed");
+            if (!res.ok) {
+                throw new Error(await getAdminApiErrorMessage(res));
+            }
+            const data = await res.json();
             toast.success(`Restocked. New stock: ${data.newQuantity}`);
             setRestQty("");
             setRestNote("");
@@ -169,11 +212,42 @@ export default function AdminInventoryPage() {
                 </p>
             </div>
 
+            {!canManage && (
+                <div
+                    className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-950 dark:text-amber-100"
+                    role="status"
+                >
+                    <strong className="font-semibold">View only.</strong> Inventory
+                    changes require a manager or owner. You can still review movement
+                    history below.
+                </div>
+            )}
+
+            {loadError && !loading && (
+                <div className="rounded-lg border border-[var(--color-error)]/40 bg-[var(--color-error)]/10 px-4 py-3 text-sm text-[var(--color-error)]">
+                    {loadError}{" "}
+                    <button
+                        type="button"
+                        className="underline font-medium ml-1"
+                        onClick={() => void load()}
+                    >
+                        Retry
+                    </button>
+                </div>
+            )}
+
             {loading && variants.length === 0 ? (
                 <p className="text-[var(--color-text-muted)]">Loading…</p>
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <form onSubmit={postSale} className="card p-5 space-y-3">
+                    <form
+                        onSubmit={postSale}
+                        className="card p-5 space-y-3"
+                    >
+                        <fieldset
+                            disabled={!canManage}
+                            className="space-y-3 min-w-0 border-0 p-0 m-0 disabled:opacity-60"
+                        >
                         <h3 className="font-semibold">In-store sale</h3>
                         <select
                             className="input"
@@ -214,9 +288,14 @@ export default function AdminInventoryPage() {
                         <button type="submit" className="btn btn-primary w-full">
                             Record sale
                         </button>
+                        </fieldset>
                     </form>
 
                     <form onSubmit={postAdjust} className="card p-5 space-y-3">
+                        <fieldset
+                            disabled={!canManage}
+                            className="space-y-3 min-w-0 border-0 p-0 m-0 disabled:opacity-60"
+                        >
                         <h3 className="font-semibold">Quick adjustment</h3>
                         <select
                             className="input"
@@ -248,9 +327,14 @@ export default function AdminInventoryPage() {
                         <button type="submit" className="btn btn-secondary w-full">
                             Apply adjustment
                         </button>
+                        </fieldset>
                     </form>
 
                     <form onSubmit={postRestock} className="card p-5 space-y-3">
+                        <fieldset
+                            disabled={!canManage}
+                            className="space-y-3 min-w-0 border-0 p-0 m-0 disabled:opacity-60"
+                        >
                         <h3 className="font-semibold">Shipment / restock</h3>
                         <select
                             className="input"
@@ -283,6 +367,7 @@ export default function AdminInventoryPage() {
                         <button type="submit" className="btn btn-secondary w-full">
                             Add stock
                         </button>
+                        </fieldset>
                     </form>
                 </div>
             )}

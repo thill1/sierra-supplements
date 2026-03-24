@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+    adminFetchInit,
+    getAdminApiErrorMessage,
+} from "@/lib/admin-api-client";
 
 type EventRow = {
     id: number;
@@ -31,12 +35,9 @@ export default function AdminEventsPage() {
                 const q = typeFilter
                     ? `?type=${encodeURIComponent(typeFilter)}`
                     : "";
-                const res = await fetch(`/api/admin/events${q}`);
+                const res = await fetch(`/api/admin/events${q}`, adminFetchInit);
                 if (!res.ok) {
-                    if (res.status === 403) {
-                        throw new Error("Manager access required.");
-                    }
-                    throw new Error("Failed to load");
+                    throw new Error(await getAdminApiErrorMessage(res));
                 }
                 const json = (await res.json()) as {
                     byType: ByType[];

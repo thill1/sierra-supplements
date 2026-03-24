@@ -3,6 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { Save, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import { useCanManageCatalog } from "@/components/admin/admin-session-context";
+import {
+    adminFetchInit,
+    getAdminApiErrorMessage,
+} from "@/lib/admin-api-client";
 import type { HomepageContentStored } from "@/lib/homepage-defaults";
 
 function emptyContent(): HomepageContentStored {
@@ -19,6 +24,7 @@ function emptyContent(): HomepageContentStored {
 }
 
 export default function AdminContentPage() {
+    const canManage = useCanManageCatalog();
     const [data, setData] = useState<HomepageContentStored>(emptyContent);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -26,12 +32,9 @@ export default function AdminContentPage() {
     const load = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await fetch("/api/admin/homepage-content");
+            const res = await fetch("/api/admin/homepage-content", adminFetchInit);
             if (!res.ok) {
-                if (res.status === 403) {
-                    throw new Error("Manager access required.");
-                }
-                throw new Error("Failed to load");
+                throw new Error(await getAdminApiErrorMessage(res));
             }
             const json = (await res.json()) as HomepageContentStored;
             setData(json);
@@ -50,13 +53,13 @@ export default function AdminContentPage() {
         setSaving(true);
         try {
             const res = await fetch("/api/admin/homepage-content", {
+                ...adminFetchInit,
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data),
             });
             if (!res.ok) {
-                const err = (await res.json()) as { error?: string };
-                throw new Error(err.error || "Save failed");
+                throw new Error(await getAdminApiErrorMessage(res));
             }
             const json = (await res.json()) as HomepageContentStored;
             setData(json);
@@ -131,7 +134,7 @@ export default function AdminContentPage() {
                     <button
                         type="button"
                         className="btn btn-primary text-sm px-6 inline-flex items-center gap-2"
-                        disabled={saving}
+                        disabled={saving || !canManage}
                         onClick={() => void save()}
                     >
                         <Save className="w-4 h-4" />{" "}
@@ -140,6 +143,16 @@ export default function AdminContentPage() {
                 </div>
             </div>
 
+            {!canManage && (
+                <p className="text-xs rounded-md bg-amber-500/10 border border-amber-500/30 px-3 py-2 text-amber-950 dark:text-amber-100">
+                    View only. Saving homepage content requires a manager or owner.
+                </p>
+            )}
+
+            <fieldset
+                disabled={!canManage}
+                className="space-y-6 border-0 p-0 m-0 min-w-0 disabled:opacity-65"
+            >
             <div className="card p-6 space-y-6">
                 <h3 className="font-semibold">Lead magnet</h3>
                 <div>
@@ -320,6 +333,7 @@ export default function AdminContentPage() {
                     </div>
                 </div>
             </div>
+            </fieldset>
         </div>
     );
 }

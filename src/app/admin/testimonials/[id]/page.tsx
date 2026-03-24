@@ -4,8 +4,15 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { toast } from "sonner";
+import { useCanManageCatalog } from "@/components/admin/admin-session-context";
+import {
+    adminFetchInit,
+    getAdminApiErrorMessage,
+} from "@/lib/admin-api-client";
 
 export default function EditTestimonialPage() {
+    const canManage = useCanManageCatalog();
     const router = useRouter();
     const params = useParams();
     const id = params.id as string;
@@ -20,22 +27,38 @@ export default function EditTestimonialPage() {
     });
 
     useEffect(() => {
-        fetch(`/api/admin/testimonials/${id}`)
-            .then((res) => {
-                if (!res.ok) throw new Error("Not found");
-                return res.json();
-            })
-            .then((data) =>
-                setForm({
-                    name: data.name,
-                    role: data.role,
-                    quote: data.quote,
-                    avatar: data.avatar || "",
-                    rating: data.rating ?? 5,
-                })
-            )
-            .catch(() => router.push("/admin/testimonials"))
-            .finally(() => setLoading(false));
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await fetch(
+                    `/api/admin/testimonials/${id}`,
+                    adminFetchInit,
+                );
+                if (!res.ok) {
+                    throw new Error(await getAdminApiErrorMessage(res));
+                }
+                const data = await res.json();
+                if (!cancelled) {
+                    setForm({
+                        name: data.name,
+                        role: data.role,
+                        quote: data.quote,
+                        avatar: data.avatar || "",
+                        rating: data.rating ?? 5,
+                    });
+                }
+            } catch (e) {
+                toast.error(
+                    e instanceof Error ? e.message : "Could not load",
+                );
+                if (!cancelled) router.push("/admin/testimonials");
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
     }, [id, router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -43,6 +66,7 @@ export default function EditTestimonialPage() {
         setSaving(true);
         try {
             const res = await fetch(`/api/admin/testimonials/${id}`, {
+                ...adminFetchInit,
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -51,12 +75,12 @@ export default function EditTestimonialPage() {
                 }),
             });
             if (!res.ok) {
-                const data = await res.json().catch(() => ({}));
-                throw new Error(data.error || "Failed to update");
+                throw new Error(await getAdminApiErrorMessage(res));
             }
+            toast.success("Saved.");
             router.push("/admin/testimonials");
         } catch (e) {
-            alert(e instanceof Error ? e.message : "Failed");
+            toast.error(e instanceof Error ? e.message : "Failed");
             setSaving(false);
         }
     };
@@ -78,9 +102,18 @@ export default function EditTestimonialPage() {
                 <ArrowLeft className="w-4 h-4" /> Back to Testimonials
             </Link>
 
+            {!canManage && (
+                <p className="text-xs rounded-md bg-amber-500/10 border border-amber-500/30 px-3 py-2 text-amber-950 dark:text-amber-100">
+                    View only. Saving requires a manager or owner.
+                </p>
+            )}
             <div className="card p-6">
                 <h2 className="text-xl font-bold mb-6">Edit Testimonial</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    <fieldset
+                        disabled={!canManage}
+                        className="space-y-4 border-0 p-0 m-0 min-w-0 disabled:opacity-65"
+                    >
                     <div>
                         <label className="block text-sm font-medium mb-1.5">Name *</label>
                         <input
@@ -135,13 +168,18 @@ export default function EditTestimonialPage() {
                         </select>
                     </div>
                     <div className="flex gap-3 pt-4">
-                        <button type="submit" disabled={saving} className="btn btn-primary">
+                        <button
+                            type="submit"
+                            disabled={saving || !canManage}
+                            className="btn btn-primary"
+                        >
                             {saving ? "Saving…" : "Save Changes"}
                         </button>
                         <Link href="/admin/testimonials" className="btn btn-secondary">
                             Cancel
                         </Link>
                     </div>
+                    </fieldset>
                 </form>
             </div>
         </div>

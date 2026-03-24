@@ -5,8 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { useCanManageCatalog } from "@/components/admin/admin-session-context";
+import {
+    adminFetchInit,
+    getAdminApiErrorMessage,
+} from "@/lib/admin-api-client";
 
 export default function AdminBlogNewPage() {
+    const canManage = useCanManageCatalog();
     const router = useRouter();
     const [slug, setSlug] = useState("");
     const [title, setTitle] = useState("");
@@ -21,6 +27,7 @@ export default function AdminBlogNewPage() {
         setSaving(true);
         try {
             const res = await fetch("/api/admin/blog-posts", {
+                ...adminFetchInit,
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -34,8 +41,7 @@ export default function AdminBlogNewPage() {
                 }),
             });
             if (!res.ok) {
-                const j = (await res.json()) as { error?: string };
-                throw new Error(j.error || "Save failed");
+                throw new Error(await getAdminApiErrorMessage(res));
             }
             const row = (await res.json()) as { id: number };
             toast.success("Post created.");
@@ -45,6 +51,25 @@ export default function AdminBlogNewPage() {
         } finally {
             setSaving(false);
         }
+    }
+
+    if (!canManage) {
+        return (
+            <div className="space-y-6 max-w-xl">
+                <Link
+                    href="/admin/blog"
+                    className="inline-flex items-center gap-2 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-accent)]"
+                >
+                    <ArrowLeft className="w-4 h-4" /> All posts
+                </Link>
+                <div className="card p-6 space-y-2">
+                    <h2 className="text-xl font-bold">New blog post</h2>
+                    <p className="text-sm text-[var(--color-text-secondary)]">
+                        Creating posts requires a manager or owner.
+                    </p>
+                </div>
+            </div>
+        );
     }
 
     return (

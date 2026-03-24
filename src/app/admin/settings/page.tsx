@@ -3,6 +3,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { Save, Bell, Shield, Mail, Globe } from "lucide-react";
 import { toast } from "sonner";
+import { useCanEditSiteSettings } from "@/components/admin/admin-session-context";
+import {
+    adminFetchInit,
+    getAdminApiErrorMessage,
+} from "@/lib/admin-api-client";
 
 type SettingsPayload = {
     siteName: string;
@@ -36,6 +41,7 @@ function normalizeSettingsPayload(raw: Partial<SettingsPayload>): SettingsPayloa
 }
 
 export default function AdminSettingsPage() {
+    const canSaveSettings = useCanEditSiteSettings();
     const [form, setForm] = useState<SettingsPayload>(emptyForm);
     const [baseline, setBaseline] = useState<SettingsPayload>(emptyForm);
     const [loading, setLoading] = useState(true);
@@ -44,16 +50,9 @@ export default function AdminSettingsPage() {
     const load = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await fetch("/api/admin/settings", {
-                credentials: "include",
-            });
+            const res = await fetch("/api/admin/settings", adminFetchInit);
             if (!res.ok) {
-                const err = await res.json().catch(() => ({}));
-                throw new Error(
-                    typeof err?.error === "string"
-                        ? err.error
-                        : "Could not load settings",
-                );
+                throw new Error(await getAdminApiErrorMessage(res));
             }
             const data = normalizeSettingsPayload(
                 (await res.json()) as Partial<SettingsPayload>,
@@ -77,19 +76,15 @@ export default function AdminSettingsPage() {
         setSaving(true);
         try {
             const res = await fetch("/api/admin/settings", {
+                ...adminFetchInit,
                 method: "PUT",
-                credentials: "include",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(form),
             });
-            const data = await res.json().catch(() => ({}));
             if (!res.ok) {
-                const msg =
-                    typeof data?.error === "string"
-                        ? data.error
-                        : "Save failed";
-                throw new Error(msg);
+                throw new Error(await getAdminApiErrorMessage(res));
             }
+            const data = await res.json();
             const saved = normalizeSettingsPayload(
                 data as Partial<SettingsPayload>,
             );
@@ -118,6 +113,15 @@ export default function AdminSettingsPage() {
 
     return (
         <div className="max-w-4xl space-y-8">
+            {!canSaveSettings && (
+                <p className="text-xs rounded-md bg-amber-500/10 border border-amber-500/30 px-3 py-2 text-amber-950 dark:text-amber-100">
+                    View only. Saving site settings requires the owner role.
+                </p>
+            )}
+            <fieldset
+                disabled={!canSaveSettings}
+                className="space-y-8 border-0 p-0 m-0 min-w-0 disabled:opacity-65"
+            >
             <section className="card">
                 <div className="flex items-center gap-3 mb-6">
                     <div className="w-10 h-10 rounded-lg bg-[var(--color-accent-subtle)] flex items-center justify-center">
@@ -301,13 +305,14 @@ export default function AdminSettingsPage() {
                     </button>
                 </div>
             </section>
+            </fieldset>
 
             <div className="flex justify-end gap-3 pt-4">
                 <button
                     type="button"
                     className="btn btn-secondary px-8"
                     onClick={handleDiscard}
-                    disabled={saving}
+                    disabled={saving || !canSaveSettings}
                 >
                     Discard
                 </button>
@@ -316,7 +321,7 @@ export default function AdminSettingsPage() {
                     className="btn btn-primary px-12 inline-flex items-center gap-2"
                     data-testid="admin-settings-save"
                     onClick={() => void handleSave()}
-                    disabled={saving}
+                    disabled={saving || !canSaveSettings}
                 >
                     <Save className="w-4 h-4" />
                     {saving ? "Saving…" : "Save All Settings"}
