@@ -69,7 +69,7 @@ const HERO_FALLBACK: HeroSectionContent = {
     servicesLinkLabel: "Services",
     stats: [
         { value: "50+", label: "Premium Products" },
-        { value: "4.9★", label: "Google Rating" },
+        { value: "-", label: "Nutrition Coaching" },
         { value: "100%", label: "Third-Party Tested" },
         { value: "500+", label: "Clients Served" },
     ],

@@ -6,6 +6,7 @@ import { logServerError } from "@/lib/observability";
 import {
     EXIT_INTENT_DISCOUNT_CODE,
     EXIT_INTENT_DISCOUNT_PERCENT,
+    isFirstOrderDiscountLeadSource,
 } from "@/lib/promo";
 
 const leadSchema = z.object({
@@ -85,14 +86,14 @@ export async function POST(request: Request) {
           `,
                 });
 
-                const isExitIntent = data.source === "exit_intent";
+                const isDiscountSignup = isFirstOrderDiscountLeadSource(data.source);
                 await resend.emails.send({
                     from: "Sierra Strength <noreply@sierrastrengthsupplements.com>",
                     to: data.email,
-                    subject: isExitIntent
+                    subject: isDiscountSignup
                         ? `Your ${EXIT_INTENT_DISCOUNT_PERCENT}% off first order — Sierra Strength`
                         : "Thanks for reaching out to Sierra Strength!",
-                    html: isExitIntent
+                    html: isDiscountSignup
                         ? `
             <h2>Your ${EXIT_INTENT_DISCOUNT_PERCENT}% first-order discount code</h2>
             <p>Hi ${escapeHtml(data.name || "there")},</p>

@@ -208,10 +208,10 @@ export const siteConfig = {
 
   // ── Lead Magnet ────────────────────────────────
   leadMagnet: {
-    title: "Free: The Mountain Performance Guide",
+    title: "Get 15% off your first order",
     subtitle:
-      "7 supplement strategies used by Sierra athletes to train harder and recover faster.",
-    cta: "Get the Free Guide",
+      "Share your name and email and we'll show your exclusive first-order discount code instantly.",
+    cta: "Reveal my code",
   },
 
   // ── Trust Badges ───────────────────────────────
