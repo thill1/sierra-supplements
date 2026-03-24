@@ -1,12 +1,13 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Resend from "next-auth/providers/resend";
-import { isUserAdmin } from "@/lib/admin-allowlist";
+import type { AdminRole } from "@/db/schema.pg";
+import { logAuthDebug } from "@/lib/observability";
 
 /**
- * Keep this module free of `pg` / Drizzle imports so middleware and
- * `next-auth/react` clients can bundle safely. Authoritative admin checks for
- * mutations live in `requireAdmin()` (`src/lib/require-admin.ts`).
+ * No top-level `pg` / Drizzle here (middleware-safe graph). `signIn` / `jwt`
+ * use a dynamic import of `@/lib/admin-auth` so token claims match
+ * `resolveAdmin()` (DB row or bootstrap when `admin_users` is empty).
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
     providers: [
@@ -32,7 +33,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     callbacks: {
         async signIn({ user }) {
-            return isUserAdmin(user?.email ?? null);
+            const { resolveAdmin } = await import("@/lib/admin-auth");
+            const email = user?.email ?? null;
+            const admin = await resolveAdmin(email);
+            logAuthDebug("callbacks:signIn", {
+                email,
+                adminResolved: Boolean(admin),
+            });
+            return admin != null;
         },
         async session({ session, token }) {
             if (token?.sub) {
@@ -42,8 +50,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 session.user.email = token.email;
             }
             session.user.isAdmin = Boolean(token.isAdmin);
-            session.user.adminRole = undefined;
-            session.user.adminDbId = null;
+            session.user.adminRole = token.adminRole as AdminRole | undefined;
+            session.user.adminDbId =
+                typeof token.adminDbId === "number" ? token.adminDbId : null;
+            logAuthDebug("callbacks:session", {
+                email: session.user.email ?? null,
+                isAdmin: session.user.isAdmin === true,
+                adminDbId: session.user.adminDbId ?? null,
+            });
             return session;
         },
         async jwt({ token, user }) {
@@ -52,9 +66,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             }
             const email =
                 typeof token.email === "string" ? token.email : null;
-            token.isAdmin = isUserAdmin(email);
-            token.adminRole = undefined;
-            token.adminDbId = null;
+            const { resolveAdmin } = await import("@/lib/admin-auth");
+            const admin = await resolveAdmin(email);
+            if (!admin) {
+                token.isAdmin = false;
+                token.adminRole = undefined;
+                token.adminDbId = null;
+                logAuthDebug("callbacks:jwt", {
+                    email,
+                    adminResolved: false,
+                });
+                return token;
+            }
+            token.isAdmin = true;
+            token.adminRole = admin.role;
+            token.adminDbId = admin.id;
+            logAuthDebug("callbacks:jwt", {
+                email,
+                adminResolved: true,
+                adminRole: admin.role,
+                adminDbId: admin.id,
+            });
             return token;
         },
     },

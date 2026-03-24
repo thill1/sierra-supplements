@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Send, Loader2 } from "lucide-react";
 
 interface FormState {
@@ -10,13 +10,30 @@ interface FormState {
     message: string;
 }
 
-export function ContactForm() {
+export function ContactForm({
+    defaultMessage = "",
+    leadSource = "contact_form",
+}: {
+    defaultMessage?: string;
+    leadSource?: string;
+}) {
     const [form, setForm] = useState<FormState>({
         name: "",
         email: "",
         phone: "",
-        message: "",
+        message: defaultMessage,
     });
+
+    useEffect(() => {
+        if (defaultMessage) {
+            setForm((prev) =>
+                prev.message ? prev : { ...prev, message: defaultMessage },
+            );
+            document
+                .getElementById("contact-form-panel")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    }, [defaultMessage]);
     const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -29,7 +46,7 @@ export function ContactForm() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     ...form,
-                    source: "contact_form",
+                    source: leadSource,
                     page: "/contact",
                 }),
             });

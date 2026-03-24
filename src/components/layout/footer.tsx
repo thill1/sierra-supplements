@@ -113,7 +113,7 @@ export function Footer() {
                         <ul className="space-y-3">
                             <li>
                                 <a
-                                    href={`tel:${siteConfig.phone}`}
+                                    href={`tel:${siteConfig.smsNumber}`}
                                     className="body-sm hover:text-[var(--color-accent)] transition-colors"
                                 >
                                     {siteConfig.phone}

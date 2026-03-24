@@ -45,16 +45,24 @@ export default function SignInPage() {
                     )}
 
                     {process.env.GOOGLE_CLIENT_ID && (
-                        <form
-                            action={async () => {
-                                "use server";
-                                await signIn("google", { redirectTo: "/admin" });
-                            }}
-                        >
-                            <button type="submit" className="btn btn-secondary w-full">
-                                Sign in with Google
-                            </button>
-                        </form>
+                        <div className="space-y-2">
+                            <form
+                                action={async () => {
+                                    "use server";
+                                    await signIn("google", { redirectTo: "/admin" });
+                                }}
+                            >
+                                <button type="submit" className="btn btn-secondary w-full">
+                                    Sign in with Google
+                                </button>
+                            </form>
+                            {process.env.RESEND_API_KEY ? (
+                                <p className="text-xs text-center text-[var(--color-text-muted)]">
+                                    If Google says the app is restricted to an organization, use{" "}
+                                    <strong>Sign in with Email</strong> above instead.
+                                </p>
+                            ) : null}
+                        </div>
                     )}
 
                     {!process.env.RESEND_API_KEY && !process.env.GOOGLE_CLIENT_ID && (

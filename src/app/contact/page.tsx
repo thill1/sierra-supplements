@@ -8,7 +8,18 @@ export const metadata: Metadata = {
     description: `Get in touch with ${siteConfig.name}. Call, text, email, or visit our Auburn location.`,
 };
 
-export default function ContactPage() {
+type Props = { searchParams: Promise<{ form?: string }> };
+
+const mapsEmbedSrc =
+    "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3104.893459563646!2d-121.06831950000002!3d38.9035516!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x809b052ab94b180b%3A0xf8c5df48a6cf4a9d!2sSierra%20Strength%20Supplements!5e0!3m2!1sen!2sus!4v1774116136264!5m2!1sen!2sus";
+
+const QUOTE_PROMPT =
+    "I'm interested in a custom supplement or coaching quote. Please reach out with next steps.";
+
+export default async function ContactPage({ searchParams }: Props) {
+    const q = await searchParams;
+    const quoteIntent = q.form === "quote";
+
     return (
         <div className="pt-24">
             <section className="section-container section-padding">
@@ -32,7 +43,7 @@ export default function ContactPage() {
                             <h3 className="font-semibold mb-4">Quick Contact</h3>
                             <div className="space-y-4">
                                 <a
-                                    href={`tel:${siteConfig.phone}`}
+                                    href={`tel:${siteConfig.smsNumber}`}
                                     className="flex items-center gap-3 p-3 rounded-lg hover:bg-[var(--color-bg-muted)] transition-colors"
                                 >
                                     <div className="w-10 h-10 rounded-lg bg-[var(--color-accent-subtle)] flex items-center justify-center flex-shrink-0">
@@ -99,13 +110,14 @@ export default function ContactPage() {
                         </div>
 
                         {/* Google Maps embed */}
-                        <div className="card !p-0 overflow-hidden h-48 rounded-xl">
+                        <div className="card !p-0 overflow-hidden h-48 rounded-xl bg-[var(--color-bg-muted)]">
                             <iframe
-                                title="Sierra Strength location – Auburn, CA"
-                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3106.8!2d-121.077!3d38.897!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x809b0a0a0a0a0a0a%3A0x0!2sAuburn%2C+CA+95603!5e0!3m2!1sen!2sus!4v1"
+                                title={`${siteConfig.name} location`}
+                                src={mapsEmbedSrc}
                                 width="100%"
                                 height="100%"
-                                style={{ border: 0, filter: "invert(90%) hue-rotate(180deg) brightness(0.95) contrast(0.9)" }}
+                                className="block min-h-[12rem]"
+                                style={{ border: 0 }}
                                 allowFullScreen
                                 loading="lazy"
                                 referrerPolicy="no-referrer-when-downgrade"
@@ -115,9 +127,16 @@ export default function ContactPage() {
 
                     {/* Form */}
                     <div className="lg:col-span-3">
-                        <div className="card">
-                            <h3 className="heading-sm mb-6">Send Us a Message</h3>
-                            <ContactForm />
+                        <div className="card" id="contact-form-panel">
+                            <h3 className="heading-sm mb-6">
+                                {quoteIntent ? "Request a quote" : "Send Us a Message"}
+                            </h3>
+                            <ContactForm
+                                defaultMessage={quoteIntent ? QUOTE_PROMPT : ""}
+                                leadSource={
+                                    quoteIntent ? "contact_form_quote" : "contact_form"
+                                }
+                            />
                         </div>
                     </div>
                 </div>

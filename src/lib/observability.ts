@@ -33,6 +33,15 @@ export function logAdminAuthzFailure(context: string, email: string) {
     });
 }
 
+export function logAuthDebug(context: string, extra?: LogPayload) {
+    emit("info", {
+        context,
+        area: "auth",
+        event: "auth_debug",
+        ...extra,
+    });
+}
+
 /**
  * Sends to Sentry when `SENTRY_DSN` is set (server); always logs JSON to stdout/stderr.
  */

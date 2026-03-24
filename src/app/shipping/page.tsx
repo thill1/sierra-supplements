@@ -49,7 +49,7 @@ export default function ShippingPage() {
                                     {siteConfig.email}
                                 </a>{" "}
                                 or{" "}
-                                <a href={`tel:${siteConfig.phone}`} className="text-[var(--color-accent)] hover:underline">
+                                <a href={`tel:${siteConfig.smsNumber}`} className="text-[var(--color-accent)] hover:underline">
                                     {siteConfig.phone}
                                 </a>{" "}
                                 for shipping questions.

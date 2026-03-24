@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { products } from "@/db/schema";
-import { eq, desc, and, gt } from "drizzle-orm";
+import { eq, desc, and, type SQL } from "drizzle-orm";
+import { publicCatalogProductWhere } from "@/lib/store/public-catalog-filter";
 
 export async function GET(request: Request) {
     try {
@@ -9,11 +10,7 @@ export async function GET(request: Request) {
         const category = searchParams.get("category");
         const featured = searchParams.get("featured");
 
-        const conditions = [
-            eq(products.published, true),
-            eq(products.status, "active"),
-            gt(products.stockQuantity, 0),
-        ];
+        const conditions: SQL[] = [publicCatalogProductWhere];
         if (category) conditions.push(eq(products.category, category));
         if (featured === "true") conditions.push(eq(products.featured, true));
 

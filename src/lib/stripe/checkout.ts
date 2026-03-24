@@ -1,7 +1,9 @@
+import { randomBytes } from "node:crypto";
 import Stripe from "stripe";
 import { inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { products } from "@/db/schema";
+import { isStripeMockMode } from "@/lib/stripe/mock-mode";
 
 export type CheckoutLineInput = { productId: number; quantity: number };
 
@@ -12,20 +14,10 @@ export type CreateCheckoutSessionParams = {
     customerEmail?: string;
 };
 
-/**
- * Build a Stripe Checkout session from DB-backed catalog (prices never from the client alone).
- */
-export async function createCheckoutSession(
-    params: CreateCheckoutSessionParams,
-): Promise<Stripe.Checkout.Session> {
-    const secret = process.env.STRIPE_SECRET_KEY?.trim();
-    if (!secret) {
-        throw new Error("STRIPE_SECRET_KEY is not configured");
-    }
-
-    const stripe = new Stripe(secret);
-
-    const ids = [...new Set(params.items.map((i) => i.productId))];
+async function buildStripeLineItems(
+    items: CheckoutLineInput[],
+): Promise<Stripe.Checkout.SessionCreateParams.LineItem[]> {
+    const ids = [...new Set(items.map((i) => i.productId))];
     if (ids.length === 0) {
         throw new Error("Cart is empty");
     }
@@ -39,12 +31,16 @@ export async function createCheckoutSession(
 
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
 
-    for (const line of params.items) {
+    for (const line of items) {
         const p = byId.get(line.productId);
         if (!p) {
             throw new Error(`Unknown product id ${line.productId}`);
         }
-        if (!p.published || p.status !== "active" || p.stockQuantity < line.quantity) {
+        if (
+            !p.published ||
+            p.status !== "active" ||
+            p.stockQuantity < line.quantity
+        ) {
             throw new Error(`Product unavailable: ${p.name}`);
         }
 
@@ -67,6 +63,45 @@ export async function createCheckoutSession(
             });
         }
     }
+
+    return lineItems;
+}
+
+/**
+ * Build a Stripe Checkout session from DB-backed catalog (prices never from the client alone).
+ * With `STRIPE_MOCK_MODE`, returns a synthetic session and does not call Stripe.
+ */
+export async function createCheckoutSession(
+    params: CreateCheckoutSessionParams,
+): Promise<Stripe.Checkout.Session> {
+    const lineItems = await buildStripeLineItems(params.items);
+
+    if (isStripeMockMode()) {
+        const sessionId = `cs_mock_${randomBytes(12).toString("hex")}`;
+        const url = params.successUrl.replace(
+            "{CHECKOUT_SESSION_ID}",
+            sessionId,
+        );
+        return {
+            id: sessionId,
+            object: "checkout.session",
+            url,
+            metadata: {
+                items_json: JSON.stringify(params.items),
+            },
+            customer_email: params.customerEmail ?? null,
+            customer_details: params.customerEmail
+                ? { email: params.customerEmail, name: null }
+                : undefined,
+        } as unknown as Stripe.Checkout.Session;
+    }
+
+    const secret = process.env.STRIPE_SECRET_KEY?.trim();
+    if (!secret) {
+        throw new Error("STRIPE_SECRET_KEY is not configured");
+    }
+
+    const stripe = new Stripe(secret);
 
     const payload: Stripe.Checkout.SessionCreateParams = {
         mode: "payment",

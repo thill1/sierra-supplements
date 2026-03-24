@@ -4,8 +4,8 @@
 
 - **Authentication**: Auth.js (NextAuth v5) with Resend magic links and/or Google OAuth (`src/lib/auth.ts`).
 - **Authorization (two layers)**:
-  - **Login + middleware**: **`ADMIN_EMAILS`** only (Edge-safe; see `src/lib/auth.ts` and `middleware.ts`).
-  - **Mutations + sensitive APIs**: **`admin_users`** via `requireAdmin()` in `src/lib/require-admin.ts` (`resolveAdmin()` in `src/lib/admin-auth.ts`), with a **bootstrap fallback** while `admin_users` is empty. Keep env allowlist aligned with real admins.
+  - **Login + middleware**: Same rules as **`resolveAdmin()`** — active **`admin_users`** row, or while the table is **empty**, emails on **`ADMIN_EMAILS`** (bootstrap). JWT/session carry `isAdmin`, `adminRole`, and `adminDbId` (null during bootstrap before a row exists).
+  - **Mutations + sensitive APIs**: **`requireAdmin()`** in `src/lib/require-admin.ts` (delegates to `requireAdminDb()` / `resolveAdmin()` in `src/lib/admin-auth.ts`). Keep env allowlist aligned with real admins for seeding and bootstrap.
 
 Roles (highest to lowest): **owner**, **manager**, **editor**.
 
@@ -14,8 +14,8 @@ Roles (highest to lowest): **owner**, **manager**, **editor**.
 
 ## Enforcement layers
 
-1. **`signIn` callback** — allows login when the email is on **`ADMIN_EMAILS`** (or dev bootstrap rules in `admin-allowlist.ts`).
-2. **Middleware** (`middleware.ts`) — `/admin/*` and `/api/admin/*` require a session with `user.isAdmin === true` derived from **`ADMIN_EMAILS`** (Edge-safe; no Postgres in the middleware bundle).
+1. **`signIn` callback** — allows login when `resolveAdmin()` succeeds (DB row or empty `admin_users` + allowlist / dev rules). Uses a dynamic import of `admin-auth` so this module stays free of a top-level DB graph.
+2. **Middleware** (`middleware.ts`) — `/admin/*` and `/api/admin/*` require `user.isAdmin === true` on the session JWT (set when the token was issued/refreshed on the server).
 3. **Route handlers** — mutations call `requireAdmin()`, which loads the admin row again (or bootstrap) and attaches `admin` with `id` (nullable during bootstrap) for audit FKs.
 
 ## Bootstrap admins

@@ -3,6 +3,7 @@
  * Run after schema push: DATABASE_URL=... pnpm db:seed-admins
  */
 
+import "./load-local-env";
 import { db } from "./index";
 import { adminUsers } from "./schema.pg";
 import { parseAdminEmailAllowlist } from "@/lib/admin-allowlist";
@@ -15,7 +16,8 @@ async function main() {
         process.exit(1);
     }
 
-    for (const email of emails) {
+    for (const raw of emails) {
+        const email = raw.trim().toLowerCase();
         await db
             .insert(adminUsers)
             .values({ email, role: "owner", active: true })

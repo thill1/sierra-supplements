@@ -56,7 +56,7 @@ export function Header() {
                     <div className="flex items-center gap-1 md:hidden">
                         <CartIcon />
                         <a
-                            href={`tel:${siteConfig.phone}`}
+                            href={`tel:${siteConfig.smsNumber}`}
                             className="p-3 rounded-lg hover:bg-[var(--color-bg-muted)] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                             aria-label="Call us"
                         >

@@ -2,14 +2,12 @@
 
 import { Phone, MessageSquare, Calendar, FileText } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
-import { formatPhone } from "@/lib/utils";
-
 export function StickyBottomBar() {
     const actions = [
         {
             label: "Call",
             icon: Phone,
-            href: `tel:${formatPhone(siteConfig.phone)}`,
+            href: `tel:${siteConfig.smsNumber}`,
             id: "sticky-call",
         },
         {

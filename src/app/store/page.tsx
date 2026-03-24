@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
-import { STORE_CATEGORIES } from "@/lib/store-categories";
+import { STORE_SIDEBAR_CATEGORIES } from "@/lib/store-categories";
 import { ProductCard } from "@/components/store/product-card";
 import { StoreGrid } from "@/components/store/store-grid";
 import type { Metadata } from "next";
@@ -47,7 +47,7 @@ export default async function StorePage({ searchParams }: Props) {
                             >
                                 All Products
                             </Link>
-                            {STORE_CATEGORIES.map((cat) => (
+                            {STORE_SIDEBAR_CATEGORIES.map((cat) => (
                                 <Link
                                     key={cat.slug}
                                     href={`/store?category=${cat.slug}`}

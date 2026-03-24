@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { checkRateLimits } from "@/lib/rate-limit";
 import { createCheckoutSession } from "@/lib/stripe/checkout";
+import { isStripeMockMode } from "@/lib/stripe/mock-mode";
 import { logServerError } from "@/lib/observability";
 
 const bodySchema = z.object({
@@ -23,7 +24,9 @@ export async function POST(request: Request) {
     ]);
     if (limited) return limited;
 
-    if (!process.env.STRIPE_SECRET_KEY?.trim()) {
+    const stripeReady =
+        isStripeMockMode() || process.env.STRIPE_SECRET_KEY?.trim();
+    if (!stripeReady) {
         return NextResponse.json(
             { error: "Online card checkout is not enabled yet." },
             { status: 503 },

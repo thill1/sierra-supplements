@@ -5,6 +5,7 @@
  * Retail prices sourced from sierra Strength Inventory.numbers
  */
 
+import "./load-local-env";
 import { db } from "./index";
 import { products, testimonials } from "./schema.pg";
 import { siteConfig } from "@/lib/site-config";
@@ -298,6 +299,10 @@ async function seed() {
                         image,
                         published: p.published,
                         featured: p.featured,
+                        inStock: true,
+                        stockQuantity: 10,
+                        lowStockThreshold: 2,
+                        status: "active",
                         updatedAt: new Date(),
                     },
                 });

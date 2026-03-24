@@ -7,6 +7,7 @@ import { applyStockChangeInTx } from "@/lib/inventory/adjust-stock";
 import { INVENTORY_SOURCE } from "@/lib/inventory/constants";
 import { writeAuditLog } from "@/lib/audit/write-audit";
 import { logServerError } from "@/lib/observability";
+import { isStripeMockMode } from "@/lib/stripe/mock-mode";
 
 export const runtime = "nodejs";
 
@@ -48,41 +49,16 @@ function parseItemsJson(raw: string | null | undefined): {
     }
 }
 
-export async function POST(request: Request) {
-    const secret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
-    const key = process.env.STRIPE_SECRET_KEY?.trim();
-    if (!secret || !key) {
-        return NextResponse.json(
-            { error: "Stripe webhook not configured" },
-            { status: 503 },
-        );
-    }
-
-    const body = await request.text();
-    const sig = request.headers.get("stripe-signature");
-    if (!sig) {
-        return NextResponse.json({ error: "Missing signature" }, { status: 400 });
-    }
-
-    const stripe = new Stripe(key);
-    let event: Stripe.Event;
-    try {
-        event = stripe.webhooks.constructEvent(body, sig, secret);
-    } catch (e) {
-        logServerError("stripe_webhook_signature", e);
-        return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
-    }
-
-    if (event.type !== "checkout.session.completed") {
-        return NextResponse.json({ received: true });
-    }
-
-    const session = event.data.object as Stripe.Checkout.Session;
+async function fulfillCheckoutSessionCompleted(
+    session: Stripe.Checkout.Session,
+): Promise<NextResponse> {
     const sessionId = session.id;
 
     const items = parseItemsJson(session.metadata?.items_json);
     if (items.length === 0) {
-        logServerError("stripe_webhook_no_items", new Error(sessionId));
+        if (!isStripeMockMode()) {
+            logServerError("stripe_webhook_no_items", new Error(sessionId));
+        }
         return NextResponse.json({ received: true });
     }
 
@@ -204,6 +180,69 @@ export async function POST(request: Request) {
         return NextResponse.json({ received: true });
     } catch (e) {
         logServerError("stripe_webhook_fulfill", e);
-        return NextResponse.json({ error: "Fulfillment failed" }, { status: 500 });
+        return NextResponse.json(
+            { error: "Fulfillment failed" },
+            { status: 500 },
+        );
     }
+}
+
+export async function POST(request: Request) {
+    const body = await request.text();
+
+    if (isStripeMockMode()) {
+        let event: Stripe.Event;
+        try {
+            event = JSON.parse(body) as Stripe.Event;
+        } catch {
+            return NextResponse.json(
+                { error: "STRIPE_MOCK_MODE expects a JSON event body" },
+                { status: 400 },
+            );
+        }
+        if (!event?.type) {
+            return NextResponse.json({ error: "Invalid event" }, { status: 400 });
+        }
+        if (event.type !== "checkout.session.completed") {
+            return NextResponse.json({ received: true });
+        }
+        const session = event.data?.object as Stripe.Checkout.Session | undefined;
+        if (!session?.id) {
+            return NextResponse.json(
+                { error: "Missing checkout session" },
+                { status: 400 },
+            );
+        }
+        return fulfillCheckoutSessionCompleted(session);
+    }
+
+    const secret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
+    const key = process.env.STRIPE_SECRET_KEY?.trim();
+    if (!secret || !key) {
+        return NextResponse.json(
+            { error: "Stripe webhook not configured" },
+            { status: 503 },
+        );
+    }
+
+    const sig = request.headers.get("stripe-signature");
+    if (!sig) {
+        return NextResponse.json({ error: "Missing signature" }, { status: 400 });
+    }
+
+    const stripe = new Stripe(key);
+    let event: Stripe.Event;
+    try {
+        event = stripe.webhooks.constructEvent(body, sig, secret);
+    } catch (e) {
+        logServerError("stripe_webhook_signature", e);
+        return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+    }
+
+    if (event.type !== "checkout.session.completed") {
+        return NextResponse.json({ received: true });
+    }
+
+    const session = event.data.object as Stripe.Checkout.Session;
+    return fulfillCheckoutSessionCompleted(session);
 }

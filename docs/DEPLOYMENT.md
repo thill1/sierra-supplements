@@ -28,6 +28,8 @@ DATABASE_URL="postgresql://..." pnpm db:seed-admins
 DATABASE_URL="postgresql://..." pnpm db:seed
 ```
 
+**Versioned SQL:** the repo includes Drizzle files under `drizzle/` (`pnpm db:generate` / `pnpm db:migrate`). New environments can apply `db:migrate`; many teams continue to use `db:push` against Supabase—see `drizzle/README.md`.
+
 ---
 
 ## 2. Vercel environment variables
@@ -43,6 +45,7 @@ DATABASE_URL="postgresql://..." pnpm db:seed
 | `ADMIN_EMAILS` | **Required.** Used to bootstrap `admin_users` (`db:seed-admins`) and as temporary allowlist if the table is empty |
 | `BLOB_READ_WRITE_TOKEN` | **Vercel Blob** (server) for admin product photos |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Optional — Stripe Checkout + webhook (`/api/webhooks/stripe`) |
+| `STRIPE_MOCK_MODE` | Optional — `true` / `1` / `yes` skips Stripe API for checkout and accepts unsigned JSON webhook events (local/staging only; see `src/lib/stripe/mock-mode.ts`) |
 | `RESEND_API_KEY` | Transactional email |
 | `ADMIN_EMAIL` | Where lead/order notifications are sent |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Optional OAuth |
@@ -69,6 +72,28 @@ By default the app uses `rejectUnauthorized: true` for non-localhost connections
 After `db:push`, run **`pnpm db:seed-admins`** so **`admin_users`** contains your team. Sign-in is then gated by active rows in that table (with a temporary `ADMIN_EMAILS` fallback only while the table is empty).
 
 Details: **`docs/ADMIN-AUTH.md`**, **`docs/ADMIN-OPERATIONS.md`**.
+
+### Google OAuth (sign in with Gmail on Vercel)
+
+Use this when you want **Sign in with Google** on `/auth/signin` (no Resend required for that path).
+
+1. **[Google Cloud Console](https://console.cloud.google.com/)** → select or create a project.  
+2. **APIs & Services → OAuth consent screen** — choose **External** (or Internal if Workspace), add your app name, and under **Test users** add **`tghill@gmail.com`** until the app is published (otherwise Google blocks sign-in for non-test users).  
+3. **APIs & Services → Credentials → Create credentials → OAuth client ID** → type **Web application**.  
+4. **Authorized JavaScript origins** (add both if you use them):  
+   - `https://<your-vercel-hostname>` (e.g. `https://sierra-supplements.vercel.app`)  
+   - `http://localhost:3000`  
+5. **Authorized redirect URIs** (exact match; NextAuth uses this path):  
+   - `https://<your-vercel-hostname>/api/auth/callback/google`  
+   - `http://localhost:3000/api/auth/callback/google`  
+6. Copy **Client ID** and **Client secret** into Vercel: **`GOOGLE_CLIENT_ID`**, **`GOOGLE_CLIENT_SECRET`**.  
+7. In Vercel, set **`ADMIN_EMAILS`** to **`tghill@gmail.com`** (comma-separate if you add more admins).  
+8. Set **`NEXTAUTH_URL`** to the **same origin** users open in the browser (production: `https://<your-vercel-hostname>`). Mismatched `NEXTAUTH_URL` causes OAuth callback errors.  
+9. Redeploy, then run **`pnpm db:seed-admins`** against production **`DATABASE_URL`** so **`admin_users`** includes that email.
+
+**Preview deployments:** Each `*.vercel.app` preview URL needs its own redirect URI in the Google client (Google does not allow wildcards). Either add each preview URL you use, or test admin only on the production hostname.
+
+**Errors `redirect_uri_mismatch` or `403 org_internal` / “restricted to organization”:** see **`docs/GOOGLE-OAUTH-FIX.md`** (use **External** consent + test users, or **Sign in with Email** via Resend).
 
 ---
 

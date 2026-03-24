@@ -33,6 +33,10 @@ Production project notes (ref, URL, RLS, Storage): **`docs/SUPABASE-PRODUCTION.m
 DATABASE_URL="postgresql://postgres.[ref]:[PASSWORD]@aws-0-us-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
 ```
 
+The pooler hostname uses an `aws-0-` or `aws-1-` prefix depending on your project (copy the exact **Session** or **Transaction** URI from **Supabase → Connect**; a wrong host returns `Tenant or user not found`).
+
+On some hosts (for example Vercel → Supabase pooler), Node may reject the pooler TLS chain unless you set `DATABASE_SSL_REJECT_UNAUTHORIZED=false` (see `src/db/index.ts` and `docs/DEPLOYMENT.md` — use only if you understand the tradeoff).
+
 ## Neon
 
 1. Create a project at [neon.tech](https://neon.tech)

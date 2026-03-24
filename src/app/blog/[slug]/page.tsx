@@ -73,6 +73,101 @@ Focus on total daily intake first. Get enough protein from quality sources throu
 Want help dialing in your protein strategy? Our nutrition coaches can create a plan that fits your training schedule and goals.
     `,
     },
+    "winter-immune-support": {
+        title: "5 Science-Backed Ways to Support Your Immune System This Winter",
+        category: "Wellness",
+        date: "2025-12-20",
+        readTime: "5 min",
+        content: `
+Winter brings cold air, dry indoor heat, and more time in crowded spaces. Your immune system benefits from consistent sleep, protein, vitamin D, zinc, and hydration — not from mega-doses of random supplements.
+
+## Sleep and stress
+
+Short sleep reliably impairs immune function. Aim for a regular schedule and manage training load so you are not chronically under-recovered.
+
+## Protein and whole foods
+
+Adequate protein supports antibody production and tissue repair. Build meals around quality protein, colorful plants, and fermented foods when you tolerate them.
+
+## Vitamin D and zinc
+
+Many adults run low on vitamin D in winter. Zinc plays a role in normal immune function. Blood work with a clinician helps you supplement appropriately instead of guessing.
+
+## Hydration and electrolytes
+
+Dry winter air increases fluid loss. Water plus electrolytes during long training sessions supports mucosal barriers and performance.
+
+## Train, but recover
+
+Moderate exercise supports immunity; excessive volume without recovery can suppress it. Match intensity to your sleep and nutrition.
+
+Book a consultation if you want a winter protocol tailored to your labs, training, and travel schedule.
+    `,
+    },
+    "magnesium-types": {
+        title: "Not All Magnesium Is Created Equal: A Guide to Forms & Doses",
+        category: "Supplements",
+        date: "2025-11-28",
+        readTime: "6 min",
+        content: `
+Magnesium supports sleep, muscle relaxation, and energy production, but absorption and side effects vary widely by form.
+
+## Common forms
+
+### Glycinate
+
+Often well tolerated and popular for evening use when relaxation and sleep quality are the goal.
+
+### Citrate
+
+Can have a mild osmotic effect at higher doses; some people use it deliberately for digestion support.
+
+### Threonate
+
+Marketed for cognitive applications; evidence is still evolving compared to more established forms.
+
+### Oxide
+
+Inexpensive but poorly absorbed for many people — not our first choice for repletion.
+
+## Dosing and timing
+
+Start low, use the form that matches your goal (sleep vs. digestion vs. general intake), and separate magnesium from certain medications per your pharmacist or physician.
+
+We help clients pick forms and doses that match their symptoms and labs instead of buying the cheapest bottle on the shelf.
+    `,
+    },
+    "athlete-recovery-stack": {
+        title: "The Recovery Stack: What Pro Athletes Take After Training",
+        category: "Performance",
+        date: "2025-11-15",
+        readTime: "9 min",
+        content: `
+Recovery is where adaptation happens. The best “stack” is always food first — then targeted supplements where data and your individual needs align.
+
+## Protein and carbohydrates
+
+Post-session, pairing protein with carbohydrates replenishes glycogen and starts muscle repair. Timing matters less than total daily intake, but convenience after hard sessions still helps adherence.
+
+## Creatine
+
+One of the most studied ergogenic aids. Supports strength, power, and lean mass when dosed consistently; hydration should stay on point.
+
+## Electrolytes
+
+Sodium, potassium, and magnesium matter for athletes who sweat heavily or train in heat or altitude — especially for long sessions.
+
+## Omega-3s
+
+May support recovery metrics for some athletes; quality and dose matter more than brand hype.
+
+## Sleep and hydration
+
+No supplement replaces sleep. Prioritize 7–9 hours and a wind-down routine; track morning hydration before stacking more pills.
+
+Want a recovery protocol built around your sport, schedule, and blood work? Book a free consultation and we will map it out with you.
+    `,
+    },
 };
 
 type Props = {
