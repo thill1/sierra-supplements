@@ -64,12 +64,10 @@ export function ServicesGrid() {
                             <div className="w-12 h-12 rounded-xl bg-[var(--color-accent-subtle)] flex items-center justify-center mb-4 group-hover:bg-[var(--color-accent)] transition-colors">
                                 <Sparkles className="w-6 h-6 text-[var(--color-accent)] group-hover:text-[var(--color-bg)] transition-colors" />
                             </div>
-                            <h3 className="heading-sm mb-2">
-                                Level Up With Custom Supplement Protocol Stacks
-                            </h3>
+                            <h3 className="heading-sm mb-2">Performance Protocols</h3>
                             <p className="body-sm mb-4 text-[var(--color-text-secondary)]">
-                                Personalized stacks built around your goals—with room to adjust as
-                                you level up.
+                                Body builder approved—personalized stacks built around your goals,
+                                with room to adjust as you level up.
                             </p>
                             <span className="inline-flex items-center gap-1 text-sm font-medium text-[var(--color-accent)] group-hover:gap-2 transition-all">
                                 Contact Us Today <ArrowRight className="w-4 h-4" />

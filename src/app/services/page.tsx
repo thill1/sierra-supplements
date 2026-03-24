@@ -75,11 +75,11 @@ export default function ServicesPage() {
                         </div>
                         <div>
                             <h2 className="heading-sm mb-2 group-hover:text-[var(--color-accent)] transition-colors">
-                                Level Up With Custom Supplement Protocol Stacks
+                                Performance Protocols
                             </h2>
                             <p className="body-sm mb-3 text-[var(--color-text-secondary)]">
-                                Personalized stacks built around your goals—with room to adjust as
-                                you level up.
+                                Body builder approved—personalized stacks built around your goals,
+                                with room to adjust as you level up.
                             </p>
                             <span className="inline-flex items-center gap-1 text-sm font-medium text-[var(--color-accent)] group-hover:gap-2 transition-all">
                                 Contact Us Today <ArrowRight className="w-4 h-4" />
