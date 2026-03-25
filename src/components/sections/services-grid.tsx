@@ -6,48 +6,71 @@ import { siteConfig } from "@/lib/site-config";
 const SERVICES_INTRO =
     "From base camp to the summit, each tier builds on the last: nutrition as your foundation, coaching on the climb, and personalized protocols at the peak. Explore where you want to start—or stack every level for the full ascent.";
 
+/**
+ * Twin peaks + distant range — matches design-mocks/peak-services-horizon-hero-mock.html
+ * and public/previews/horizon-hero-services-preview.png (low-poly mass + rim-lit skyline).
+ */
 function ServiceMountains() {
     return (
         <div
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[30%] min-h-[7.5rem] max-h-[11rem] md:min-h-[9rem] md:max-h-[13rem]"
+            className="pointer-events-none absolute inset-0 z-[1] min-h-[320px]"
             aria-hidden
         >
             <svg
-                className="h-full w-full text-[#0d1812]"
-                viewBox="0 0 1200 200"
-                preserveAspectRatio="none"
+                className="block h-[105%] w-full min-h-[280px] translate-y-[2%]"
+                viewBox="0 0 400 300"
+                preserveAspectRatio="xMidYMax slice"
                 xmlns="http://www.w3.org/2000/svg"
             >
                 <defs>
-                    <linearGradient id="services-ridge-front" x1="600" y1="20" x2="600" y2="200" gradientUnits="userSpaceOnUse">
-                        <stop stopColor="#0a1210" />
-                        <stop offset="0.45" stopColor="#152820" />
-                        <stop offset="1" stopColor="var(--color-pine)" stopOpacity="0.85" />
+                    <linearGradient id="servicesPeakMassMain" x1="50%" y1="0%" x2="50%" y2="100%">
+                        <stop offset="0%" stopColor="#2a4d3a" />
+                        <stop offset="28%" stopColor="#1a3024" />
+                        <stop offset="62%" stopColor="#0c1610" />
+                        <stop offset="100%" stopColor="#030605" />
                     </linearGradient>
-                    <linearGradient id="services-ridge-mist" x1="600" y1="0" x2="600" y2="200" gradientUnits="userSpaceOnUse">
-                        <stop stopColor="var(--color-pine)" stopOpacity="0.12" />
-                        <stop offset="0.55" stopColor="var(--color-pine)" stopOpacity="0.38" />
-                        <stop offset="1" stopColor="#0a1210" stopOpacity="0.5" />
+                    <linearGradient id="servicesPeakMassBack" x1="50%" y1="0%" x2="50%" y2="100%">
+                        <stop offset="0%" stopColor="#1f3d2e" />
+                        <stop offset="100%" stopColor="#050807" />
                     </linearGradient>
                 </defs>
-                {/* Mist layer — wider, softer */}
+                {/* Distant range */}
                 <path
-                    d="M0 200 V130 Q180 95 360 125 T720 85 T1080 105 L1200 115 V200 H0Z"
-                    fill="url(#services-ridge-mist)"
+                    className="opacity-[0.45]"
+                    fill="url(#servicesPeakMassBack)"
+                    d="M0 300 L0 210 L45 175 L95 195 L155 155 L220 175 L290 140 L360 165 L400 145 L400 300 Z"
                 />
-                {/* Primary range — multi-peak silhouette */}
+                {/* Foreground twin peaks */}
                 <path
-                    d="M0 200 L0 145 L180 100 L290 128 L430 78 L520 108 L620 62 L740 98 L860 72 L960 95 L1080 68 L1200 95 L1200 200 Z"
-                    fill="url(#services-ridge-front)"
+                    className="opacity-[0.55] drop-shadow-[0_-2px_24px_rgba(0,0,0,0.45)]"
+                    fill="url(#servicesPeakMassMain)"
+                    d="M0 300 L0 188 L78 98 L128 128 L200 32 L272 82 L322 48 L400 148 L400 300 Z"
                 />
-                {/* Crest catchlight */}
+                {/* Cool sage rim — reads behind warm front line */}
                 <path
-                    d="M0 145 L180 100 L290 128 L430 78 L520 108 L620 62 L740 98 L860 72 L960 95 L1080 68 L1200 95"
+                    className="opacity-[0.55]"
                     fill="none"
-                    stroke="var(--color-accent)"
-                    strokeOpacity={0.22}
-                    strokeWidth={1.25}
-                    vectorEffect="non-scaling-stroke"
+                    stroke="#9aae94"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.75}
+                    vectorEffect="nonScalingStroke"
+                    d="M0 210 L45 175 L95 195 L155 155 L220 175 L290 140 L360 165 L400 145"
+                />
+                {/* Copper / gold rim + glow — matches PNG backlight */}
+                <path
+                    className="opacity-[0.92]"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2.75}
+                    vectorEffect="nonScalingStroke"
+                    d="M0 188 L78 98 L128 128 L200 32 L272 82 L322 48 L400 148"
+                    style={{
+                        stroke: "color-mix(in srgb, var(--color-accent) 72%, #fde68a)",
+                        filter:
+                            "drop-shadow(0 0 10px color-mix(in srgb, var(--color-accent) 55%, transparent)) drop-shadow(0 -1px 18px color-mix(in srgb, var(--color-accent-hover) 35%, transparent))",
+                    }}
                 />
             </svg>
         </div>
@@ -89,32 +112,35 @@ export function ServicesGrid() {
                 </div>
 
                 <nav
-                    className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] shadow-[0_28px_72px_rgba(0,0,0,0.55)] md:rounded-[var(--radius-2xl)]"
+                    className="relative isolate mx-auto w-full max-w-5xl overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] shadow-[0_28px_72px_rgba(0,0,0,0.55)] md:rounded-[var(--radius-2xl)]"
                     aria-label="Service tiers: Peak Protocols, High Elevation Coaching, Base Camp Nutrition"
                 >
-                    {/* Atmospheric mesh */}
+                    {/* Atmospheric mesh — aligned with design-mocks/peak-services-horizon-hero-mock.html */}
+                    <div className="absolute inset-0 z-0 bg-[var(--color-bg)]" aria-hidden />
                     <div
-                        className="absolute inset-0 bg-[var(--color-bg)]"
-                        aria-hidden
-                    />
-                    <div
-                        className="absolute inset-0 opacity-[0.97]"
+                        className="absolute inset-0 z-0"
                         style={{
                             background: `
-                radial-gradient(ellipse 90% 70% at 50% -15%, rgba(217, 119, 6, 0.12), transparent 52%),
-                radial-gradient(ellipse 70% 50% at 85% 40%, rgba(45, 90, 61, 0.22), transparent 48%),
-                radial-gradient(ellipse 65% 45% at 10% 55%, rgba(45, 90, 61, 0.18), transparent 45%),
-                linear-gradient(180deg, #121a16 0%, var(--color-bg) 38%, #0a0e0d 100%)
+                radial-gradient(ellipse 100% 70% at 50% 0%, rgba(217, 119, 6, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse 85% 55% at 15% 100%, rgba(45, 90, 61, 0.4) 0%, transparent 52%),
+                radial-gradient(ellipse 75% 45% at 88% 95%, rgba(26, 46, 34, 0.55) 0%, transparent 48%),
+                linear-gradient(180deg, #121820 0%, var(--color-pine) 38%, #0c0f12 100%)
               `,
                         }}
                         aria-hidden
                     />
+                    {/* Warm center bloom behind text — matches PNG */}
                     <div
-                        className="absolute inset-0 opacity-[0.04] mix-blend-overlay bg-[url('data:image/svg+xml,%3Csvg viewBox=%220 0 256 256%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E')]"
+                        className="pointer-events-none absolute left-1/2 top-[-15%] z-[1] h-[45%] w-[min(90%,520px)] -translate-x-1/2 bg-[radial-gradient(ellipse_at_center,rgba(217,119,6,0.15)_0%,transparent_70%)]"
+                        aria-hidden
+                    />
+                    <ServiceMountains />
+                    <div
+                        className="absolute inset-0 z-[2] opacity-[0.03] mix-blend-overlay bg-[url('data:image/svg+xml,%3Csvg viewBox=%220 0 256 256%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E')]"
                         aria-hidden
                     />
 
-                    <div className="relative z-[2] px-5 pt-10 pb-28 sm:px-8 sm:pt-12 sm:pb-32 md:px-12 md:pt-14 md:pb-36 lg:px-16 lg:pt-16 lg:pb-40">
+                    <div className="relative z-[3] px-5 pt-10 pb-32 sm:px-8 sm:pt-12 sm:pb-36 md:px-12 md:pt-14 md:pb-40 lg:px-16 lg:pt-16 lg:pb-48">
                         {/* Horizon line */}
                         <div
                             className="mx-auto mb-9 h-px max-w-3xl bg-gradient-to-r from-transparent via-[var(--color-accent)] to-transparent opacity-[0.72] md:mb-11"
@@ -152,8 +178,6 @@ export function ServicesGrid() {
                             ))}
                         </div>
                     </div>
-
-                    <ServiceMountains />
                 </nav>
 
                 <p className="text-center text-sm text-[var(--color-text-muted)] mt-10 md:mt-12">
