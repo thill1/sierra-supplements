@@ -11,6 +11,8 @@ const SERVICES_INTRO =
  * and rim strokes aligned with public/previews/horizon-hero-services-preview.png (not flat polygons).
  */
 function ServiceMountains() {
+    const burntOrange = "#c25a12";
+    const burntOrangeSoft = "#d06b2a";
     /* Closed shapes: bottom L/R corners anchor to viewBox floor. */
     const backMassD =
         "M0 300 L0 211 C 20 198 36 176 50 170 C 68 158 86 178 100 168 C 122 154 142 150 158 154 C 178 158 200 166 222 156 C 242 146 262 132 288 140 C 308 148 334 158 356 150 C 374 144 386 138 400 132 L 400 300 Z";
@@ -170,7 +172,7 @@ function ServiceMountains() {
                     filter="url(#servicesFrontRidgeGlow)"
                     d={frontRidgeD}
                     style={{
-                        stroke: "color-mix(in srgb, var(--color-accent) 68%, #fde68a)",
+                        stroke: `color-mix(in srgb, ${burntOrangeSoft} 62%, ${burntOrange} 38%)`,
                     }}
                 />
             </svg>
@@ -208,7 +210,7 @@ export function ServicesGrid() {
                 </div>
 
                 <nav
-                    className="relative isolate flex min-h-[28rem] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] shadow-[0_28px_72px_rgba(0,0,0,0.55)] sm:min-h-[30rem] md:min-h-[34rem] md:rounded-[var(--radius-2xl)] lg:min-h-[38rem]"
+                    className="relative isolate flex min-h-[27rem] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] shadow-[0_28px_72px_rgba(0,0,0,0.55)] sm:min-h-[29rem] md:min-h-[32rem] md:rounded-[var(--radius-2xl)] lg:min-h-[35rem]"
                     aria-label="Service tiers: Peak Protocols, High Elevation Coaching, Base Camp Nutrition"
                 >
                     {/* Background — warm top-center bloom like PNG; edges fall to deep green/black */}
@@ -217,8 +219,8 @@ export function ServicesGrid() {
                         className="absolute inset-0 z-0"
                         style={{
                             background: `
-                radial-gradient(ellipse 85% 55% at 50% 8%, rgba(217, 119, 6, 0.22) 0%, transparent 55%),
-                radial-gradient(ellipse 70% 45% at 50% 0%, rgba(245, 158, 11, 0.08) 0%, transparent 45%),
+                radial-gradient(ellipse 85% 55% at 50% 8%, rgba(194, 90, 18, 0.25) 0%, transparent 55%),
+                radial-gradient(ellipse 70% 45% at 50% 0%, rgba(208, 107, 42, 0.1) 0%, transparent 45%),
                 radial-gradient(ellipse 90% 60% at 12% 100%, rgba(45, 90, 61, 0.35) 0%, transparent 50%),
                 radial-gradient(ellipse 85% 55% at 92% 100%, rgba(26, 46, 34, 0.45) 0%, transparent 48%),
                 linear-gradient(180deg, #152018 0%, #0f1612 35%, #0a0e0c 100%)
@@ -227,7 +229,7 @@ export function ServicesGrid() {
                         aria-hidden
                     />
                     <div
-                        className="pointer-events-none absolute left-1/2 top-[-8%] z-[1] h-[52%] w-[min(95%,560px)] -translate-x-1/2 bg-[radial-gradient(ellipse_at_center,rgba(217,119,6,0.18)_0%,rgba(217,119,6,0.06)_35%,transparent_68%)]"
+                        className="pointer-events-none absolute left-1/2 top-[-8%] z-[1] h-[52%] w-[min(95%,560px)] -translate-x-1/2 bg-[radial-gradient(ellipse_at_center,rgba(194,90,18,0.2)_0%,rgba(194,90,18,0.08)_35%,transparent_68%)]"
                         aria-hidden
                     />
                     <ServiceMountains />
@@ -237,7 +239,7 @@ export function ServicesGrid() {
                     />
 
                     {/* Content: centered columns like PNG; horizon ~upper third of card */}
-                    <div className="relative z-[3] flex min-h-0 flex-1 flex-col px-6 pt-8 pb-48 sm:px-10 sm:pt-10 sm:pb-52 md:px-12 md:pt-11 md:pb-56 lg:px-14 lg:pt-12 lg:pb-60">
+                    <div className="relative z-[3] flex min-h-0 flex-1 flex-col px-6 pt-8 pb-40 sm:px-10 sm:pt-10 sm:pb-44 md:px-12 md:pt-11 md:pb-48 lg:px-14 lg:pt-12 lg:pb-52">
                         <div
                             className="mb-8 h-px w-full max-w-none bg-gradient-to-r from-transparent via-[var(--color-accent)]/35 to-transparent sm:mb-10 md:mb-12"
                             aria-hidden
@@ -257,13 +259,16 @@ export function ServicesGrid() {
                                             aria-hidden
                                         />
                                     ) : null}
-                                    <h3 className="font-[family-name:var(--font-outfit)] text-lg font-semibold tracking-tight text-[var(--color-text)] sm:text-xl">
+                                    <h3 className="font-[family-name:var(--font-outfit)] text-[2rem] leading-[1.05] font-semibold tracking-tight text-[var(--color-text)] sm:text-[2.15rem] md:text-[2.25rem]">
                                         {tier.title}
                                     </h3>
-                                    <p className="mt-4 max-w-[22rem] text-pretty text-sm leading-relaxed text-[var(--color-text-secondary)]">
-                                        {tier.shortDescription}
-                                    </p>
-                                    <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--color-accent)] group-hover:gap-2.5 transition-all">
+                                    {/* Preview-matched body treatment: subtle placeholder bars, not paragraph blocks. */}
+                                    <div className="mt-4 w-full max-w-[16rem] space-y-2" aria-hidden>
+                                        <span className="block h-[5px] rounded-full bg-[color-mix(in_srgb,var(--color-text-secondary)_28%,transparent)]" />
+                                        <span className="block h-[5px] w-[84%] rounded-full bg-[color-mix(in_srgb,var(--color-text-secondary)_24%,transparent)]" />
+                                    </div>
+                                    <span className="sr-only">{tier.shortDescription}</span>
+                                    <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--color-accent)] group-hover:gap-2.5 transition-all">
                                         Explore
                                         <ArrowRight className="h-4 w-4" aria-hidden />
                                     </span>
