@@ -7,10 +7,20 @@ const SERVICES_INTRO =
     "From base camp to the summit, each tier builds on the last: nutrition as your foundation, coaching on the climb, and personalized protocols at the peak. Explore where you want to start—or stack every level for the full ascent.";
 
 /**
- * Twin peaks + distant range — matches design-mocks/peak-services-horizon-hero-mock.html:
- * full-card silhouette layer, SVG 105% height, min 320px, xMidYMax slice so peaks scale large.
+ * Layered range — organic Bézier ridgelines, diagonal facet shading, soft ambient shadow,
+ * and rim strokes aligned with public/previews/horizon-hero-services-preview.png (not flat polygons).
  */
 function ServiceMountains() {
+    /* Closed shapes: bottom L/R corners anchor to viewBox floor. */
+    const backMassD =
+        "M0 300 L0 211 C 20 198 36 176 50 170 C 68 158 86 178 100 168 C 122 154 142 150 158 154 C 178 158 200 166 222 156 C 242 146 262 132 288 140 C 308 148 334 158 356 150 C 374 144 386 138 400 132 L 400 300 Z";
+    const backRidgeD =
+        "M0 211 C 20 198 36 176 50 170 C 68 158 86 178 100 168 C 122 154 142 150 158 154 C 178 158 200 166 222 156 C 242 146 262 132 288 140 C 308 148 334 158 356 150 C 374 144 386 138 400 132";
+    const frontMassD =
+        "M0 300 L0 189 C 28 148 52 98 80 94 C 94 108 112 122 130 112 C 156 68 182 36 202 30 C 222 38 252 74 278 82 C 296 66 314 50 328 44 C 348 70 376 112 400 150 L 400 300 Z";
+    const frontRidgeD =
+        "M0 189 C 28 148 52 98 80 94 C 94 108 112 122 130 112 C 156 68 182 36 202 30 C 222 38 252 74 278 82 C 296 66 314 50 328 44 C 348 70 376 112 400 150";
+
     return (
         <div className="pointer-events-none absolute inset-0 z-[1] min-h-[280px]" aria-hidden>
             <svg
@@ -20,49 +30,147 @@ function ServiceMountains() {
                 xmlns="http://www.w3.org/2000/svg"
             >
                 <defs>
-                    <linearGradient id="servicesPeakMassMain" x1="50%" y1="0%" x2="50%" y2="100%">
-                        <stop offset="0%" stopColor="#2a4d3a" />
-                        <stop offset="28%" stopColor="#1a3024" />
-                        <stop offset="62%" stopColor="#0c1610" />
+                    <filter
+                        id="servicesPeakAmbientBlur"
+                        x="-25%"
+                        y="-25%"
+                        width="150%"
+                        height="150%"
+                        colorInterpolationFilters="sRGB"
+                    >
+                        <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="b" />
+                        <feColorMatrix
+                            in="b"
+                            type="matrix"
+                            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.55 0"
+                            result="dim"
+                        />
+                    </filter>
+                    <filter
+                        id="servicesFrontRidgeGlow"
+                        x="-40%"
+                        y="-40%"
+                        width="180%"
+                        height="180%"
+                        colorInterpolationFilters="sRGB"
+                    >
+                        <feGaussianBlur in="SourceGraphic" stdDeviation="2.2" result="glow" />
+                        <feMerge>
+                            <feMergeNode in="glow" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                    <linearGradient id="servicesPeakMassBack" x1="18%" y1="0%" x2="82%" y2="100%">
+                        <stop offset="0%" stopColor="#2a4a38" />
+                        <stop offset="38%" stopColor="#1a3226" />
+                        <stop offset="72%" stopColor="#0c1812" />
                         <stop offset="100%" stopColor="#030605" />
                     </linearGradient>
-                    <linearGradient id="servicesPeakMassBack" x1="50%" y1="0%" x2="50%" y2="100%">
-                        <stop offset="0%" stopColor="#1f3d2e" />
-                        <stop offset="100%" stopColor="#050807" />
+                    <linearGradient id="servicesPeakMassMain" x1="12%" y1="5%" x2="88%" y2="95%">
+                        <stop offset="0%" stopColor="#3d5e4a" />
+                        <stop offset="18%" stopColor="#2d4d3a" />
+                        <stop offset="42%" stopColor="#1e3528" />
+                        <stop offset="68%" stopColor="#0f1e16" />
+                        <stop offset="100%" stopColor="#030605" />
+                    </linearGradient>
+                    <linearGradient id="servicesPeakFacetShadow" x1="92%" y1="8%" x2="8%" y2="92%">
+                        <stop offset="0%" stopColor="#000000" stopOpacity={0} />
+                        <stop offset="38%" stopColor="#06100c" stopOpacity={0.45} />
+                        <stop offset="100%" stopColor="#020403" stopOpacity={0.72} />
+                    </linearGradient>
+                    <linearGradient id="servicesPeakLitShoulder" x1="0%" y1="0%" x2="55%" y2="75%">
+                        <stop offset="0%" stopColor="#4a7260" stopOpacity={0.22} />
+                        <stop offset="55%" stopColor="#1f3d2e" stopOpacity={0} />
+                        <stop offset="100%" stopColor="#1f3d2e" stopOpacity={0} />
+                    </linearGradient>
+                    <radialGradient
+                        id="servicesPeakSummitBloom"
+                        cx="52%"
+                        cy="18%"
+                        r="55%"
+                        fx="50%"
+                        fy="12%"
+                    >
+                        <stop offset="0%" stopColor="#5a8a6e" stopOpacity={0.2} />
+                        <stop offset="45%" stopColor="#2a4536" stopOpacity={0.08} />
+                        <stop offset="100%" stopColor="#0a0f0c" stopOpacity={0} />
+                    </radialGradient>
+                    <linearGradient
+                        id="servicesDistantRim"
+                        gradientUnits="userSpaceOnUse"
+                        x1={0}
+                        y1={168}
+                        x2={400}
+                        y2={168}
+                    >
+                        <stop offset="0%" stopColor="#8fa894" stopOpacity={0.35} />
+                        <stop offset="50%" stopColor="#b8c9ae" stopOpacity={0.65} />
+                        <stop offset="100%" stopColor="#7d9178" stopOpacity={0.4} />
                     </linearGradient>
                 </defs>
+
+                {/* Soft mass behind distant range */}
                 <path
-                    className="opacity-[0.45]"
-                    fill="url(#servicesPeakMassBack)"
-                    d="M0 300 L0 210 L45 175 L95 195 L155 155 L220 175 L290 140 L360 165 L400 145 L400 300 Z"
+                    d={backMassD}
+                    fill="#050807"
+                    opacity={0.35}
+                    filter="url(#servicesPeakAmbientBlur)"
+                    transform="translate(0 6)"
+                />
+                <path className="opacity-[0.48]" fill="url(#servicesPeakMassBack)" d={backMassD} />
+                <path
+                    className="opacity-[0.28]"
+                    fill="url(#servicesPeakFacetShadow)"
+                    d={backMassD}
+                    style={{ mixBlendMode: "multiply" }}
+                />
+
+                {/* Foreground: ambient, base mass, facet + summit light */}
+                <path
+                    d={frontMassD}
+                    fill="#030605"
+                    opacity={0.28}
+                    filter="url(#servicesPeakAmbientBlur)"
+                    transform="translate(0 8)"
                 />
                 <path
-                    className="opacity-[0.55] drop-shadow-[0_-2px_24px_rgba(0,0,0,0.45)]"
+                    className="opacity-[0.58] drop-shadow-[0_-4px_28px_rgba(0,0,0,0.5)]"
                     fill="url(#servicesPeakMassMain)"
-                    d="M0 300 L0 188 L78 98 L128 128 L200 32 L272 82 L322 48 L400 148 L400 300 Z"
+                    d={frontMassD}
                 />
                 <path
                     className="opacity-[0.55]"
-                    fill="none"
-                    stroke="#9aae94"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.75}
-                    vectorEffect="nonScalingStroke"
-                    d="M0 210 L45 175 L95 195 L155 155 L220 175 L290 140 L360 165 L400 145"
+                    fill="url(#servicesPeakFacetShadow)"
+                    d={frontMassD}
+                    style={{ mixBlendMode: "multiply" }}
                 />
                 <path
-                    className="opacity-[0.92]"
+                    className="opacity-[0.9]"
+                    fill="url(#servicesPeakLitShoulder)"
+                    d={frontMassD}
+                    style={{ mixBlendMode: "soft-light" }}
+                />
+                <path className="opacity-[0.85]" fill="url(#servicesPeakSummitBloom)" d={frontMassD} />
+
+                <path
+                    fill="none"
+                    stroke="url(#servicesDistantRim)"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.85}
+                    vectorEffect="nonScalingStroke"
+                    d={backRidgeD}
+                />
+                <path
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    strokeWidth={2.75}
+                    strokeWidth={2.35}
                     vectorEffect="nonScalingStroke"
-                    d="M0 188 L78 98 L128 128 L200 32 L272 82 L322 48 L400 148"
+                    filter="url(#servicesFrontRidgeGlow)"
+                    d={frontRidgeD}
                     style={{
-                        stroke: "color-mix(in srgb, var(--color-accent) 72%, #fde68a)",
-                        filter:
-                            "drop-shadow(0 0 10px color-mix(in srgb, var(--color-accent) 55%, transparent)) drop-shadow(0 -1px 18px color-mix(in srgb, var(--color-accent-hover) 35%, transparent))",
+                        stroke: "color-mix(in srgb, var(--color-accent) 68%, #fde68a)",
                     }}
                 />
             </svg>
