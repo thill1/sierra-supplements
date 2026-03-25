@@ -7,19 +7,19 @@ const SERVICES_INTRO =
     "From base camp to the summit, each tier builds on the last: nutrition as your foundation, coaching on the climb, and personalized protocols at the peak. Explore where you want to start—or stack every level for the full ascent.";
 
 /**
- * Twin peaks + distant range — matches design-mocks/peak-services-horizon-hero-mock.html
- * and public/previews/horizon-hero-services-preview.png (low-poly mass + rim-lit skyline).
+ * Twin peaks + distant range — same geometry as public/previews/horizon-hero-services-preview.png
+ * (filled masses + gold rim on every ridgeline). Rendered in the bottom band only.
  */
 function ServiceMountains() {
     return (
         <div
-            className="pointer-events-none absolute inset-0 z-[1] min-h-[320px]"
+            className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[min(38%,220px)] min-h-[11.5rem] sm:min-h-[12.5rem] md:h-[36%] md:max-h-[15rem] md:min-h-[13.5rem]"
             aria-hidden
         >
             <svg
-                className="block h-[105%] w-full min-h-[280px] translate-y-[2%]"
+                className="block h-full w-full"
                 viewBox="0 0 400 300"
-                preserveAspectRatio="xMidYMax slice"
+                preserveAspectRatio="xMidYMax meet"
                 xmlns="http://www.w3.org/2000/svg"
             >
                 <defs>
@@ -34,52 +34,67 @@ function ServiceMountains() {
                         <stop offset="100%" stopColor="#050807" />
                     </linearGradient>
                 </defs>
-                {/* Distant range */}
-                <path
-                    className="opacity-[0.45]"
-                    fill="url(#servicesPeakMassBack)"
-                    d="M0 300 L0 210 L45 175 L95 195 L155 155 L220 175 L290 140 L360 165 L400 145 L400 300 Z"
-                />
-                {/* Foreground twin peaks */}
-                <path
-                    className="opacity-[0.55] drop-shadow-[0_-2px_24px_rgba(0,0,0,0.45)]"
-                    fill="url(#servicesPeakMassMain)"
-                    d="M0 300 L0 188 L78 98 L128 128 L200 32 L272 82 L322 48 L400 148 L400 300 Z"
-                />
-                {/* Cool sage rim — reads behind warm front line */}
-                <path
-                    className="opacity-[0.55]"
-                    fill="none"
-                    stroke="#9aae94"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.75}
-                    vectorEffect="nonScalingStroke"
-                    d="M0 210 L45 175 L95 195 L155 155 L220 175 L290 140 L360 165 L400 145"
-                />
-                {/* Copper / gold rim + glow — matches PNG backlight */}
-                <path
-                    className="opacity-[0.92]"
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2.75}
-                    vectorEffect="nonScalingStroke"
-                    d="M0 188 L78 98 L128 128 L200 32 L272 82 L322 48 L400 148"
-                    style={{
-                        stroke: "color-mix(in srgb, var(--color-accent) 72%, #fde68a)",
-                        filter:
-                            "drop-shadow(0 0 10px color-mix(in srgb, var(--color-accent) 55%, transparent)) drop-shadow(0 -1px 18px color-mix(in srgb, var(--color-accent-hover) 35%, transparent))",
-                    }}
-                />
+                <g transform="translate(0, 0)">
+                    {/* Distant range */}
+                    <path
+                        className="opacity-[0.5]"
+                        fill="url(#servicesPeakMassBack)"
+                        d="M0 300 L0 210 L45 175 L95 195 L155 155 L220 175 L290 140 L360 165 L400 145 L400 300 Z"
+                    />
+                    {/* Foreground twin peaks */}
+                    <path
+                        className="opacity-[0.62] drop-shadow-[0_-2px_20px_rgba(0,0,0,0.5)]"
+                        fill="url(#servicesPeakMassMain)"
+                        d="M0 300 L0 188 L78 98 L128 128 L200 32 L272 82 L322 48 L400 148 L400 300 Z"
+                    />
+                    {/* Distant ridge — sage + faint gold (PNG: rim light on all peaks) */}
+                    <path
+                        className="opacity-[0.55]"
+                        fill="none"
+                        stroke="#9aae94"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.75}
+                        vectorEffect="nonScalingStroke"
+                        d="M0 210 L45 175 L95 195 L155 155 L220 175 L290 140 L360 165 L400 145"
+                    />
+                    <path
+                        className="opacity-[0.45]"
+                        fill="none"
+                        stroke="var(--color-accent)"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.25}
+                        vectorEffect="nonScalingStroke"
+                        d="M0 210 L45 175 L95 195 L155 155 L220 175 L290 140 L360 165 L400 145"
+                        style={{
+                            filter: "drop-shadow(0 0 6px color-mix(in srgb, var(--color-accent) 40%, transparent))",
+                        }}
+                    />
+                    {/* Front ridgeline — strong copper / gold glow (PNG anchor) */}
+                    <path
+                        className="opacity-[0.95]"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2.85}
+                        vectorEffect="nonScalingStroke"
+                        d="M0 188 L78 98 L128 128 L200 32 L272 82 L322 48 L400 148"
+                        style={{
+                            stroke: "color-mix(in srgb, var(--color-accent) 78%, #fde68a)",
+                            filter:
+                                "drop-shadow(0 0 12px color-mix(in srgb, var(--color-accent) 65%, transparent)) drop-shadow(0 -2px 22px color-mix(in srgb, var(--color-accent-hover) 45%, transparent))",
+                        }}
+                    />
+                </g>
             </svg>
         </div>
     );
 }
 
 /**
- * Horizon hero: atmospheric band, gold horizon, three service columns, ridge silhouettes.
- * Copy from siteConfig; server-rendered.
+ * Horizon hero — layout and atmosphere aligned with public/previews/horizon-hero-services-preview.png
+ * (centered three columns, warm top glow, faint horizon, mountains in bottom third).
  */
 export function ServicesGrid() {
     const peak = siteConfig.services.find((s) => s.slug === "sierra-stack-systems");
@@ -90,11 +105,7 @@ export function ServicesGrid() {
         return null;
     }
 
-    const tiers = [
-        { ...peak, eyebrow: "Summit" },
-        { ...coaching, eyebrow: "Ridge" },
-        { ...base, eyebrow: "Base camp" },
-    ] as const;
+    const tiers = [peak, coaching, base] as const;
 
     return (
         <section
@@ -112,65 +123,62 @@ export function ServicesGrid() {
                 </div>
 
                 <nav
-                    className="relative isolate mx-auto w-full max-w-5xl overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] shadow-[0_28px_72px_rgba(0,0,0,0.55)] md:rounded-[var(--radius-2xl)]"
+                    className="relative isolate flex min-h-[24rem] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-[color-mix(in_srgb,var(--color-border)_82%,transparent)] shadow-[0_28px_72px_rgba(0,0,0,0.55)] sm:min-h-[26rem] md:min-h-[28rem] md:rounded-[var(--radius-2xl)] lg:min-h-[30rem]"
                     aria-label="Service tiers: Peak Protocols, High Elevation Coaching, Base Camp Nutrition"
                 >
-                    {/* Atmospheric mesh — aligned with design-mocks/peak-services-horizon-hero-mock.html */}
+                    {/* Background — warm top-center bloom like PNG; edges fall to deep green/black */}
                     <div className="absolute inset-0 z-0 bg-[var(--color-bg)]" aria-hidden />
                     <div
                         className="absolute inset-0 z-0"
                         style={{
                             background: `
-                radial-gradient(ellipse 100% 70% at 50% 0%, rgba(217, 119, 6, 0.12) 0%, transparent 50%),
-                radial-gradient(ellipse 85% 55% at 15% 100%, rgba(45, 90, 61, 0.4) 0%, transparent 52%),
-                radial-gradient(ellipse 75% 45% at 88% 95%, rgba(26, 46, 34, 0.55) 0%, transparent 48%),
-                linear-gradient(180deg, #121820 0%, var(--color-pine) 38%, #0c0f12 100%)
+                radial-gradient(ellipse 85% 55% at 50% 8%, rgba(217, 119, 6, 0.22) 0%, transparent 55%),
+                radial-gradient(ellipse 70% 45% at 50% 0%, rgba(245, 158, 11, 0.08) 0%, transparent 45%),
+                radial-gradient(ellipse 90% 60% at 12% 100%, rgba(45, 90, 61, 0.35) 0%, transparent 50%),
+                radial-gradient(ellipse 85% 55% at 92% 100%, rgba(26, 46, 34, 0.45) 0%, transparent 48%),
+                linear-gradient(180deg, #152018 0%, #0f1612 35%, #0a0e0c 100%)
               `,
                         }}
                         aria-hidden
                     />
-                    {/* Warm center bloom behind text — matches PNG */}
                     <div
-                        className="pointer-events-none absolute left-1/2 top-[-15%] z-[1] h-[45%] w-[min(90%,520px)] -translate-x-1/2 bg-[radial-gradient(ellipse_at_center,rgba(217,119,6,0.15)_0%,transparent_70%)]"
+                        className="pointer-events-none absolute left-1/2 top-[-8%] z-[1] h-[52%] w-[min(95%,560px)] -translate-x-1/2 bg-[radial-gradient(ellipse_at_center,rgba(217,119,6,0.18)_0%,rgba(217,119,6,0.06)_35%,transparent_68%)]"
                         aria-hidden
                     />
                     <ServiceMountains />
                     <div
-                        className="absolute inset-0 z-[2] opacity-[0.03] mix-blend-overlay bg-[url('data:image/svg+xml,%3Csvg viewBox=%220 0 256 256%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E')]"
+                        className="absolute inset-0 z-[2] opacity-[0.025] mix-blend-overlay bg-[url('data:image/svg+xml,%3Csvg viewBox=%220 0 256 256%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23n)%22/%3E%3C/svg%3E')]"
                         aria-hidden
                     />
 
-                    <div className="relative z-[3] px-5 pt-10 pb-32 sm:px-8 sm:pt-12 sm:pb-36 md:px-12 md:pt-14 md:pb-40 lg:px-16 lg:pt-16 lg:pb-48">
-                        {/* Horizon line */}
+                    {/* Content: centered columns like PNG; horizon ~upper third of card */}
+                    <div className="relative z-[3] flex min-h-0 flex-1 flex-col px-6 pt-8 pb-36 sm:px-10 sm:pt-10 sm:pb-40 md:px-12 md:pt-11 md:pb-44 lg:px-14 lg:pt-12 lg:pb-48">
                         <div
-                            className="mx-auto mb-9 h-px max-w-3xl bg-gradient-to-r from-transparent via-[var(--color-accent)] to-transparent opacity-[0.72] md:mb-11"
+                            className="mb-8 h-px w-full max-w-none bg-gradient-to-r from-transparent via-[var(--color-accent)]/35 to-transparent sm:mb-10 md:mb-12"
                             aria-hidden
                         />
 
-                        <div className="grid grid-cols-1 gap-12 md:grid-cols-3 md:gap-8 lg:gap-12">
+                        <div className="grid flex-1 grid-cols-1 content-start gap-14 md:grid-cols-3 md:gap-6 lg:gap-10">
                             {tiers.map((tier, index) => (
                                 <Link
                                     key={tier.slug}
                                     href={`/services/${tier.slug}`}
-                                    className="group relative flex flex-col items-center text-center outline-none md:items-stretch md:text-left focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)] rounded-xl md:rounded-lg md:px-2 -mx-2 px-4 py-3 md:py-0 transition-colors hover:bg-[color-mix(in_srgb,var(--color-snow)_4%,transparent)]"
-                                    aria-label={`${tier.eyebrow}: ${tier.title}. ${tier.shortDescription}`}
+                                    className="group relative flex flex-col items-center text-center outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-bg)] rounded-xl px-3 py-2 -mx-3 transition-colors hover:bg-[color-mix(in_srgb,var(--color-snow)_5%,transparent)]"
+                                    aria-label={`${tier.title}. ${tier.shortDescription}`}
                                 >
                                     {index > 0 ? (
                                         <span
-                                            className="mx-auto mb-6 block h-px w-12 bg-gradient-to-r from-transparent via-[var(--color-accent)] to-transparent opacity-50 md:hidden"
+                                            className="mx-auto mb-8 block h-px w-14 bg-gradient-to-r from-transparent via-[var(--color-accent)]/30 to-transparent md:hidden"
                                             aria-hidden
                                         />
                                     ) : null}
-                                    <span className="label mb-3 block text-center text-[0.7rem] tracking-[0.22em] text-[var(--color-accent)] md:text-left">
-                                        {tier.eyebrow}
-                                    </span>
-                                    <h3 className="text-center font-[family-name:var(--font-outfit)] text-lg font-semibold tracking-tight text-[var(--color-text)] sm:text-xl md:text-left">
+                                    <h3 className="font-[family-name:var(--font-outfit)] text-lg font-semibold tracking-tight text-[var(--color-text)] sm:text-xl">
                                         {tier.title}
                                     </h3>
-                                    <p className="mt-3 max-w-sm text-center text-pretty text-sm leading-relaxed text-[var(--color-text-secondary)] md:max-w-none md:text-left">
+                                    <p className="mt-4 max-w-[22rem] text-pretty text-sm leading-relaxed text-[var(--color-text-secondary)]">
                                         {tier.shortDescription}
                                     </p>
-                                    <span className="mx-auto mt-5 inline-flex items-center gap-1.5 self-center text-sm font-medium text-[var(--color-accent)] group-hover:gap-2.5 transition-all md:mx-0 md:self-start">
+                                    <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-[var(--color-accent)] group-hover:gap-2.5 transition-all">
                                         Explore
                                         <ArrowRight className="h-4 w-4" aria-hidden />
                                     </span>
