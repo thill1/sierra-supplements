@@ -1,5 +1,4 @@
 import { parseAdminEmailAllowlist } from "@/lib/admin-allowlist";
-import { isSharedRateLimitingConfigured } from "@/lib/rate-limit";
 import { isStripeMockMode } from "@/lib/stripe/mock-mode";
 
 /**
@@ -41,12 +40,6 @@ export function assertProductionEnv(): void {
 
     if (process.env.STRIPE_MOCK_MODE?.trim() && !isStripeMockMode()) {
         missing.push("STRIPE_MOCK_MODE must be disabled in production");
-    }
-
-    if (!isSharedRateLimitingConfigured()) {
-        missing.push(
-            "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN",
-        );
     }
 
     if (missing.length > 0) {

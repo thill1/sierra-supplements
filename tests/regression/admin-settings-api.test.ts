@@ -13,6 +13,7 @@ vi.mock("@/lib/admin-rate-limit", () => ({
 
 vi.mock("@/lib/require-admin", () => ({
     requireAdmin: vi.fn(),
+    requireAdminOrRespond: vi.fn((result) => result.response ?? result),
 }));
 
 const dbHarness = vi.hoisted(() => {

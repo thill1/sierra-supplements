@@ -57,4 +57,21 @@ describe("payment service", () => {
             externalSessionId: "cs_123",
         });
     });
+
+    it("fails safely when SignaPay is selected without a configured adapter flow", async () => {
+        process.env.PAYMENT_PROVIDER = "signapay";
+
+        const { createPaymentSession, isPaymentProviderReady } = await import(
+            "@/lib/payments/service"
+        );
+
+        expect(isPaymentProviderReady()).toBe(false);
+        await expect(
+            createPaymentSession({
+                items: [{ productId: 1, variantId: 0, quantity: 1 }],
+                successUrl: "https://example.com/store/thank-you",
+                cancelUrl: "https://example.com/store/cart",
+            }),
+        ).rejects.toThrow(/SignaPay/);
+    });
 });

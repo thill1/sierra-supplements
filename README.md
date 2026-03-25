@@ -35,8 +35,10 @@ pnpm setup:check
 | `NEXTAUTH_SECRET` | `openssl rand -base64 32` |
 | `NEXTAUTH_URL` | Public origin, e.g. `http://localhost:3000` or `https://your-domain.vercel.app` |
 | `ADMIN_EMAILS` | **Comma-separated** emails — used to **bootstrap** `admin_users` (`pnpm db:seed-admins`) and as a temporary allowlist only while `admin_users` is empty. Required on Vercel. |
+| `PAYMENT_PROVIDER` | Optional. Defaults to `stripe`. Set to `signapay` only after the official SignaPay checkout/token flow is configured. |
 | `BLOB_READ_WRITE_TOKEN` | **Vercel Blob** read-write token (server only) for admin image uploads. |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Optional — **Stripe Checkout** and `/api/webhooks/stripe` for paid orders + inventory decrement. |
+| `SIGNAPAY_CLIENT_ID` / `SIGNAPAY_API_KEY` / `SIGNAPAY_REDIRECT_URI` | Placeholder SignaPay provider config. The provider slot exists, but the live checkout launch step still needs official merchant docs or sandbox credentials. |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Shared rate limiting backend for public/admin APIs. Required by production env checks. |
 | `RESEND_API_KEY` | Contact + order notification email |
 | `ADMIN_EMAIL` | Inbound address for lead/order notifications |
@@ -96,6 +98,7 @@ See **`docs/DEPLOYMENT.md`** for Supabase connection strings, Vercel env vars, a
 - Production catalog uses the database unless `ALLOW_HARDCODED_CATALOG=true`.
 - Content-Security-Policy and security headers apply in production builds.
 - Stripe mock mode is disabled by runtime checks on production deployments.
+- Checkout now runs through a provider-neutral payment service with Stripe as the active working adapter.
 - `GET /api/health` for uptime / DB connectivity checks.
 
 ## Customization

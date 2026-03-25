@@ -42,10 +42,12 @@ DATABASE_URL="postgresql://..." pnpm db:seed
 | `NEXTAUTH_SECRET` | Output of `openssl rand -base64 32` |
 | `NEXTAUTH_URL` | `https://your-domain.vercel.app` (production) or preview URL |
 | `NEXT_PUBLIC_APP_URL` | Same canonical URL as the site |
-| `ADMIN_EMAILS` | **Required.** Used to bootstrap `admin_users` (`db:seed-admins`) and as temporary allowlist if the table is empty |
+| `ADMIN_EMAILS` | **Required.** Comma-separated sign-in emails. Used by `db:seed-admins` and by **`resolveAdmin()`** when there is no **active** `admin_users` row for that address (so new admins can be added via env without a migration) |
+| `PAYMENT_PROVIDER` | Optional. Defaults to `stripe`. Set to `signapay` only after you have the official merchant checkout/token flow details |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | **Required.** Shared rate limiting backend for public/admin APIs across serverless instances |
 | `BLOB_READ_WRITE_TOKEN` | **Vercel Blob** (server) for admin product photos |
 | `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Optional — Stripe Checkout + webhook (`/api/webhooks/stripe`) |
+| `SIGNAPAY_CLIENT_ID` / `SIGNAPAY_API_KEY` / `SIGNAPAY_REDIRECT_URI` | Placeholder SignaPay provider settings. The provider slot is wired, but a live checkout launch still needs official SignaPay merchant docs or sandbox credentials |
 | `STRIPE_MOCK_MODE` | Optional — `true` / `1` / `yes` skips Stripe API for checkout and accepts unsigned JSON webhook events (local/staging only; production env checks reject it) |
 | `RESEND_API_KEY` | Transactional email |
 | `ADMIN_EMAIL` | Where lead/order notifications are sent |
@@ -71,7 +73,7 @@ By default the app uses `rejectUnauthorized: true` for non-localhost connections
 
 ## 3. Admin access
 
-After `db:push`, run **`pnpm db:seed-admins`** so **`admin_users`** contains your team. Sign-in is then gated by active rows in that table (with a temporary `ADMIN_EMAILS` fallback only while the table is empty).
+After `db:push`, run **`pnpm db:seed-admins`** so **`admin_users`** contains your team. Sign-in requires an **active** row for that email **or** the email on **`ADMIN_EMAILS`** (allowlist owner when no active row yet). Inactive rows stay blocked even if the address is on the allowlist.
 
 Details: **`docs/ADMIN-AUTH.md`**, **`docs/ADMIN-OPERATIONS.md`**.
 
@@ -89,9 +91,9 @@ Use this when you want **Sign in with Google** on `/auth/signin` (no Resend requ
    - `https://<your-vercel-hostname>/api/auth/callback/google`  
    - `http://localhost:3000/api/auth/callback/google`  
 6. Copy **Client ID** and **Client secret** into Vercel: **`GOOGLE_CLIENT_ID`**, **`GOOGLE_CLIENT_SECRET`**.  
-7. In Vercel, set **`ADMIN_EMAILS`** to **`tghill@gmail.com`** (comma-separate if you add more admins).  
+7. In Vercel, set **`ADMIN_EMAILS`** to the **exact Google account email(s)** you use to sign in (e.g. **`sierrastrengthsupplements@gmail.com`**, comma-separate for a team).  
 8. Set **`NEXTAUTH_URL`** to the **same origin** users open in the browser (production: `https://<your-vercel-hostname>`). Mismatched `NEXTAUTH_URL` causes OAuth callback errors.  
-9. Redeploy, then run **`pnpm db:seed-admins`** against production **`DATABASE_URL`** so **`admin_users`** includes that email.
+9. Redeploy. Run **`pnpm db:seed-admins`** against production **`DATABASE_URL`** so **`admin_users`** matches (recommended for roles and audit); allowlist alone is enough to sign in after this code change.
 
 **Preview deployments:** Each `*.vercel.app` preview URL needs its own redirect URI in the Google client (Google does not allow wildcards). Either add each preview URL you use, or test admin only on the production hostname.
 

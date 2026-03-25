@@ -1,4 +1,8 @@
 import {
+    createSignapayPaymentSession,
+    isSignapayPaymentReady,
+} from "@/lib/payments/providers/signapay";
+import {
     createStripePaymentSession,
     isStripePaymentReady,
 } from "@/lib/payments/providers/stripe";
@@ -17,7 +21,7 @@ export function isPaymentProviderReady(): boolean {
         case "stripe":
             return isStripePaymentReady();
         case "signapay":
-            return false;
+            return isSignapayPaymentReady();
     }
 }
 
@@ -28,6 +32,6 @@ export async function createPaymentSession(
         case "stripe":
             return createStripePaymentSession(params);
         case "signapay":
-            throw new Error("SignaPay is not configured yet");
+            return createSignapayPaymentSession(params);
     }
 }

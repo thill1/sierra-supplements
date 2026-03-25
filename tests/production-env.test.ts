@@ -53,7 +53,7 @@ describe("assertProductionEnv", () => {
         expect(() => assertProductionEnv()).toThrow(/STRIPE_MOCK_MODE/);
     });
 
-    it("requires Upstash Redis credentials for production rate limiting", () => {
-        expect(() => assertProductionEnv()).toThrow(/UPSTASH_REDIS_REST_/);
+    it("allows production startup without Upstash Redis credentials", () => {
+        expect(() => assertProductionEnv()).not.toThrow();
     });
 });

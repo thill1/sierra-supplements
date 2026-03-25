@@ -21,6 +21,7 @@ vi.mock("@/lib/require-admin", () => ({
             ),
         }),
     ),
+    requireAdminOrRespond: vi.fn((result) => result.response ?? result),
 }));
 
 import { GET as leadsGET } from "@/app/api/admin/leads/route";
