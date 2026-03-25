@@ -30,10 +30,11 @@ export async function getAdminByEmail(
 }
 
 /**
- * Prefer `admin_users` when an active row exists. Otherwise, if `ADMIN_EMAILS`
- * contains this address, grant owner (same as empty-table bootstrap). That way
- * Vercel `ADMIN_EMAILS` stays authoritative without re-running `db:seed-admins`
- * whenever the table already has other admins. Explicitly inactive rows still deny.
+ * Prefer an **active** `admin_users` row (role + id from DB).
+ * Otherwise, if `ADMIN_EMAILS` contains this address, grant access: same as empty-table
+ * bootstrap when there is no row, or re-admit when a row exists but `active` is false
+ * (so Vercel allowlist stays authoritative without a manual DB fix).
+ * No row / inactive row and not on allowlist → deny.
  */
 export async function resolveAdmin(
     email: string | null | undefined,
@@ -44,11 +45,12 @@ export async function resolveAdmin(
     if (row?.active) {
         return { id: row.id, email: norm, role: row.role as AdminRole };
     }
-    if (row && !row.active) {
-        return null;
-    }
     if (isUserAdmin(norm)) {
-        return { id: null, email: norm, role: "owner" };
+        return {
+            id: row?.id ?? null,
+            email: norm,
+            role: (row?.role as AdminRole) ?? "owner",
+        };
     }
     return null;
 }

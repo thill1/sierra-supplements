@@ -41,8 +41,25 @@ describe("resolveAdmin", () => {
         expect(r).toEqual({ id: 1, email: "a@b.com", role: "editor" });
     });
 
-    it("denies inactive DB row even if on allowlist", async () => {
+    it("allows inactive DB row when email is on ADMIN_EMAILS (allowlist re-admits)", async () => {
         vi.stubEnv("ADMIN_EMAILS", "a@b.com");
+        limitFn.mockResolvedValue([
+            {
+                id: 1,
+                email: "a@b.com",
+                role: "owner",
+                active: false,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+        ]);
+
+        const r = await resolveAdmin("a@b.com");
+        expect(r).toEqual({ id: 1, email: "a@b.com", role: "owner" });
+    });
+
+    it("denies inactive DB row when not on allowlist", async () => {
+        vi.stubEnv("ADMIN_EMAILS", "other@example.com");
         limitFn.mockResolvedValue([
             {
                 id: 1,
