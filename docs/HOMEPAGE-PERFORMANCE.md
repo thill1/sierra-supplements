@@ -35,6 +35,16 @@ The script refuses non-local databases and any other database name. It seeds and
 
 Stage a production-environment build with `vercel deploy --prod --skip-domain`. Verify the deployment URL and content before `vercel promote`; keep the prior deployment available for rollback. No database migration is part of this upgrade.
 
+## Live release, October 2
+
+The tested deployment `dpl_3CWnZgtT4pRXGCb4GgjypqMh62iR` was promoted to `https://www.sierrastrengthsupplements.com`. Vercel identifies source commit `3942ac3ea408d8086ecc8768ebdc4c50cb30aece` on `fix/sierra-homepage-latency`, with Node 24.x. Later documentation commits on this branch are not part of that deployed artifact.
+
+All ten local integration checks passed, including the real five-minute timed-refresh database failure. The staged health endpoint reported a working database, public store/booking/checkout pages returned 200, and an unauthorized admin content request returned 401. Staged and previous public homepage text matched before promotion.
+
+After promotion, the initial direct-www HTTP request took 477 ms to headers (`PRERENDER`), followed by five cache hits at 55–108 ms to headers and 56–109 ms for the complete HTML response. A desktop browser check measured 242 ms to headers and 557 ms to document completion, preserving the visible text, headings and links. These samples do not establish a percentile or native iPhone performance result.
+
+Structured verification evidence is in `docs/releases/homepage-cache-2026-10-02.json`. [Baseline PR #2](https://github.com/thill1/sierra-supplements/pull/2) and [cache PR #3](https://github.com/thill1/sierra-supplements/pull/3) remain drafts for branch reconciliation and review. The original checkout remains untouched. Roll back to `dpl_Fkmy2SnapL78aDUdtrSfymgorSki` if production checks show a regression.
+
 ## Follow-up work
 
 1. Cache the public catalog separately, with invalidation for product, variant, inventory, restock, in-store sale and payment settlement changes. Checkout must continue to read current prices and stock.

@@ -1,0 +1,227 @@
+{
+  "verifiedAt": "2026-10-02T22:07:07.476Z",
+  "deployment": {
+    "id": "dpl_3CWnZgtT4pRXGCb4GgjypqMh62iR",
+    "url": "sierra-strength-i49bi5ymo-troy-hills-projects.vercel.app",
+    "projectId": "prj_NObbcKaD5ImjWynljoDmin2x9KZy",
+    "readyState": "READY",
+    "target": "production",
+    "gitCommit": "3942ac3ea408d8086ecc8768ebdc4c50cb30aece",
+    "gitBranch": "fix/sierra-homepage-latency",
+    "nodeVersion": "24.x"
+  },
+  "previousDeploymentId": "dpl_Fkmy2SnapL78aDUdtrSfymgorSki",
+  "repository": "https://github.com/thill1/sierra-supplements",
+  "rootBranch": "main",
+  "baselineBranch": "production/sierra-2026-05-11",
+  "upgradeBranch": "fix/sierra-homepage-latency",
+  "pullRequests": [
+    "https://github.com/thill1/sierra-supplements/pull/2",
+    "https://github.com/thill1/sierra-supplements/pull/3"
+  ],
+  "existingTests": {
+    "files": 30,
+    "tests": 128,
+    "passed": true
+  },
+  "localCacheChecks": {
+    "checkedAt": "2026-10-02T22:02:31.199Z",
+    "checks": [
+      {
+        "name": "Warm homepage uses the full route cache",
+        "cache": "HIT",
+        "ms": 5
+      },
+      {
+        "name": "Database changes remain cached until invalidation"
+      },
+      {
+        "name": "Testimonial creation expires both data and HTML before the next visitor"
+      },
+      {
+        "name": "Testimonial edits appear on the next request"
+      },
+      {
+        "name": "Unpublished testimonials disappear on the next request"
+      },
+      {
+        "name": "Republishing and deletion refresh the homepage"
+      },
+      {
+        "name": "Homepage CMS save appears on the next request"
+      },
+      {
+        "name": "Unauthorized, invalid and missing-record writes leave the cache intact"
+      },
+      {
+        "name": "Failed database writes retain the last successful cached page"
+      },
+      {
+        "name": "Database read failure during timed refresh retains published content"
+      }
+    ]
+  },
+  "stagedChecks": {
+    "mainContentIdentical": true,
+    "checks": [
+      {
+        "path": "/api/health",
+        "status": 200,
+        "health": {
+          "ok": true,
+          "database": true,
+          "timestamp": "2026-10-02T22:02:59.074Z"
+        }
+      },
+      {
+        "path": "/api/admin/homepage-content",
+        "status": 401
+      },
+      {
+        "path": "/store",
+        "status": 200
+      },
+      {
+        "path": "/book",
+        "status": 200
+      },
+      {
+        "path": "/store/checkout",
+        "status": 200
+      }
+    ]
+  },
+  "publicHttpChecks": {
+    "checkedAt": "2026-10-02T22:04:42.740Z",
+    "deploymentId": "dpl_3CWnZgtT4pRXGCb4GgjypqMh62iR",
+    "sourceCommit": "3942ac3ea408d8086ecc8768ebdc4c50cb30aece",
+    "results": [
+      {
+        "url": "https://www.sierrastrengthsupplements.com/",
+        "finalUrl": "https://www.sierrastrengthsupplements.com/",
+        "status": 200,
+        "ttfbMs": 477,
+        "totalMs": 481,
+        "cache": "PRERENDER",
+        "cacheControl": "public, max-age=0, must-revalidate"
+      },
+      {
+        "url": "https://www.sierrastrengthsupplements.com/",
+        "finalUrl": "https://www.sierrastrengthsupplements.com/",
+        "status": 200,
+        "ttfbMs": 78,
+        "totalMs": 80,
+        "cache": "HIT",
+        "cacheControl": "public, max-age=0, must-revalidate"
+      },
+      {
+        "url": "https://www.sierrastrengthsupplements.com/",
+        "finalUrl": "https://www.sierrastrengthsupplements.com/",
+        "status": 200,
+        "ttfbMs": 108,
+        "totalMs": 109,
+        "cache": "HIT",
+        "cacheControl": "public, max-age=0, must-revalidate"
+      },
+      {
+        "url": "https://www.sierrastrengthsupplements.com/",
+        "finalUrl": "https://www.sierrastrengthsupplements.com/",
+        "status": 200,
+        "ttfbMs": 57,
+        "totalMs": 58,
+        "cache": "HIT",
+        "cacheControl": "public, max-age=0, must-revalidate"
+      },
+      {
+        "url": "https://www.sierrastrengthsupplements.com/",
+        "finalUrl": "https://www.sierrastrengthsupplements.com/",
+        "status": 200,
+        "ttfbMs": 60,
+        "totalMs": 62,
+        "cache": "HIT",
+        "cacheControl": "public, max-age=0, must-revalidate"
+      },
+      {
+        "url": "https://www.sierrastrengthsupplements.com/",
+        "finalUrl": "https://www.sierrastrengthsupplements.com/",
+        "status": 200,
+        "ttfbMs": 55,
+        "totalMs": 56,
+        "cache": "HIT",
+        "cacheControl": "public, max-age=0, must-revalidate"
+      },
+      {
+        "url": "https://sierrastrengthsupplements.com/",
+        "finalUrl": "https://www.sierrastrengthsupplements.com/",
+        "status": 200,
+        "ttfbMs": 433,
+        "totalMs": 434,
+        "cache": "HIT",
+        "cacheControl": "public, max-age=0, must-revalidate"
+      },
+      {
+        "url": "https://sierrastrengthsupplements.com/",
+        "finalUrl": "https://www.sierrastrengthsupplements.com/",
+        "status": 200,
+        "ttfbMs": 104,
+        "totalMs": 105,
+        "cache": "HIT",
+        "cacheControl": "public, max-age=0, must-revalidate"
+      },
+      {
+        "url": "https://sierrastrengthsupplements.com/",
+        "finalUrl": "https://www.sierrastrengthsupplements.com/",
+        "status": 200,
+        "ttfbMs": 86,
+        "totalMs": 87,
+        "cache": "HIT",
+        "cacheControl": "public, max-age=0, must-revalidate"
+      },
+      {
+        "url": "https://sierrastrengthsupplements.com/",
+        "finalUrl": "https://www.sierrastrengthsupplements.com/",
+        "status": 200,
+        "ttfbMs": 116,
+        "totalMs": 117,
+        "cache": "HIT",
+        "cacheControl": "public, max-age=0, must-revalidate"
+      },
+      {
+        "url": "https://sierrastrengthsupplements.com/",
+        "finalUrl": "https://www.sierrastrengthsupplements.com/",
+        "status": 200,
+        "ttfbMs": 98,
+        "totalMs": 99,
+        "cache": "HIT",
+        "cacheControl": "public, max-age=0, must-revalidate"
+      },
+      {
+        "url": "https://sierrastrengthsupplements.com/",
+        "finalUrl": "https://www.sierrastrengthsupplements.com/",
+        "status": 200,
+        "ttfbMs": 142,
+        "totalMs": 143,
+        "cache": "HIT",
+        "cacheControl": "public, max-age=0, must-revalidate"
+      }
+    ]
+  },
+  "browserCheck": {
+    "contentPreserved": true,
+    "linksPreserved": true,
+    "headingsPreserved": true,
+    "horizontalOverflow": false,
+    "testFixtures": false,
+    "before": {
+      "ttfbMs": 717,
+      "documentMs": 1220
+    },
+    "after": {
+      "ttfbMs": 242,
+      "documentMs": 557
+    },
+    "scope": "Desktop browser; not native iPhone performance testing"
+  },
+  "limit": "Small sequential samples; monitor history over several days is required to establish a percentile.",
+  "originalCheckoutPreserved": true
+}
