@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { once } from "node:events";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { setTimeout as delay } from "node:timers/promises";
 import { encode } from "next-auth/jwt";
 import pg from "pg";
@@ -51,6 +51,8 @@ try {
         "INSERT INTO testimonials (name, role, quote, published) VALUES ($1, $2, $3, true)",
         ["Initial client", "Client", "Cache test initial quote"],
     );
+    // Next's data cache survives builds; each run must start from its own seed.
+    rmSync(".next", { recursive: true, force: true });
     const build = spawnSync("pnpm", ["build"], { env, stdio: "inherit" });
     assert.equal(build.status, 0, "Production build must succeed");
     server = spawn("pnpm", ["exec", "next", "start", "-p", String(port)], {
