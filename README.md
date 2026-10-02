@@ -1,6 +1,6 @@
 # Sierra Strength Supplements
 
-Marketing site, supplement store (order intake + optional **Stripe Checkout**), and an **admin control center**. Stack: **Next.js 16 (App Router)**, **TypeScript**, **Postgres + Drizzle**, **Auth.js**, **Resend**, **Vercel Blob** for product images (HEIC → JPEG pipeline), optional **Stripe**.
+Marketing site, supplement store (order intake + **Valor hosted checkout**), and an **admin control center**. Stack: **Next.js 16 (App Router)**, **TypeScript**, **Postgres + Drizzle**, **Auth.js**, **Resend**, and **Vercel Blob** for product images (HEIC → JPEG pipeline).
 
 ## Requirements
 
@@ -35,10 +35,10 @@ pnpm setup:check
 | `NEXTAUTH_SECRET` | `openssl rand -base64 32` |
 | `NEXTAUTH_URL` | Public origin, e.g. `http://localhost:3000` or `https://your-domain.vercel.app` |
 | `ADMIN_EMAILS` | **Comma-separated** emails — used to **bootstrap** `admin_users` (`pnpm db:seed-admins`) and as a temporary allowlist only while `admin_users` is empty. Required on Vercel. |
-| `PAYMENT_PROVIDER` | Optional. Defaults to `stripe`. Set to `signapay` only after the official SignaPay checkout/token flow is configured. |
+| `PAYMENT_PROVIDER` | Optional. Defaults to `valor`. |
 | `BLOB_READ_WRITE_TOKEN` | **Vercel Blob** read-write token (server only) for admin image uploads. |
-| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Optional — **Stripe Checkout** and `/api/webhooks/stripe` for paid orders + inventory decrement. |
-| `SIGNAPAY_CLIENT_ID` / `SIGNAPAY_API_KEY` / `SIGNAPAY_REDIRECT_URI` | Placeholder SignaPay provider config. The provider slot exists, but the live checkout launch step still needs official merchant docs or sandbox credentials. |
+| `VALOR_HOSTED_PAGE_URL` / `VALOR_APP_ID` / `VALOR_APP_KEY` / `VALOR_EPI` | Required for **Valor Hosted Page Sale** checkout. Use Valor's live hosted-page URL in production. |
+| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Legacy optional Stripe path; not used when `PAYMENT_PROVIDER=valor`. |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Shared rate limiting backend for public/admin APIs. Required by production env checks. |
 | `RESEND_API_KEY` | Contact + order notification email |
 | `ADMIN_EMAIL` | Inbound address for lead/order notifications |
@@ -57,7 +57,7 @@ Full template: `.env.example`. AuthZ details: **`docs/ADMIN-AUTH.md`**. Operator
 - **Access**: `admin_users` table + roles (`owner` / `manager` / `editor`). Run `pnpm db:seed-admins` after `db:push` so sign-in works once the table exists.
 - **Media**: `/api/admin/upload` — validates type/size, converts HEIC, processes with **sharp** (orientation + no EXIF), uploads main + thumb to **Vercel Blob**.
 - **Inventory**: all stock changes go through **transactions** (`inventory_movements` + `audit_logs`); storefront catalog requires **active** status, **published**, and **`stockQuantity > 0`**.
-- **Stripe**: `POST /api/checkout/session` starts Checkout; `POST /api/webhooks/stripe` fulfills `checkout.session.completed` (order + `order_items` + stock decrement). Card data never touches your database.
+- **Valor**: `POST /api/checkout/session` creates a local `pending_payment` order from DB-backed prices, then redirects the customer to Valor Hosted Page Sale. Card data never touches your database. Reconcile paid Valor transactions manually before adjusting inventory.
 - **Migrations**: prefer `pnpm db:push`; optional SQL reference: `docs/migrations/admin-control-center-upgrade.sql`.
 
 ### Sentry
@@ -80,7 +80,7 @@ The app includes `@sentry/nextjs`. Set **`SENTRY_DSN`** and **`NEXT_PUBLIC_SENTR
 ## Testing
 
 ```bash
-pnpm test        # Vitest — schemas, image magic bytes, Stripe signature helper, roles
+pnpm test        # Vitest — schemas, image magic bytes, payment providers, roles
 pnpm test:e2e    # Playwright — homepage, store, contact, API hardening
 ```
 
@@ -97,8 +97,8 @@ See **`docs/DEPLOYMENT.md`** for Supabase connection strings, Vercel env vars, a
 - Production rate limiting uses Upstash Redis for shared limits across instances.
 - Production catalog uses the database unless `ALLOW_HARDCODED_CATALOG=true`.
 - Content-Security-Policy and security headers apply in production builds.
-- Stripe mock mode is disabled by runtime checks on production deployments.
-- Checkout now runs through a provider-neutral payment service with Stripe as the active working adapter.
+- Valor credentials are required by runtime checks on production deployments when `PAYMENT_PROVIDER=valor`.
+- Checkout now runs through a provider-neutral payment service with Valor as the active adapter.
 - `GET /api/health` for uptime / DB connectivity checks.
 
 ## Customization

@@ -14,10 +14,11 @@ import { logAuthDebug } from "@/lib/observability";
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
     providers: [
-        ...(process.env.RESEND_API_KEY
+        ...(process.env.AUTH_EMAIL_LOGIN_ENABLED === "true" &&
+        process.env.RESEND_API_KEY
             ? [
                   Resend({
-                      from: "Sierra Strength <noreply@sierrastrengthsupplements.com>",
+                      from: "Sierra Strength Supplements <noreply@lordsgymoutreach.com>",
                   }),
               ]
             : []),

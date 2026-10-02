@@ -7,6 +7,7 @@ import { requireAdmin, requireAdminOrRespond } from "@/lib/require-admin";
 import { logAdminFailure } from "@/lib/observability";
 import { rateLimitAdminWrite } from "@/lib/admin-rate-limit";
 import { writeAuditLog } from "@/lib/audit/write-audit";
+import { isPgMissingSchemaError } from "@/lib/db/compat-errors";
 
 const kindSchema = z.enum(productImageKinds);
 
@@ -51,6 +52,10 @@ export async function GET(_request: Request, { params }: Params) {
 
         return NextResponse.json(rows);
     } catch (error) {
+        if (isPgMissingSchemaError(error)) {
+            logAdminFailure("product_images_list_compat", error);
+            return NextResponse.json([]);
+        }
         logAdminFailure("product_images_list", error);
         return NextResponse.json(
             { error: "Failed to load images" },
@@ -116,6 +121,15 @@ export async function POST(request: Request, { params }: Params) {
             return NextResponse.json(
                 { error: "Validation failed", details: error.issues },
                 { status: 400 },
+            );
+        }
+        if (isPgMissingSchemaError(error)) {
+            logAdminFailure("product_image_create_schema_missing", error);
+            return NextResponse.json(
+                {
+                    error: "Product image management requires the production database migration.",
+                },
+                { status: 503 },
             );
         }
         logAdminFailure("product_image_create", error);
@@ -207,6 +221,15 @@ export async function PATCH(request: Request, { params }: Params) {
             return NextResponse.json(
                 { error: "Validation failed", details: error.issues },
                 { status: 400 },
+            );
+        }
+        if (isPgMissingSchemaError(error)) {
+            logAdminFailure("product_images_patch_schema_missing", error);
+            return NextResponse.json(
+                {
+                    error: "Product image management requires the production database migration.",
+                },
+                { status: 503 },
             );
         }
         logAdminFailure("product_images_patch", error);

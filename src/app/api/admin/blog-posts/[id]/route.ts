@@ -8,6 +8,7 @@ import { requireAdmin, requireAdminOrRespond } from "@/lib/require-admin";
 import { requireMinRole } from "@/lib/admin-auth";
 import { rateLimitAdminWrite } from "@/lib/admin-rate-limit";
 import { logAdminFailure } from "@/lib/observability";
+import { isPgMissingSchemaError } from "@/lib/db/compat-errors";
 
 const updateSchema = z.object({
     slug: z
@@ -46,6 +47,10 @@ export async function GET(_request: Request, { params }: Params) {
         }
         return NextResponse.json(row);
     } catch (error) {
+        if (isPgMissingSchemaError(error)) {
+            logAdminFailure("blog_post_get_schema_missing", error);
+            return NextResponse.json({ error: "Not found" }, { status: 404 });
+        }
         logAdminFailure("blog_post_get", error);
         return NextResponse.json(
             { error: "Failed to load post" },
@@ -124,6 +129,15 @@ export async function PUT(request: Request, { params }: Params) {
                 { status: 400 },
             );
         }
+        if (isPgMissingSchemaError(error)) {
+            logAdminFailure("blog_post_update_schema_missing", error);
+            return NextResponse.json(
+                {
+                    error: "Blog post editing requires the production database migration.",
+                },
+                { status: 503 },
+            );
+        }
         logAdminFailure("blog_post_update", error);
         return NextResponse.json(
             { error: "Failed to update post" },
@@ -162,6 +176,15 @@ export async function DELETE(_request: Request, { params }: Params) {
         revalidatePath(`/blog/${gone.slug}`);
         return NextResponse.json({ success: true });
     } catch (error) {
+        if (isPgMissingSchemaError(error)) {
+            logAdminFailure("blog_post_delete_schema_missing", error);
+            return NextResponse.json(
+                {
+                    error: "Blog post editing requires the production database migration.",
+                },
+                { status: 503 },
+            );
+        }
         logAdminFailure("blog_post_delete", error);
         return NextResponse.json(
             { error: "Failed to delete post" },

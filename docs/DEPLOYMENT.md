@@ -43,11 +43,12 @@ DATABASE_URL="postgresql://..." pnpm db:seed
 | `NEXTAUTH_URL` | `https://your-domain.vercel.app` (production) or preview URL |
 | `NEXT_PUBLIC_APP_URL` | Same canonical URL as the site |
 | `ADMIN_EMAILS` | **Required.** Comma-separated sign-in emails. Used by `db:seed-admins` and by **`resolveAdmin()`** when there is no **active** `admin_users` row for that address (so new admins can be added via env without a migration) |
-| `PAYMENT_PROVIDER` | Optional. Defaults to `stripe`. Set to `signapay` only after you have the official merchant checkout/token flow details |
+| `PAYMENT_PROVIDER` | Optional. Defaults to `valor` |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | **Required.** Shared rate limiting backend for public/admin APIs across serverless instances |
 | `BLOB_READ_WRITE_TOKEN` | **Vercel Blob** (server) for admin product photos |
-| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Optional — Stripe Checkout + webhook (`/api/webhooks/stripe`) |
-| `SIGNAPAY_CLIENT_ID` / `SIGNAPAY_API_KEY` / `SIGNAPAY_REDIRECT_URI` | Placeholder SignaPay provider settings. The provider slot is wired, but a live checkout launch still needs official SignaPay merchant docs or sandbox credentials |
+| `VALOR_HOSTED_PAGE_URL` | **Required for Valor.** Use `https://securelink-prod.valorpaytech.com:4430/` in production |
+| `VALOR_APP_ID` / `VALOR_APP_KEY` / `VALOR_EPI` | **Required for Valor.** Merchant credentials from Valor PayTech |
+| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Legacy optional Stripe path; not used when `PAYMENT_PROVIDER=valor` |
 | `STRIPE_MOCK_MODE` | Optional — `true` / `1` / `yes` skips Stripe API for checkout and accepts unsigned JSON webhook events (local/staging only; production env checks reject it) |
 | `RESEND_API_KEY` | Transactional email |
 | `ADMIN_EMAIL` | Where lead/order notifications are sent |
@@ -103,7 +104,7 @@ Use this when you want **Sign in with Google** on `/auth/signin` (no Resend requ
 
 ## 3b. Alternate domain (`sierrastrongsupplements.com` → canonical)
 
-The app **301 redirects** `sierrastrongsupplements.com` and `www.sierrastrongsupplements.com` to `https://sierrastrengthsupplements.com` (same path). Hostnames are listed in **`src/lib/site-config.ts`** as `redirectHosts`.
+The app **301 redirects** `sierrastrengthsupplements.com`, `sierrastrongsupplements.com`, and `www.sierrastrongsupplements.com` to `https://www.sierrastrengthsupplements.com` (same path). Hostnames are listed in **`src/lib/site-config.ts`** as `redirectHosts`.
 
 **Vercel (required for HTTPS):** Project → **Settings → Domains** → add **`sierrastrongsupplements.com`** and **`www.sierrastrongsupplements.com`** to the same project as the main site.
 

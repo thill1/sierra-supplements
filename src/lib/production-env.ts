@@ -38,6 +38,18 @@ export function assertProductionEnv(): void {
         missing.push("ADMIN_EMAILS (comma-separated admin emails)");
     }
 
+    const provider = process.env.PAYMENT_PROVIDER || "valor";
+    if (provider === "valor") {
+        for (const key of [
+            "VALOR_HOSTED_PAGE_URL",
+            "VALOR_APP_ID",
+            "VALOR_APP_KEY",
+            "VALOR_EPI",
+        ]) {
+            if (!process.env[key]?.trim()) missing.push(key);
+        }
+    }
+
     if (process.env.STRIPE_MOCK_MODE?.trim() && !isStripeMockMode()) {
         missing.push("STRIPE_MOCK_MODE must be disabled in production");
     }

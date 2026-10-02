@@ -6,6 +6,7 @@ import { events } from "@/db/schema";
 import { requireAdmin, requireAdminOrRespond } from "@/lib/require-admin";
 import { requireMinRole } from "@/lib/admin-auth";
 import { logAdminFailure } from "@/lib/observability";
+import { isPgMissingSchemaError } from "@/lib/db/compat-errors";
 
 const querySchema = z.object({
     limit: z.coerce.number().int().min(1).max(500).optional().default(100),
@@ -64,6 +65,15 @@ export async function GET(request: Request) {
                 "Events are retained until you prune the table; avoid exporting raw rows without a privacy review.",
         });
     } catch (error) {
+        if (isPgMissingSchemaError(error)) {
+            logAdminFailure("admin_events_list_schema_missing", error);
+            return NextResponse.json({
+                byType: [],
+                items: [],
+                retentionNote:
+                    "Events are retained until you prune the table; avoid exporting raw rows without a privacy review.",
+            });
+        }
         logAdminFailure("admin_events_list", error);
         return NextResponse.json(
             { error: "Failed to load events" },

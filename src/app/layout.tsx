@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
@@ -56,6 +57,7 @@ export const metadata: Metadata = {
 
 import { LocalBusinessSchema } from "@/components/seo/local-business-schema";
 import { CartProvider } from "@/contexts/cart-context";
+import { PageViewTracker } from "@/components/analytics/page-view-tracker";
 
 export default async function RootLayout({
   children,
@@ -72,6 +74,9 @@ export default async function RootLayout({
         style={{ fontFamily: "var(--font-body)" }}
       >
         <CartProvider>
+          <Suspense fallback={null}>
+            <PageViewTracker />
+          </Suspense>
           <Header />
           <main className="min-h-screen">{children}</main>
           <Footer />

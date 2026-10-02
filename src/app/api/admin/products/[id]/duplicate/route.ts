@@ -8,6 +8,7 @@ import { requireMinRole } from "@/lib/admin-auth";
 import { logAdminFailure } from "@/lib/observability";
 import { rateLimitAdminWrite } from "@/lib/admin-rate-limit";
 import { writeAuditLog } from "@/lib/audit/write-audit";
+import { isPgMissingSchemaError } from "@/lib/db/compat-errors";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -72,22 +73,30 @@ export async function POST(_request: Request, { params }: Params) {
                 .returning();
 
             if (p) {
-                const imgs = await tx
-                    .select()
-                    .from(productImages)
-                    .where(eq(productImages.productId, productId));
+                try {
+                    const imgs = await tx
+                        .select()
+                        .from(productImages)
+                        .where(eq(productImages.productId, productId));
 
-                for (const im of imgs) {
-                    await tx.insert(productImages).values({
-                        productId: p.id,
-                        url: im.url,
-                        kind: im.kind,
-                        sortOrder: im.sortOrder,
-                        altText: im.altText,
-                    });
+                    for (const im of imgs) {
+                        await tx.insert(productImages).values({
+                            productId: p.id,
+                            url: im.url,
+                            kind: im.kind,
+                            sortOrder: im.sortOrder,
+                            altText: im.altText,
+                        });
+                    }
+                } catch (error) {
+                    if (!isPgMissingSchemaError(error)) throw error;
                 }
 
-                await duplicateVariantsForProduct(tx, productId, p.id);
+                try {
+                    await duplicateVariantsForProduct(tx, productId, p.id);
+                } catch (error) {
+                    if (!isPgMissingSchemaError(error)) throw error;
+                }
 
                 await writeAuditLog(tx, {
                     actorUserId: admin.id,

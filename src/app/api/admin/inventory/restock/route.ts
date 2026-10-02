@@ -4,11 +4,15 @@ import { requireAdmin, requireAdminOrRespond } from "@/lib/require-admin";
 import { requireMinRole } from "@/lib/admin-auth";
 import { rateLimitAdminWrite } from "@/lib/admin-rate-limit";
 import { INVENTORY_SOURCE } from "@/lib/inventory/constants";
-import { applyStockChange } from "@/lib/inventory/adjust-stock";
+import {
+    applyParentProductStockInTx,
+    applyStockChange,
+} from "@/lib/inventory/adjust-stock";
 import { logAdminFailure } from "@/lib/observability";
+import { db } from "@/db";
 
 const bodySchema = z.object({
-    variantId: z.number().int().positive(),
+    variantId: z.number().int().refine((n) => n !== 0, "variantId cannot be 0"),
     quantity: z.number().int().positive().max(9999),
     note: z.string().max(1000).optional().nullable(),
 });
@@ -28,14 +32,26 @@ export async function POST(request: Request) {
         const json = await request.json();
         const data = bodySchema.parse(json);
 
-        const result = await applyStockChange({
-            variantId: data.variantId,
-            delta: data.quantity,
-            reason: "restock",
-            source: INVENTORY_SOURCE.restock,
-            note: data.note ?? null,
-            actorUserId: admin.id,
-        });
+        const result =
+            data.variantId < 0
+                ? await db.transaction((tx) =>
+                      applyParentProductStockInTx(tx, {
+                          productId: Math.abs(data.variantId),
+                          delta: data.quantity,
+                          reason: "restock",
+                          source: INVENTORY_SOURCE.restock,
+                          note: data.note ?? null,
+                          actorUserId: admin.id,
+                      }),
+                  )
+                : await applyStockChange({
+                      variantId: data.variantId,
+                      delta: data.quantity,
+                      reason: "restock",
+                      source: INVENTORY_SOURCE.restock,
+                      note: data.note ?? null,
+                      actorUserId: admin.id,
+                  });
 
         return NextResponse.json({ success: true, ...result });
     } catch (error) {

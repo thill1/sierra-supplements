@@ -8,7 +8,7 @@ import { siteConfig } from "@/lib/site-config";
 
 export const ADMIN_APP_SETTINGS_ID = 1;
 
-const RESEND_FROM = "Sierra Strength <noreply@sierrastrengthsupplements.com>";
+const RESEND_FROM = "Sierra Strength Supplements <noreply@lordsgymoutreach.com>";
 
 export type AdminAppSettingsRow = typeof adminAppSettings.$inferSelect;
 
@@ -29,10 +29,10 @@ export async function getAdminAppSettings(): Promise<AdminAppSettingsRow | null>
 export function resolveAdminNotificationEmail(
     settings: Pick<AdminAppSettingsRow, "adminNotificationEmail"> | null | undefined,
 ): string {
-    const fromDb = settings?.adminNotificationEmail?.trim();
-    if (fromDb) return fromDb;
     const env = process.env.ADMIN_EMAIL?.trim();
     if (env) return env;
+    const fromDb = settings?.adminNotificationEmail?.trim();
+    if (fromDb) return fromDb;
     return siteConfig.adminEmail;
 }
 

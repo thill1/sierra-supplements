@@ -7,6 +7,11 @@ import { Mountain } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default function SignInPage() {
+    const emailLoginEnabled =
+        process.env.AUTH_EMAIL_LOGIN_ENABLED === "true" &&
+        Boolean(process.env.RESEND_API_KEY);
+    const googleLoginEnabled = Boolean(process.env.GOOGLE_CLIENT_ID);
+
     return (
         <div className="min-h-screen flex items-center justify-center px-4 bg-[var(--color-bg)]">
             <div className="w-full max-w-sm space-y-8">
@@ -21,7 +26,7 @@ export default function SignInPage() {
                 </div>
 
                 <div className="card p-6 space-y-4">
-                    {process.env.RESEND_API_KEY && (
+                    {emailLoginEnabled && (
                         <form
                             action={async (formData) => {
                                 "use server";
@@ -48,7 +53,7 @@ export default function SignInPage() {
                         </form>
                     )}
 
-                    {process.env.GOOGLE_CLIENT_ID && (
+                    {googleLoginEnabled && (
                         <div className="space-y-2">
                             <form
                                 action={async () => {
@@ -60,7 +65,7 @@ export default function SignInPage() {
                                     Sign in with Google
                                 </button>
                             </form>
-                            {process.env.RESEND_API_KEY ? (
+                            {emailLoginEnabled ? (
                                 <p className="text-xs text-center text-[var(--color-text-muted)]">
                                     If Google says the app is restricted to an organization, use{" "}
                                     <strong>Sign in with Email</strong> above instead.
@@ -69,9 +74,9 @@ export default function SignInPage() {
                         </div>
                     )}
 
-                    {!process.env.RESEND_API_KEY && !process.env.GOOGLE_CLIENT_ID && (
+                    {!emailLoginEnabled && !googleLoginEnabled && (
                         <p className="text-sm text-[var(--color-text-muted)]">
-                            No sign-in providers configured. Set RESEND_API_KEY or GOOGLE_CLIENT_ID.
+                            No sign-in providers configured. Set Google sign-in or enable email login after the auth tables are migrated.
                         </p>
                     )}
 
@@ -136,7 +141,7 @@ export default function SignInPage() {
                     ) : null}
 
                     <p className="text-xs text-center text-[var(--color-text-muted)]">
-                        We&apos;ll send a magic link to your email, or use Google to sign in.
+                        Sign in with an authorized Google account to manage the store.
                     </p>
                 </div>
             </div>

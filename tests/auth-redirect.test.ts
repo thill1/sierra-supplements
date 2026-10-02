@@ -2,20 +2,20 @@ import { describe, expect, it } from "vitest";
 import { resolveSafeAuthRedirect } from "@/lib/auth-redirect";
 
 describe("resolveSafeAuthRedirect", () => {
-    const baseUrl = "https://sierrastrengthsupplements.com";
+    const baseUrl = "https://www.sierrastrengthsupplements.com";
 
     it("allows same-origin absolute redirects", () => {
         expect(
             resolveSafeAuthRedirect(
-                "https://sierrastrengthsupplements.com/admin/orders",
+                "https://www.sierrastrengthsupplements.com/admin/orders",
                 baseUrl,
             ),
-        ).toBe("https://sierrastrengthsupplements.com/admin/orders");
+        ).toBe("https://www.sierrastrengthsupplements.com/admin/orders");
     });
 
     it("resolves relative redirects against the configured base URL", () => {
         expect(resolveSafeAuthRedirect("/admin", baseUrl)).toBe(
-            "https://sierrastrengthsupplements.com/admin",
+            "https://www.sierrastrengthsupplements.com/admin",
         );
     });
 

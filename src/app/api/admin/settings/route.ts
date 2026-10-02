@@ -8,6 +8,7 @@ import { requireMinRole } from "@/lib/admin-auth";
 import { logAdminFailure } from "@/lib/observability";
 import { requireAdmin, requireAdminOrRespond } from "@/lib/require-admin";
 import { siteConfig } from "@/lib/site-config";
+import { isPgMissingSchemaError } from "@/lib/db/compat-errors";
 
 const SETTINGS_ID = 1;
 
@@ -59,10 +60,7 @@ export async function GET() {
         });
     } catch (error) {
         logAdminFailure("admin_settings_get", error);
-        return NextResponse.json(
-            { error: "Failed to load settings" },
-            { status: 500 },
-        );
+        return NextResponse.json(defaultSettings());
     }
 }
 
@@ -123,6 +121,15 @@ export async function PUT(request: Request) {
             return NextResponse.json(
                 { error: "Invalid body", details: error.flatten() },
                 { status: 400 },
+            );
+        }
+        if (isPgMissingSchemaError(error)) {
+            logAdminFailure("admin_settings_put_schema_missing", error);
+            return NextResponse.json(
+                {
+                    error: "Settings editing requires the production database migration.",
+                },
+                { status: 503 },
             );
         }
         logAdminFailure("admin_settings_put", error);

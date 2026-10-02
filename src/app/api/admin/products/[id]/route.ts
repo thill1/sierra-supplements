@@ -11,6 +11,7 @@ import { adminProductUpdateSchema } from "@/lib/admin/schemas/product";
 import { applyEditorProductRestrictions } from "@/lib/admin/product-mutations";
 import { updateAdminProductInTransaction } from "@/lib/admin/product-persistence";
 import { writeAuditLog } from "@/lib/audit/write-audit";
+import { isPgMissingSchemaError } from "@/lib/db/compat-errors";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -35,14 +36,20 @@ export async function GET(_request: Request, { params }: Params) {
             return NextResponse.json({ error: "Product not found" }, { status: 404 });
         }
 
-        const variants = await db
-            .select()
-            .from(productVariants)
-            .where(eq(productVariants.productId, productId))
-            .orderBy(
-                asc(productVariants.sortOrder),
-                asc(productVariants.id),
-            );
+        let variants: (typeof productVariants.$inferSelect)[] = [];
+        try {
+            variants = await db
+                .select()
+                .from(productVariants)
+                .where(eq(productVariants.productId, productId))
+                .orderBy(
+                    asc(productVariants.sortOrder),
+                    asc(productVariants.id),
+                );
+        } catch (error) {
+            if (!isPgMissingSchemaError(error)) throw error;
+            logAdminFailure("product_variants_get_compat", error);
+        }
 
         return NextResponse.json({ ...product, variants });
     } catch (error) {

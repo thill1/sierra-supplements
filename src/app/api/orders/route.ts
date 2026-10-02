@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { inArray } from "drizzle-orm";
-import { escapeHtml } from "@/lib/escape-html";
 import { checkRateLimits } from "@/lib/rate-limit";
 import { logServerError } from "@/lib/observability";
+import { sendOfflineOrderEmails } from "@/lib/email/order-emails";
 
 /**
  * Legacy order-intake endpoint (email + shipping + pay-offline flow).
@@ -154,62 +154,21 @@ export async function POST(request: Request) {
             );
         }
 
-        if (process.env.RESEND_API_KEY) {
-            try {
-                const { Resend } = await import("resend");
-                const resend = new Resend(process.env.RESEND_API_KEY);
-                const adminEmail =
-                    process.env.ADMIN_EMAIL || "sierrastrengthsupplements@gmail.com";
-
-                const itemsHtml = validatedItems
-                    .map(
-                        (i) =>
-                            `<tr><td>${escapeHtml(i.name)}</td><td>×${i.quantity}</td><td>$${((i.price * i.quantity) / 100).toFixed(2)}</td></tr>`
-                    )
-                    .join("");
-
-                await resend.emails.send({
-                    from: "Sierra Strength <noreply@sierrastrengthsupplements.com>",
-                    to: adminEmail,
-                    subject: `New Order: ${escapeHtml(parsed.name)} – $${(finalSubtotal / 100).toFixed(2)}${autoPay ? " (Auto-Pay)" : ""}`,
-                    html: `
-<h2>New Order Received</h2>
-<p><strong>Name:</strong> ${escapeHtml(parsed.name)}</p>
-<p><strong>Email:</strong> ${escapeHtml(parsed.email)}</p>
-<p><strong>Phone:</strong> ${parsed.phone ? escapeHtml(parsed.phone) : "—"}</p>
-<p><strong>Shipping:</strong><br/>
-${escapeHtml(parsed.addressLine1)}<br/>
-${parsed.addressLine2 ? escapeHtml(parsed.addressLine2) + "<br/>" : ""}
-${escapeHtml(parsed.city)}, ${escapeHtml(parsed.state)} ${parsed.zip}</p>
-${autoPay ? `<p><strong>Monthly Auto-Pay:</strong> Yes (10% discount applied)</p>` : ""}
-<p><strong>Order total:</strong> $${(finalSubtotal / 100).toFixed(2)}</p>
-<h3>Items</h3>
-<table cellpadding="8" cellspacing="0" border="1" style="border-collapse:collapse">
-<thead><tr><th>Product</th><th>Qty</th><th>Total</th></tr></thead>
-<tbody>${itemsHtml}</tbody>
-</table>
-${parsed.notes ? `<p><strong>Notes:</strong> ${escapeHtml(parsed.notes)}</p>` : ""}
-                    `,
-                });
-
-                await resend.emails.send({
-                    from: "Sierra Strength <noreply@sierrastrengthsupplements.com>",
-                    to: parsed.email,
-                    subject: "Order confirmed – Sierra Strength",
-                    html: `
-<h2>Thanks for your order!</h2>
-<p>Hi ${escapeHtml(parsed.name)},</p>
-<p>We've received your order and will reach out shortly to confirm payment and shipping.</p>
-<p><strong>Order total:</strong> $${(finalSubtotal / 100).toFixed(2)}</p>
-${autoPay ? `<p>You're signed up for monthly auto-pay — we'll reach out to set up your recurring order.</p>` : ""}
-<p>Questions? Reply to this email or call us.</p>
-<p>– The Sierra Strength Team</p>
-                    `,
-                });
-            } catch (e) {
-                logServerError("orders_resend", e);
-            }
-        }
+        await sendOfflineOrderEmails({
+            id: orderId,
+            email: parsed.email,
+            name: parsed.name,
+            phone: parsed.phone ?? null,
+            addressLine1: parsed.addressLine1,
+            addressLine2: parsed.addressLine2 ?? null,
+            city: parsed.city,
+            state: parsed.state,
+            zip: parsed.zip,
+            subtotal: finalSubtotal,
+            notes: parsed.notes ?? null,
+            autoPay,
+            lines: validatedItems,
+        });
 
         return NextResponse.json({ success: true, orderId }, { status: 201 });
     } catch (error) {

@@ -6,6 +6,7 @@ import { auditLogs } from "@/db/schema";
 import { requireAdmin, requireAdminOrRespond } from "@/lib/require-admin";
 import { requireMinRole } from "@/lib/admin-auth";
 import { logAdminFailure } from "@/lib/observability";
+import { isPgMissingSchemaError } from "@/lib/db/compat-errors";
 
 const querySchema = z.object({
     limit: z.coerce.number().int().min(1).max(200).optional().default(50),
@@ -79,6 +80,15 @@ export async function GET(request: Request) {
             offset,
         });
     } catch (error) {
+        if (isPgMissingSchemaError(error)) {
+            logAdminFailure("audit_logs_list_schema_missing", error);
+            return NextResponse.json({
+                items: [],
+                total: 0,
+                limit: 50,
+                offset: 0,
+            });
+        }
         logAdminFailure("audit_logs_list", error);
         return NextResponse.json(
             { error: "Failed to load audit logs" },

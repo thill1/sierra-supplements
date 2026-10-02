@@ -54,6 +54,27 @@ export const adminAppSettings = pgTable("admin_app_settings", {
     baseUrl: text("base_url").notNull(),
     adminNotificationEmail: text("admin_notification_email").notNull(),
     notifyEmailLeads: boolean("notify_email_leads").notNull().default(true),
+    customerLeadAutoReply: boolean("customer_lead_auto_reply")
+        .notNull()
+        .default(true),
+    customerOrderReceivedEmail: boolean("customer_order_received_email")
+        .notNull()
+        .default(true),
+    customerOrderPaidEmail: boolean("customer_order_paid_email")
+        .notNull()
+        .default(false),
+    customerOrderPackedEmail: boolean("customer_order_packed_email")
+        .notNull()
+        .default(false),
+    customerOrderFulfilledEmail: boolean("customer_order_fulfilled_email")
+        .notNull()
+        .default(true),
+    customerOrderCancelledEmail: boolean("customer_order_cancelled_email")
+        .notNull()
+        .default(false),
+    customerOrderRefundedEmail: boolean("customer_order_refunded_email")
+        .notNull()
+        .default(false),
     notifyEmailCalBookings: boolean("notify_email_cal_bookings")
         .notNull()
         .default(true),
