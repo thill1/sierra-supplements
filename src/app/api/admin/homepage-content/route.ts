@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { revalidateTag } from "next/cache";
+import { revalidatePublicHomepage } from "@/lib/public-homepage-cache";
 import { z } from "zod/v4";
 import { db } from "@/db";
 import { homepageContent } from "@/db/schema";
@@ -82,7 +82,7 @@ export async function PUT(request: Request) {
                 set: { data, updatedAt: now },
             });
 
-        revalidateTag("homepage-content", "max");
+        revalidatePublicHomepage("homepage-content");
 
         return NextResponse.json(mergeHomepageContent(data));
     } catch (error) {

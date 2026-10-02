@@ -8,6 +8,7 @@ import { writeAuditLog } from "@/lib/audit/write-audit";
 import { logAdminFailure } from "@/lib/observability";
 import { db } from "@/db";
 import { testimonials } from "@/db/schema";
+import { revalidatePublicHomepage } from "@/lib/public-homepage-cache";
 
 const createSchema = z.object({
     name: z.string().min(1).max(200),
@@ -76,6 +77,7 @@ export async function POST(request: Request) {
             }
             return [r];
         });
+        revalidatePublicHomepage("testimonials");
         return NextResponse.json(row, { status: 201 });
     } catch (error) {
         if (error instanceof z.ZodError) {

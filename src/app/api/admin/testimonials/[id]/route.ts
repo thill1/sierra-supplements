@@ -8,6 +8,7 @@ import { writeAuditLog } from "@/lib/audit/write-audit";
 import { logAdminFailure } from "@/lib/observability";
 import { db } from "@/db";
 import { testimonials } from "@/db/schema";
+import { revalidatePublicHomepage } from "@/lib/public-homepage-cache";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -100,6 +101,7 @@ export async function PUT(request: Request, { params }: Params) {
         if (!row) {
             return NextResponse.json({ error: "Not found" }, { status: 404 });
         }
+        revalidatePublicHomepage("testimonials");
         return NextResponse.json(row);
     } catch (error) {
         if (error instanceof z.ZodError) {
@@ -153,6 +155,7 @@ export async function DELETE(request: Request, { params }: Params) {
                 before,
             });
         });
+        revalidatePublicHomepage("testimonials");
         return NextResponse.json({ success: true });
     } catch (error) {
         logAdminFailure("testimonial_delete", error);
