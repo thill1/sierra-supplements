@@ -1,0 +1,15 @@
+.git
+.next
+node_modules
+out
+build
+data
+.playwright
+playwright-report
+test-results
+.vercel
+.env*
+!.env.example
+*.tsbuildinfo
+next-env.d.ts
+supabase/.temp

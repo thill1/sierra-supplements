@@ -14,8 +14,8 @@ export const metadata: Metadata = {
   description: siteConfig.description,
 };
 
-/** Avoid stale home HTML at CDNs that ignore short ISR windows. */
-export const dynamic = "force-dynamic";
+/** Public HTML; admin content saves also invalidate this route on demand. */
+export const revalidate = 300;
 
 export default async function HomePage() {
   const [testimonials, homepage] = await Promise.all([
