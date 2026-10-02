@@ -17,6 +17,13 @@ const bodySchema = z.object({
         .min(1)
         .max(50),
     email: z.string().email().optional(),
+    name: z.string().min(1).max(200).optional(),
+    phone: z.string().max(50).optional(),
+    addressLine1: z.string().max(200).optional(),
+    addressLine2: z.string().max(200).optional(),
+    city: z.string().max(100).optional(),
+    state: z.string().max(50).optional(),
+    zip: z.string().max(20).optional(),
 });
 
 export async function POST(request: Request) {
@@ -45,6 +52,15 @@ export async function POST(request: Request) {
             successUrl: `${base}/store/thank-you?session_id={CHECKOUT_SESSION_ID}`,
             cancelUrl: `${base}/store/cart`,
             customerEmail: data.email,
+            customerName: data.name,
+            customerPhone: data.phone,
+            shippingAddress: {
+                line1: data.addressLine1,
+                line2: data.addressLine2,
+                city: data.city,
+                state: data.state,
+                zip: data.zip,
+            },
         });
 
         if (!session.url) {

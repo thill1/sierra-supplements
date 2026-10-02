@@ -81,6 +81,13 @@ export default function CheckoutPage() {
                         quantity: i.quantity,
                     })),
                     email: form.email?.trim() || undefined,
+                    name: form.name?.trim() || undefined,
+                    phone: form.phone?.trim() || undefined,
+                    addressLine1: form.addressLine1?.trim() || undefined,
+                    addressLine2: form.addressLine2?.trim() || undefined,
+                    city: form.city?.trim() || undefined,
+                    state: form.state?.trim() || undefined,
+                    zip: form.zip?.trim() || undefined,
                 }),
             });
             const data = (await res.json().catch(() => ({}))) as {
@@ -302,8 +309,8 @@ export default function CheckoutPage() {
                     <p className="text-xs text-[var(--color-text-muted)] mt-4">
                         <strong>Place order</strong> sends your request to the team
                         (no card charge). <strong>Pay with card</strong> uses the
-                        active checkout provider when configured, and inventory
-                        updates after payment succeeds.
+                        active checkout provider when configured. Reconcile paid
+                        Valor orders manually before adjusting inventory.
                     </p>
                 </form>
             </section>

@@ -1,7 +1,6 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { products, productVariants } from "@/db/schema";
-import { logServerError } from "@/lib/observability";
 
 export type CheckoutLineInput = {
   productId: number;
@@ -12,8 +11,8 @@ export type CheckoutLineInput = {
 };
 
 /**
- * variantId 0 = resolve first variant row, or product-level fallback (`variantId` 0 in session)
- * when `product_variants` is missing or empty.
+ * variantId 0 = product-level checkout. This keeps catalog-card checkout compatible
+ * with older production databases while manual reconciliation is in place.
  * Positive variantId must exist and belong to productId.
  */
 export async function resolveLineToVariantIds(
@@ -48,24 +47,6 @@ export async function resolveLineToVariantIds(
     if (p) {
       productId = p.id;
     }
-  }
-
-  try {
-    const [def] = await db
-      .select()
-      .from(productVariants)
-      .where(eq(productVariants.productId, productId))
-      .orderBy(asc(productVariants.sortOrder), asc(productVariants.id))
-      .limit(1);
-
-    if (def) {
-      return { productId, variantId: def.id };
-    }
-  } catch (err) {
-    logServerError("checkout:resolve_default_variant", err, {
-      productId,
-      slug: line.slug,
-    });
   }
 
   const [product] = await db

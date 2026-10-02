@@ -8,6 +8,7 @@ import { requireAdmin, requireAdminOrRespond } from "@/lib/require-admin";
 import { requireMinRole } from "@/lib/admin-auth";
 import { rateLimitAdminWrite } from "@/lib/admin-rate-limit";
 import { logAdminFailure } from "@/lib/observability";
+import { isPgMissingSchemaError } from "@/lib/db/compat-errors";
 
 const createSchema = z.object({
     slug: z
@@ -34,6 +35,10 @@ export async function GET() {
             .orderBy(desc(blogPosts.updatedAt), desc(blogPosts.id));
         return NextResponse.json(rows);
     } catch (error) {
+        if (isPgMissingSchemaError(error)) {
+            logAdminFailure("blog_posts_list_schema_missing", error);
+            return NextResponse.json([]);
+        }
         logAdminFailure("blog_posts_list", error);
         return NextResponse.json(
             { error: "Failed to fetch blog posts" },
@@ -85,6 +90,15 @@ export async function POST(request: Request) {
             return NextResponse.json(
                 { error: "Validation failed", details: error.issues },
                 { status: 400 },
+            );
+        }
+        if (isPgMissingSchemaError(error)) {
+            logAdminFailure("blog_post_create_schema_missing", error);
+            return NextResponse.json(
+                {
+                    error: "Blog post editing requires the production database migration.",
+                },
+                { status: 503 },
             );
         }
         logAdminFailure("blog_post_create", error);

@@ -233,6 +233,70 @@ export default function AdminSettingsPage() {
                 </div>
             </section>
 
+            <section className="card border-[var(--color-border-subtle)] bg-[color-mix(in_srgb,var(--color-surface)_92%,var(--color-text-muted)_8%)]">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-lg bg-[color-mix(in_srgb,var(--color-accent-subtle)_65%,#6b7280_35%)] flex items-center justify-center">
+                        <Mail className="w-5 h-5 text-[color-mix(in_srgb,var(--color-accent)_55%,#9ca3af_45%)]" />
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold text-[color-mix(in_srgb,var(--color-text)_72%,#9ca3af_28%)]">
+                            Customer Email Automation
+                        </h2>
+                        <p className="text-xs text-[color-mix(in_srgb,var(--color-text-muted)_85%,#9ca3af_15%)] mt-1">
+                            Your current email flow includes the essentials.
+                            Additional automations can be turned on whenever
+                            you are ready to expand the customer journey.
+                        </p>
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    {[
+                        "Lead auto-reply sequence",
+                        "Order received / pending email",
+                        "Fulfilled order email",
+                    ].map((label) => (
+                        <div
+                            key={label}
+                            className="flex items-center justify-between py-2 border-b border-[var(--color-border-subtle)] last:border-0"
+                        >
+                            <span className="text-sm">
+                                {label}
+                            </span>
+                            <input
+                                type="checkbox"
+                                className="w-4 h-4 cursor-not-allowed accent-[var(--color-accent)]"
+                                checked
+                                disabled
+                                readOnly
+                            />
+                        </div>
+                    ))}
+                    {[
+                        "Payment confirmed email",
+                        "Packed / being prepared email",
+                        "Cancelled order email",
+                        "Refunded order email",
+                    ].map((label) => (
+                        <div
+                            key={label}
+                            className="flex items-center justify-between py-2 border-b border-[var(--color-border-subtle)] last:border-0"
+                        >
+                            <span className="text-sm text-[var(--color-text-muted)]">
+                                {label}
+                            </span>
+                            <input
+                                type="checkbox"
+                                className="w-4 h-4 cursor-not-allowed accent-slate-500 opacity-40 grayscale"
+                                checked={false}
+                                disabled
+                                readOnly
+                            />
+                        </div>
+                    ))}
+                </div>
+            </section>
+
             <section className="card">
                 <div className="flex items-center gap-3 mb-6">
                     <div className="w-10 h-10 rounded-lg bg-[var(--color-accent-subtle)] flex items-center justify-center">

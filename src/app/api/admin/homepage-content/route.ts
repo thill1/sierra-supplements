@@ -9,6 +9,7 @@ import { requireMinRole } from "@/lib/admin-auth";
 import { logAdminFailure } from "@/lib/observability";
 import { requireAdmin, requireAdminOrRespond } from "@/lib/require-admin";
 import { mergeHomepageContent } from "@/lib/homepage-defaults";
+import { isPgMissingSchemaError } from "@/lib/db/compat-errors";
 
 const HOMEPAGE_ID = 1;
 
@@ -49,10 +50,7 @@ export async function GET() {
         return NextResponse.json(merged);
     } catch (error) {
         logAdminFailure("homepage_content_get", error);
-        return NextResponse.json(
-            { error: "Failed to load homepage content" },
-            { status: 500 },
-        );
+        return NextResponse.json(mergeHomepageContent(null));
     }
 }
 
@@ -92,6 +90,15 @@ export async function PUT(request: Request) {
             return NextResponse.json(
                 { error: "Invalid body", details: error.issues },
                 { status: 400 },
+            );
+        }
+        if (isPgMissingSchemaError(error)) {
+            logAdminFailure("homepage_content_put_schema_missing", error);
+            return NextResponse.json(
+                {
+                    error: "Homepage content editing requires the production database migration.",
+                },
+                { status: 503 },
             );
         }
         logAdminFailure("homepage_content_put", error);

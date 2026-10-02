@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type OrderItem = { slug: string; name: string; price: number; quantity: number };
 
@@ -24,6 +25,7 @@ type Order = {
 };
 
 export default function AdminOrdersPage() {
+    const router = useRouter();
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -118,12 +120,22 @@ export default function AdminOrdersPage() {
                                     return (
                                         <tr
                                             key={order.id}
-                                            className="hover:bg-[var(--color-bg-muted)]/30 transition-colors"
+                                            className="cursor-pointer hover:bg-[var(--color-bg-muted)]/30 transition-colors"
+                                            role="link"
+                                            tabIndex={0}
+                                            onClick={() => router.push(`/admin/orders/${order.id}`)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter" || e.key === " ") {
+                                                    e.preventDefault();
+                                                    router.push(`/admin/orders/${order.id}`);
+                                                }
+                                            }}
                                         >
                                             <td className="px-6 py-4">
                                                 <Link
                                                     href={`/admin/orders/${order.id}`}
                                                     className="font-medium text-sm text-[var(--color-accent)] hover:underline"
+                                                    onClick={(e) => e.stopPropagation()}
                                                 >
                                                     #{order.id}
                                                 </Link>

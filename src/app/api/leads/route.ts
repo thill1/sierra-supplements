@@ -13,6 +13,7 @@ import {
     resolveAdminNotificationEmail,
     sendAdminNotificationEmail,
 } from "@/lib/email/admin-notifications";
+import { siteConfig } from "@/lib/site-config";
 
 const leadSchema = z.object({
     name: z.string().max(200).optional(),
@@ -95,35 +96,43 @@ export async function POST(request: Request) {
                     });
                 }
 
-                const isDiscountSignup = isFirstOrderDiscountLeadSource(data.source);
-                await resend.emails.send({
-                    from: "Sierra Strength <noreply@sierrastrengthsupplements.com>",
-                    to: data.email,
-                    subject: isDiscountSignup
-                        ? `Your ${EXIT_INTENT_DISCOUNT_PERCENT}% off first order — Sierra Strength`
-                        : "Thanks for reaching out to Sierra Strength!",
-                    html: isDiscountSignup
-                        ? `
+                const shouldSendLeadAutoReply =
+                    adminSettings?.customerLeadAutoReply ?? true;
+                if (shouldSendLeadAutoReply) {
+                    const isDiscountSignup = isFirstOrderDiscountLeadSource(
+                        data.source,
+                    );
+                    await resend.emails.send({
+                        from: "Sierra Strength Supplements <noreply@lordsgymoutreach.com>",
+                        to: data.email,
+                        subject: isDiscountSignup
+                            ? `Your ${EXIT_INTENT_DISCOUNT_PERCENT}% off first order — Sierra Strength`
+                            : "Thanks for reaching out to Sierra Strength!",
+                        html: isDiscountSignup
+                            ? `
             <h2>Your ${EXIT_INTENT_DISCOUNT_PERCENT}% first-order discount code</h2>
             <p>Hi ${escapeHtml(data.name || "there")},</p>
-            <p>Thanks for connecting with us. Use this code on your <strong>first order only</strong>—at checkout or mention it when you order:</p>
+            <p>Thanks for connecting with Sierra Strength. Here is your first-order code to use at checkout:</p>
             <p style="font-size:1.25rem;font-weight:600;letter-spacing:0.05em;font-family:ui-monospace,monospace;">${escapeHtml(EXIT_INTENT_DISCOUNT_CODE)}</p>
-            <p>This saves you ${EXIT_INTENT_DISCOUNT_PERCENT}% on your first purchase when the code is applied. One use per customer.</p>
-            <p><a href="https://sierrastrengthsupplements.com/store">Shop the store</a> · <a href="https://sierrastrengthsupplements.com/book">Book a free consultation</a></p>
+            <p>This saves you ${EXIT_INTENT_DISCOUNT_PERCENT}% on your first purchase. One use per customer.</p>
+            <p>If you want help choosing the right products, reply to this email or book a free consultation with our team.</p>
+            <p><a href="${siteConfig.url}/store">Shop the store</a> · <a href="${siteConfig.url}/book">Book a free consultation</a></p>
             <p>– The Sierra Strength Team</p>
           `
-                        : `
+                            : `
             <h2>We received your message!</h2>
             <p>Hi ${escapeHtml(data.name || "there")},</p>
-            <p>Thank you for reaching out to Sierra Strength. We've received your information and will be in touch within 2 hours during business hours.</p>
-            <p>In the meantime, feel free to:</p>
+            <p>Thank you for reaching out to Sierra Strength. We have your information and will follow up within 2 hours during business hours.</p>
+            <p>In the meantime, you can:</p>
             <ul>
-              <li><a href="https://sierrastrengthsupplements.com/book">Book a free consultation</a></li>
-              <li><a href="https://sierrastrengthsupplements.com/blog">Read our latest articles</a></li>
+              <li><a href="${siteConfig.url}/book">Book a free consultation</a></li>
+              <li><a href="${siteConfig.url}/store">Browse the store</a></li>
             </ul>
+            <p>If there is anything urgent you want us to know before we reply, just respond to this email.</p>
             <p>– The Sierra Strength Team</p>
           `,
-                });
+                    });
+                }
             } catch (emailError) {
                 logServerError("leads_resend", emailError);
             }

@@ -7,9 +7,10 @@ export const siteConfig = {
   tagline: "Peak Performance, Naturally",
   description:
     "Premium supplements & wellness services inspired by the strength of the Sierra Nevada mountains. Fuel your body with nature's best.",
-  url: "https://sierrastrengthsupplements.com",
+  url: "https://www.sierrastrengthsupplements.com",
   /** Typo / parked hostnames → permanent redirect to `url` (see `next.config.ts`). */
   redirectHosts: [
+    "sierrastrengthsupplements.com",
     "sierrastrongsupplements.com",
     "www.sierrastrongsupplements.com",
   ],
@@ -20,7 +21,7 @@ export const siteConfig = {
   phone: "(916) 824-5497",
   smsNumber: "+19168245497",
   email: "sierrastrengthsupplements@gmail.com",
-  adminEmail: "sierrastrengthsupplements@gmail.com",
+  adminEmail: "Lordsgymoutreach@gmail.com",
   address: {
     street: "258 Elm Ave",
     city: "Auburn",

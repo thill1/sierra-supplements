@@ -11,6 +11,7 @@ import { adminProductVariantsReplaceSchema } from "@/lib/admin/schemas/product-v
 import { dollarsToCents } from "@/lib/admin/product-mutations";
 import { syncParentProductStockFromVariants } from "@/lib/inventory/sync-parent-product-stock";
 import { writeAuditLog } from "@/lib/audit/write-audit";
+import { isPgMissingSchemaError } from "@/lib/db/compat-errors";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -153,6 +154,15 @@ export async function PUT(request: Request, { params }: Params) {
             return NextResponse.json(
                 { error: "Invalid variant id for this product" },
                 { status: 400 },
+            );
+        }
+        if (isPgMissingSchemaError(error)) {
+            logAdminFailure("product_variants_replace_schema_missing", error);
+            return NextResponse.json(
+                {
+                    error: "Variant management requires the production database migration.",
+                },
+                { status: 503 },
             );
         }
         logAdminFailure("product_variants_replace", error);

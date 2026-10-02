@@ -11,6 +11,11 @@ describe("assertProductionEnv", () => {
         NEXTAUTH_URL: process.env.NEXTAUTH_URL,
         DATABASE_URL: process.env.DATABASE_URL,
         ADMIN_EMAILS: process.env.ADMIN_EMAILS,
+        PAYMENT_PROVIDER: process.env.PAYMENT_PROVIDER,
+        VALOR_HOSTED_PAGE_URL: process.env.VALOR_HOSTED_PAGE_URL,
+        VALOR_APP_ID: process.env.VALOR_APP_ID,
+        VALOR_APP_KEY: process.env.VALOR_APP_KEY,
+        VALOR_EPI: process.env.VALOR_EPI,
         STRIPE_MOCK_MODE: process.env.STRIPE_MOCK_MODE,
         UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL,
         UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN,
@@ -25,6 +30,12 @@ describe("assertProductionEnv", () => {
         process.env.NEXTAUTH_URL = "https://example.com";
         process.env.DATABASE_URL = "postgresql://example";
         process.env.ADMIN_EMAILS = "admin@example.com";
+        process.env.PAYMENT_PROVIDER = "valor";
+        process.env.VALOR_HOSTED_PAGE_URL =
+            "https://securelink-prod.valorpaytech.com:4430/";
+        process.env.VALOR_APP_ID = "app-id";
+        process.env.VALOR_APP_KEY = "app-key";
+        process.env.VALOR_EPI = "epi";
         delete process.env.STRIPE_MOCK_MODE;
         delete process.env.UPSTASH_REDIS_REST_URL;
         delete process.env.UPSTASH_REDIS_REST_TOKEN;
@@ -41,6 +52,11 @@ describe("assertProductionEnv", () => {
         process.env.NEXTAUTH_URL = envSnapshot.NEXTAUTH_URL;
         process.env.DATABASE_URL = envSnapshot.DATABASE_URL;
         process.env.ADMIN_EMAILS = envSnapshot.ADMIN_EMAILS;
+        process.env.PAYMENT_PROVIDER = envSnapshot.PAYMENT_PROVIDER;
+        process.env.VALOR_HOSTED_PAGE_URL = envSnapshot.VALOR_HOSTED_PAGE_URL;
+        process.env.VALOR_APP_ID = envSnapshot.VALOR_APP_ID;
+        process.env.VALOR_APP_KEY = envSnapshot.VALOR_APP_KEY;
+        process.env.VALOR_EPI = envSnapshot.VALOR_EPI;
         process.env.STRIPE_MOCK_MODE = envSnapshot.STRIPE_MOCK_MODE;
         process.env.UPSTASH_REDIS_REST_URL = envSnapshot.UPSTASH_REDIS_REST_URL;
         process.env.UPSTASH_REDIS_REST_TOKEN =
